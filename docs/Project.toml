@@ -1,0 +1,3 @@
+[deps]
+DifferentiableMetabolism = "9677e053-0fc1-49e6-98a8-2ad3a1525e54"
+Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
