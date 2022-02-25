@@ -72,17 +72,18 @@
         [mid for mid in metabolites(model) if haskey(metabolite_concentrations, mid)]
     #! assumption is that every metabolite here is involved in some reaction
 
-    c, Ef, d, M, hf, reaction_map, metabolite_map = differentiable_thermokinetic_smoment_opt_problem(
-        model;
-        protein_stoichiometry,
-        protein_masses,
-        kcat_rid_order,
-        met_conc_order,
-        reaction_dg0s,
-        reaction_kcats,
-        ϵ = 1e-8,
-        ignore_reaction_ids = ["H2Ot"],
-    )
+    c, Ef, d, M, hf, reaction_map, metabolite_map =
+        differentiable_thermokinetic_smoment_opt_problem(
+            model;
+            protein_stoichiometry,
+            protein_masses,
+            kcat_rid_order,
+            met_conc_order,
+            reaction_dg0s,
+            reaction_kcats,
+            ϵ = 1e-8,
+            ignore_reaction_ids = ["H2Ot"],
+        )
 
     θ = [
         [first(reaction_kcats[rid][1]) for rid in kcat_rid_order]
