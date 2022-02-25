@@ -3,6 +3,18 @@ uuid = "9677e053-0fc1-49e6-98a8-2ad3a1525e54"
 authors = ["St. Elmo Wilken <stelmozors@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+COBREXA = "babc4406-5200-4a30-9033-bf5ae714c842"
+CPLEX = "a076750e-1247-5638-91d2-ce28b192dca0"
+ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+Gurobi = "2e9cd046-0924-5485-92f1-d5272153d98b"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+RowEchelon = "af85af4c-bcd5-5d23-b03a-a909639aa875"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+Tulip = "6dd1b50a-3aae-11e9-10b5-ef983d2400fa"
+
 [compat]
 julia = "1.7"
 

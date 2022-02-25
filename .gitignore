@@ -1,1 +1,16 @@
 /docs/build/
+
+# ignore vscode
+./vscode
+/vscode
+
+# ignore temporary files
+temp*
+
+# ignore julia files
+*.jl.cov
+*.jl.*.cov
+*.jl.mem
+/deps/deps.jl
+/docs/build
+Manifest.toml
