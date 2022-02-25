@@ -196,7 +196,7 @@ function qp_objective_measured(
         if !haskey(obs_v_dict, rid) || abs(obs_v_dict[rid]) < vtol
             q[i] = reg
         else
-            c[i] = -1.0 / obs_v_dict[rid]
+            c[i] = -1.0 / abs(obs_v_dict[rid]) #! fluxes are positive in model
             q[i] = 1.0 / obs_v_dict[rid]^2
             n += 1
         end
