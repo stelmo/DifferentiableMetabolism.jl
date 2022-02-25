@@ -44,7 +44,7 @@
         haskey(reaction_kcats, rid) && COBREXA._has_grr(pruned_model, rid)
     ]
 
-    c, Ef, d, M, hf, reaction_map, protein_ids = differentiable_smoment(
+    c, Ef, d, M, hf, reaction_map, protein_ids = differentiable_smoment_opt_problem(
         pruned_model;
         protein_stoichiometry,
         protein_masses,

@@ -1,20 +1,9 @@
 """
-    differentiable_smoment(
-        model::StandardModel,
-        protein_stoichiometry,
-        protein_masses,
-        reaction_kcats,
-        kcat_rid_order;
-        lb_flux_measurements = Dict(),
-        ub_flux_measurements = Dict(),
-        ϵ = 1e-8,
-    )
-
 Return structures that will allow the most basic form of smoment to be solved.
 No enzyme constraints allowed. Assume preprocessing changes model such that most
 effective enzyme is the only GRR.
 """
-function differentiable_smoment(
+function differentiable_smoment_opt_problem(
     model::StandardModel;
     protein_stoichiometry = Dict(),
     protein_masses = Dict(),

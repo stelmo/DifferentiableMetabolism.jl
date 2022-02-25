@@ -1,4 +1,3 @@
-
 """
 
 
@@ -8,7 +7,7 @@ Singularity issues will arise if not.
 2) Each reaction has only one active isozyme and one kcat assigned to that
 isozyme.
 """
-function differentiable_gecko(
+function differentiable_gecko_opt_problem(
     model::StandardModel;
     protein_stoichiometry = Dict(),
     protein_masses = Dict(),

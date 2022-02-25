@@ -170,9 +170,9 @@ function differentiate_QP(
                 ndx[i, j] = round(θ[j] / vars[i] * dx[i, j]; digits = 8)
             end
         end
-        return value.(x), ndx, objective_value(m)
+        return value.(x), ndx, objective_value(opt_model)
     else
-        return value.(x), dx, objective_value(m)
+        return value.(x), dx, objective_value(opt_model)
     end
 end
 

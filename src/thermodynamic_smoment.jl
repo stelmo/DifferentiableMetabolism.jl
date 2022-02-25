@@ -142,7 +142,7 @@ Return structures that will allow the most basic form of
 smoment to be solved. No enzyme constraints allowed.
 Most effective enzyme is the only GRR. Assume unidirectional reactions.
 """
-function differentiable_thermokinetic_smoment(
+function differentiable_thermokinetic_smoment_opt_problem(
     model::StandardModel;
     protein_stoichiometry = Dict(),
     protein_masses = Dict(),
