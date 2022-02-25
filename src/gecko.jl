@@ -177,7 +177,7 @@ function _gecko_build_inequality_constraints_as_functions(
         ub = ub_flux_measurements[original_rid]
         rids = [rid for rid in keys(reaction_map) if startswith(rid, original_rid)]
 
-        contains(rids, "§ISO") && @warn("Isozyme detected, unexpected behaviour!")
+        any(contains(x, "§ISO") for x in rids) && @warn("Isozyme detected, unexpected behaviour!")
 
         if lb > 0 # forward only
             for rid in rids
