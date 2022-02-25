@@ -13,7 +13,7 @@ function remove_low_expressed_isozymes!(
 )
 
     for rid in reactions(model)
-        if _has_grr(model, rid)
+        if COBREXA._has_grr(model, rid)
             measured_proteins = Float64[]
             grrs = reaction_gene_association(model, rid)
             for (i, grr) in enumerate(grrs)
@@ -40,7 +40,7 @@ function remove_low_expressed_isozymes!(
 
     curated_gids = String[]
     for rid in reactions(model)
-        if _has_grr(model, rid)
+        if COBREXA._has_grr(model, rid)
             for grr in reaction_gene_association(model, rid)
                 append!(curated_gids, grr)
             end
