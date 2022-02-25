@@ -45,7 +45,10 @@ function differentiable_gecko_opt_problem(
         original_rid = string(split(rid, "§")[1])
 
         # skip these entries
-        contains(rid, "§ARM") && continue
+        if contains(rid, "§ARM")
+            @warn "Isozyme found, unexpected!"
+            continue
+        end
         !haskey(reaction_kcats, original_rid) && continue
 
         # add all entries to column of matrix
@@ -173,7 +176,8 @@ function _gecko_build_inequality_constraints_as_functions(
         lb = lb_flux_measurements[original_rid]
         ub = ub_flux_measurements[original_rid]
         rids = [rid for rid in keys(reaction_map) if startswith(rid, original_rid)]
-        filter!(x -> !contains(x, "§ISO"), rids) # remove isozyme partial reactions (ARM reactions take care of these)
+
+        contains(rids, "§ISO") && @warn("Isozyme detected, unexpected behaviour!")
 
         if lb > 0 # forward only
             for rid in rids
@@ -202,7 +206,7 @@ function _gecko_build_inequality_constraints_as_functions(
         pid in protein_ids
     ]
     ub_proteins = [
-        haskey(ub_protein_measurements, pid) ? ub_protein_measurements[pid] : 10_000.0
+        haskey(ub_protein_measurements, pid) ? ub_protein_measurements[pid] : 1000.0
         for pid in protein_ids
     ]
 
