@@ -15,6 +15,7 @@ function differentiate_LP(
     use_analytic = true,
     scale = true,
     modifications = [],
+    kkt_check = 1e-3,
 )
     #: forward pass, solve the optimization problem
     E = Ef(θ)
@@ -51,7 +52,7 @@ function differentiate_LP(
     ]
 
     #: ensure that KKT conditions are satisfied, so that implicit function theorem holds
-    @assert(maximum(abs.(F(vars, θ))) < 1e-3)
+    @assert(maximum(abs.(F(vars, θ))) < kkt_check)
 
     if use_analytic
         #: faster
@@ -106,6 +107,7 @@ function differentiate_QP(
     use_analytic = true,
     scale = true,
     modifications = [],
+    kkt_check = 1e-3,
 )
     #: KKT function
     F(x, θ) = [
@@ -142,7 +144,7 @@ function differentiate_QP(
     vars = [z; ν; λ]
 
     #: ensure that KKT conditions are satisfied, so that implicit function theorem holds
-    @assert(maximum(abs.(F(vars, θ))) < 1e-3)
+    @assert(maximum(abs.(F(vars, θ))) < kkt_check)
 
     if use_analytic
         n_mets = size(Ef(θ), 1)
