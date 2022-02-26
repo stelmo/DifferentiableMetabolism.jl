@@ -17,6 +17,7 @@ Tulip = "6dd1b50a-3aae-11e9-10b5-ef983d2400fa"
 
 [compat]
 JSON = "0.21"
+ForwardDiff = "0.10"
 julia = "1.7"
 
 [extras]
