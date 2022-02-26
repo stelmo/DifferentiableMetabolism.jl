@@ -16,6 +16,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Tulip = "6dd1b50a-3aae-11e9-10b5-ef983d2400fa"
 
 [compat]
+RowEchelon = "0.2"
 CPLEX = "0.9"
 JSON = "0.21"
 ForwardDiff = "0.10"
