@@ -15,17 +15,6 @@ RowEchelon = "af85af4c-bcd5-5d23-b03a-a909639aa875"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 Tulip = "6dd1b50a-3aae-11e9-10b5-ef983d2400fa"
 
-[compat]
-JuMP = "0.22, 0.23"
-Gurobi = "0.11"
-Tulip = "0.9"
-COBREXA = "1"
-RowEchelon = "0.2"
-CPLEX = "0.9"
-JSON = "0.21"
-ForwardDiff = "0.10"
-julia = "1.7"
-
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
