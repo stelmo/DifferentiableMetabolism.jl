@@ -107,6 +107,7 @@ function differentiate_QP(
     use_analytic = true,
     scale = true,
     modifications = [],
+    num_retries = 1,
 )
     #: KKT function
     F(x, θ) = [
@@ -131,6 +132,31 @@ function differentiate_QP(
     end
 
     optimize!(opt_model)
+
+    if termination_status(opt_model) != JuMP.OPTIMAL
+        for retry_num = 1:num_retries
+            θ .*= 1 .+ 0.005 .* randn(length(θ))
+            E = Ef(θ)
+            h = hf(θ)
+        
+            #: forward pass
+            opt_model = Model(optimizer)
+            x = @variable(opt_model, x[1:size(E, 2)])
+            @constraint(opt_model, eq, E * x .== d)
+            @constraint(opt_model, ineq, M * x .<= h)
+            @objective(opt_model, sense, 0.5 * x' * Q * x + c' * x + 0.5 * n)
+        
+            # apply the modifications, if any (from COBREXA, only optimizer based mods though)
+            for mod in modifications
+                mod(nothing, opt_model)
+            end   
+
+            optimize!(opt_model)
+
+            termination_status(opt_model) == JuMP.OPTIMAL && break
+        end
+    end
+
     @assert(termination_status(opt_model) == JuMP.OPTIMAL)
 
     #: differentiate
