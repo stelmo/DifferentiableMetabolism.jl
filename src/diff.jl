@@ -107,7 +107,6 @@ function differentiate_QP(
     use_analytic = true,
     scale = true,
     modifications = [],
-    kkt_check = 1e-3,
 )
     #: KKT function
     F(x, θ) = [
@@ -132,6 +131,7 @@ function differentiate_QP(
     end
 
     optimize!(opt_model)
+    @assert(termination_status(opt_model) == JuMP.OPTIMAL)
 
     #: differentiate
     z = value.(opt_model[:x])
@@ -143,8 +143,8 @@ function differentiate_QP(
 
     vars = [z; ν; λ]
 
-    #: ensure that KKT conditions are satisfied, so that implicit function theorem holds
-    @assert(maximum(abs.(F(vars, θ))) < kkt_check)
+    # #: ensure that KKT conditions are satisfied, so that implicit function theorem holds
+    # @assert(maximum(abs.(F(vars, θ))) < kkt_check)
 
     if use_analytic
         n_mets = size(Ef(θ), 1)
@@ -172,9 +172,9 @@ function differentiate_QP(
                 ndx[i, j] = round(θ[j] / vars[i] * dx[i, j]; digits = 8)
             end
         end
-        return value.(x), ndx, objective_value(opt_model)
+        return value.(x), ndx, objective_value(opt_model), maximum(abs.(F(vars, θ)))
     else
-        return value.(x), dx, objective_value(opt_model)
+        return value.(x), dx, objective_value(opt_model), maximum(abs.(F(vars, θ)))
     end
 end
 
