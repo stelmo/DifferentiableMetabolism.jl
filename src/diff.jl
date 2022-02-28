@@ -189,7 +189,7 @@ function qp_objective_measured(
     vtol = 1e-3,
     etol = 1e-3,
     reg = 1e-1,
-    gsub, # gene substitutions
+    gsub = Dict(), # gene substitutions
 )
     n_vars = length(gids) + length(rids)
     c = zeros(n_vars)
