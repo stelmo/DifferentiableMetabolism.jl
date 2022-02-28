@@ -189,6 +189,7 @@ function qp_objective_measured(
     vtol = 1e-3,
     etol = 1e-3,
     reg = 1e-1,
+    gsub, # gene substitutions
 )
     n_vars = length(gids) + length(rids)
     c = zeros(n_vars)
@@ -206,11 +207,16 @@ function qp_objective_measured(
     end
     k = length(rids)
     for (i, gid) in enumerate(gids)
-        if !haskey(obs_e_dict, gid) || abs(obs_e_dict[gid]) < etol
-            q[k+i] = reg
+        if haskey(gsub, gid)
+            scale = gsub[gid][2]
         else
-            c[k+i] = -1.0 / obs_e_dict[gid]
-            q[k+i] = 1.0 / obs_e_dict[gid]^2
+            scale = 1.0
+        end
+        if !haskey(obs_e_dict, gid) || abs(obs_e_dict[gid]) < etol
+            q[k+i] = reg * scale
+        else
+            c[k+i] = -1.0 / obs_e_dict[gid] * scale
+            q[k+i] = 1.0 / obs_e_dict[gid]^2 * scale^2
             n += 1
         end
     end
