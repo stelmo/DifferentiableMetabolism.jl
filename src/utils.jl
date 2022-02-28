@@ -10,36 +10,31 @@ function remove_low_expressed_isozymes!(
     protein_stoichiometry = Dict(),
     protein_masses = Dict(),
     gid_measurements = Dict(),
-    spont_gene_id = "s0001",
 )
 
     for rid in reactions(model)
         if COBREXA._has_grr(model, rid)
-            if any(spont_gene_id in grr for grr in reaction_gene_association(model, rid))
-                model.reactions[rid].grr = [[]]
-            else
-                measured_proteins = Float64[]
-                grrs = reaction_gene_association(model, rid)
-                for (i, grr) in enumerate(grrs)
+            measured_proteins = Float64[]
+            grrs = reaction_gene_association(model, rid)
+            for (i, grr) in enumerate(grrs)
 
-                    push!(
-                        measured_proteins,
-                        sum(
-                            map(
-                                *,
-                                protein_stoichiometry[rid][i],
-                                [get(gid_measurements, gid, 0.0) for gid in grr],
-                                [protein_masses[gid] for gid in grr],
-                            ),
+                push!(
+                    measured_proteins,
+                    sum(
+                        map(
+                            *,
+                            protein_stoichiometry[rid][i],
+                            [get(gid_measurements, gid, 0.0) for gid in grr],
+                            [protein_masses[gid] for gid in grr],
                         ),
-                    )
-                end
-                idx = argmax(measured_proteins)
-
-                model.reactions[rid].grr = [grrs[idx]]
-                reaction_kcats[rid] = [reaction_kcats[rid][idx]]
-                protein_stoichiometry[rid] = [protein_stoichiometry[rid][idx]]
+                    ),
+                )
             end
+            idx = argmax(measured_proteins)
+
+            model.reactions[rid].grr = [grrs[idx]]
+            reaction_kcats[rid] = [reaction_kcats[rid][idx]]
+            protein_stoichiometry[rid] = [protein_stoichiometry[rid][idx]]
         end
     end
 
