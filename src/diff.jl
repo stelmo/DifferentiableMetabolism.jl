@@ -121,8 +121,8 @@ function differentiate_QP(
         E = Ef(θ)
         h = hf(θ)
     else
-        E = round.(Ef(θ), digits=rounding_digits)
-        h = round.(hf(θ), digits=rounding_digits)
+        E = round.(Ef(θ), RoundUp; digits=rounding_digits)
+        h = round.(hf(θ), RoundUp; digits=rounding_digits)
     end
 
     #: forward pass
@@ -147,8 +147,8 @@ function differentiate_QP(
                 E = Ef(θ)
                 h = hf(θ)
             else
-                E = round.(Ef(θ), digits=rounding_digits)
-                h = round.(hf(θ), digits=rounding_digits)
+                E = round.(Ef(θ), RoundUp; digits=rounding_digits)
+                h = round.(hf(θ), RoundUp; digits=rounding_digits)
             end
         
             #: forward pass
