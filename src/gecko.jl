@@ -18,12 +18,13 @@ function differentiable_gecko_opt_problem(
     ub_flux_measurements = Dict(),
     kcat_rid_order = [],
     ϵ = 1e-8,
+    stoich_digits_round = 8
 )
     S_rank_issues, lb_fluxes, ub_fluxes, reaction_map, _ =
         COBREXA._build_irreversible_stoichiometric_matrix(model)
 
     #: make full rank
-    S = round.(_remove_lin_dep_rows(S_rank_issues; ϵ), digits = 8)
+    S = round.(_remove_lin_dep_rows(S_rank_issues; ϵ), digits = stoich_digits_round)
 
     #: find all gene products that have kcats associated with them
     protein_ids = COBREXA._get_proteins_with_kcats(model, reaction_kcats)
