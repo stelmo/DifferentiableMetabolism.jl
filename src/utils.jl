@@ -129,3 +129,16 @@ function _remove_lin_dep_rows(A; ϵ = 1e-8)
     @info "Removed $remrows rows!"
     return rA[idxs, :]
 end
+
+function in_another_grr(model, current_rid, current_gid)
+    for rid in reactions(model)
+        current_rid == rid && continue 
+        !COBREXA._has_grr(model, rid) && continue 
+        for grr in reaction_gene_association(model, rid)
+            for gid in grr 
+                current_gid == gid && return true
+            end
+        end
+    end
+    false
+end

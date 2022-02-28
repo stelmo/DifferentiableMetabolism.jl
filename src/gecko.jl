@@ -6,6 +6,7 @@ Notes:
 Singularity issues will arise if not.
 2) Each reaction has only one active isozyme and one kcat assigned to that
 isozyme.
+3) Rescale some columns to prevent numerical issues from arising
 """
 function differentiable_gecko_opt_problem(
     model::StandardModel;
@@ -53,7 +54,7 @@ function differentiable_gecko_opt_problem(
         !haskey(reaction_kcats, original_rid) && continue
 
         # add all entries to column of matrix
-        #! no isozymes by assumption
+        #! no isozymes by assumption and all unidirectional
         _add_enzyme_variable_as_function(
             model,
             original_rid,
