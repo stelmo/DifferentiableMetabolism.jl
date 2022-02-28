@@ -108,6 +108,7 @@ function differentiate_QP(
     scale = true,
     modifications = [],
     num_retries = 1,
+    rounding_digits = -1,
 )
     #: KKT function
     F(x, θ) = [
@@ -116,8 +117,13 @@ function differentiate_QP(
         diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
     ]
 
-    E = Ef(θ)
-    h = hf(θ)
+    if rounding_digits == -1
+        E = Ef(θ)
+        h = hf(θ)
+    else
+        E = round.(Ef(θ), digits=rounding_digits)
+        h = round.(hf(θ), digits=rounding_digits)
+    end
 
     #: forward pass
     opt_model = Model(optimizer)
