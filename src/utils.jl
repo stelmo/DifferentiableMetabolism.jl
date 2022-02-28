@@ -5,15 +5,16 @@ Remove isozymes that are not expressed.
 If multiple isozymes are expressed, pick one that has the highest expression.
 """
 function remove_low_expressed_isozymes!(
-    model::StandardModel,
-    reaction_kcats,
-    protein_stoichiometry,
-    protein_masses,
-    gid_measurements,
+    model::StandardModel;
+    reaction_kcats = Dict(),
+    protein_stoichiometry = Dict(),
+    protein_masses = Dict(),
+    gid_measurements = Dict(),
+    spont_gene_id = "s0001",
 )
 
     for rid in reactions(model)
-        if COBREXA._has_grr(model, rid)
+        if COBREXA._has_grr(model, rid) && haskey(reaction_kcats, rid)
             measured_proteins = Float64[]
             grrs = reaction_gene_association(model, rid)
             for (i, grr) in enumerate(grrs)
