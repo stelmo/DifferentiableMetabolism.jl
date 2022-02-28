@@ -142,8 +142,14 @@ function differentiate_QP(
     if termination_status(opt_model) != JuMP.OPTIMAL
         for retry_num = 1:num_retries
             θ .*= 1 .+ 0.005 .* randn(length(θ))
-            E = Ef(θ)
-            h = hf(θ)
+
+            if rounding_digits == -1
+                E = Ef(θ)
+                h = hf(θ)
+            else
+                E = round.(Ef(θ), digits=rounding_digits)
+                h = round.(hf(θ), digits=rounding_digits)
+            end
         
             #: forward pass
             opt_model = Model(optimizer)
