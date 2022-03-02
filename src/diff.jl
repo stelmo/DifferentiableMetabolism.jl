@@ -204,7 +204,7 @@ function qp_objective_measured(
     k = length(rids)
     for (i, gid) in enumerate(gids)
         if !haskey(obs_e_dict, gid) || abs(obs_e_dict[gid]) < etol
-            q[k+i] = reg * scale
+            q[k+i] = reg
         else
             c[k+i] = -1.0 / obs_e_dict[gid]
             q[k+i] = 1.0 / obs_e_dict[gid]^2
