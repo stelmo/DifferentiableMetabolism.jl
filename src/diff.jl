@@ -5,19 +5,22 @@ Implicitly differentiate the system and scale.
 """
 function differentiate_LP(
     c,
-    Ef,
-    d,
-    M,
-    hf,
+    opt,
     θ,
     optimizer;
     sense = MOI.MIN_SENSE,
     use_analytic = true,
     scale = true,
     modifications = [],
+    dFdθ = nothing,
     kkt_check = 1e-3,
 )
     #: forward pass, solve the optimization problem
+    Ef = opt.Ef
+    hf = opt.hf
+    M = opt.M
+    d = opt.d
+
     E = Ef(θ)
     h = hf(θ)
 
@@ -65,12 +68,16 @@ function differentiate_LP(
             E zeros(n_mets, n_ν) zeros(n_mets, n_λ)
             diagm(λ)*M zeros(n_cons, n_ν) diagm(M * z - h)
         ]
+        if isnothing(dFdθ)
+            B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
+        else
+            B = dFdθ(z, ν, λ, θ)
+        end
     else
         #: slower
         A = ForwardDiff.jacobian(x -> F(x, θ), vars)
+        B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
     end
-
-    B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
 
     dx = -A \ B #! will fail if det(A) = 0
     dx = dx[1:n_vars, :] # only return derivatives of variables, not the duals
@@ -95,14 +102,14 @@ Implicitly differentiate the system and scale.
 """
 function differentiate_QP(
     Q,
+    c,
     opt,
-    opt_struct,
     θ,
     optimizer;
     use_analytic = true,
     scale = true,
     modifications = [],
-    dFdθ = manual_diff(opt_struct),
+    dFdθ = nothing,
     kkt_check = 1e-3,
 )
     Ef = opt.Ef
@@ -139,6 +146,16 @@ function differentiate_QP(
 
     vars = [z; ν; λ]
 
+    #: KKT function
+    F(x, θ) = [
+        Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] -
+        M' * x[(n_vars+n_ν).+(1:n_λ)]
+        Ef(θ) * x[1:n_vars] - d
+        diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
+    ]
+
+    @assert(maximum(abs.(F(vars, θ))) < kkt_check)
+    
     if use_analytic
         n_mets = size(Ef(θ), 1)
         n_cons = size(M, 1)
@@ -148,18 +165,12 @@ function differentiate_QP(
             Ef(θ) zeros(n_mets, n_ν) zeros(n_mets, n_λ)
             diagm(λ)*M zeros(n_cons, n_ν) diagm(M * z - hf(θ))
         ]
-        B = dFdθ(z, ν, λ, θ)
+        if isnothing(dFdθ)
+            B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
+        else
+            B = dFdθ(z, ν, λ, θ)
+        end
     else
-        #: KKT function
-        F(x, θ) = [
-            Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] -
-            M' * x[(n_vars+n_ν).+(1:n_λ)]
-            Ef(θ) * x[1:n_vars] - d
-            diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
-        ]
-
-        @assert(maximum(abs.(F(vars, θ))) < kkt_check)
-
         A = ForwardDiff.jacobian(x -> F(x, θ), vars)
         B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
     end
@@ -175,9 +186,9 @@ function differentiate_QP(
                 ndx[i, j] = round(θ[j] / vars[i] * dx[i, j]; digits = 8)
             end
         end
-        return value.(x), ndx, objective_value(opt_model), maximum(abs.(F(vars, θ)))
+        return value.(x), ndx, objective_value(opt_model)
     else
-        return value.(x), dx, objective_value(opt_model), maximum(abs.(F(vars, θ)))
+        return value.(x), dx, objective_value(opt_model)
     end
 end
 
