@@ -95,18 +95,21 @@ Implicitly differentiate the system and scale.
 """
 function differentiate_QP(
     Q,
-    c,
-    n,
-    Ef,
-    d,
-    M,
-    hf,
+    opt,
+    opt_struct,
     θ,
     optimizer;
     use_analytic = true,
     scale = true,
     modifications = [],
+    dFdθ = manual_diff(opt_struct),
+    kkt_check = 1e-3,
 )
+    Ef = opt.Ef
+    hf = opt.hf
+    M = opt.M
+    d = opt.d
+
     E = Ef(θ)
     h = hf(θ)
 
@@ -136,17 +139,6 @@ function differentiate_QP(
 
     vars = [z; ν; λ]
 
-    #: KKT function
-    F(x, θ) = [
-        Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] - M' * x[(n_vars+n_ν).+(1:n_λ)]
-        Ef(θ) * x[1:n_vars] - d
-        diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
-    ]
-
-
-    # #: ensure that KKT conditions are satisfied, so that implicit function theorem holds
-    # @assert(maximum(abs.(F(vars, θ))) < kkt_check)
-
     if use_analytic
         n_mets = size(Ef(θ), 1)
         n_cons = size(M, 1)
@@ -156,11 +148,21 @@ function differentiate_QP(
             Ef(θ) zeros(n_mets, n_ν) zeros(n_mets, n_λ)
             diagm(λ)*M zeros(n_cons, n_ν) diagm(M * z - hf(θ))
         ]
+        B = dFdθ(z, ν, λ, θ)
     else
-        A = ForwardDiff.jacobian(x -> F(x, θ), vars)
-    end
+        #: KKT function
+        F(x, θ) = [
+            Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] -
+            M' * x[(n_vars+n_ν).+(1:n_λ)]
+            Ef(θ) * x[1:n_vars] - d
+            diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
+        ]
 
-    B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
+        @assert(maximum(abs.(F(vars, θ))) < kkt_check)
+
+        A = ForwardDiff.jacobian(x -> F(x, θ), vars)
+        B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
+    end
 
     dx = -A \ B #! will fail if det(A) = 0
     dx = dx[1:n_vars, :] # only return derivatives of variables
@@ -262,11 +264,11 @@ end
 
 function manual_diff(opt_struct)
     (z, ν, λ, θ) -> [
-            _block1(z, ν, λ, θ, opt_struct)
-            zeros(opt_struct.n_proteins, length(θ))
-            zeros(opt_struct.n_metabolites, length(θ))
-            _block2(z, ν, λ, θ, opt_struct)
-            zeros(length(λ) - 1, length(θ))
-            [zeros(length(θ) - 1); -λ[end]]'
-        ]
+        _block1(z, ν, λ, θ, opt_struct)
+        zeros(opt_struct.n_proteins, length(θ))
+        zeros(opt_struct.n_metabolites, length(θ))
+        _block2(z, ν, λ, θ, opt_struct)
+        zeros(length(λ) - 1, length(θ))
+        [zeros(length(θ) - 1); -λ[end]]'
+    ]
 end
