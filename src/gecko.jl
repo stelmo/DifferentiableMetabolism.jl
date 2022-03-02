@@ -19,7 +19,7 @@ function differentiable_gecko_opt_problem(
     ub_flux_measurements = Dict(),
     kcat_rid_order = [],
     ϵ = 1e-8,
-    stoich_digits_round = 8
+    stoich_digits_round = 8,
 )
     S_rank_issues, lb_fluxes, ub_fluxes, reaction_map, _ =
         COBREXA._build_irreversible_stoichiometric_matrix(model)
@@ -103,7 +103,20 @@ function differentiable_gecko_opt_problem(
         reaction_map,
     )
 
-    return c, Ef, d, M, hf, reaction_map, protein_ids, kcat_rid_order
+    opt = (c = c, Ef = Ef, d = d, M = M, hf = hf)
+    opt_struct = (
+        reaction_map = reaction_map,
+        protein_ids = protein_ids,
+        kcat_rid_order = kcat_rid_order,
+        row_idxs = E_components.row_idxs,
+        col_idxs = E_components.col_idxs,
+        vals = kcat_pst_idxs,
+        n_proteins = n_proteins,
+        n_reactions = n_reactions,
+        n_metabolites = n_metabolites,
+    )
+
+    return opt, opt_struct
 end
 
 """
@@ -179,7 +192,8 @@ function _gecko_build_inequality_constraints_as_functions(
         ub = ub_flux_measurements[original_rid]
         rids = [rid for rid in keys(reaction_map) if startswith(rid, original_rid)]
 
-        any(contains(x, "§ISO") for x in rids) && @warn("Isozyme detected, unexpected behaviour!")
+        any(contains(x, "§ISO") for x in rids) &&
+            @warn("Isozyme detected, unexpected behaviour!")
 
         if lb > 0 # forward only
             for rid in rids
@@ -208,8 +222,8 @@ function _gecko_build_inequality_constraints_as_functions(
         pid in protein_ids
     ]
     ub_proteins = [
-        haskey(ub_protein_measurements, pid) ? ub_protein_measurements[pid] : 1000.0
-        for pid in protein_ids
+        haskey(ub_protein_measurements, pid) ? ub_protein_measurements[pid] : 1000.0 for
+        pid in protein_ids
     ]
 
     hf(θ) = Array([-lb_fluxes; ub_fluxes; -lb_proteins; ub_proteins; θ[end]])

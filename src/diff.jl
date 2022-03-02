@@ -107,16 +107,8 @@ function differentiate_QP(
     scale = true,
     modifications = [],
 )
-    #: KKT function
-    F(x, θ) = [
-        Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] - M' * x[(n_vars+n_ν).+(1:n_λ)]
-        Ef(θ) * x[1:n_vars] - d
-        diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
-    ]
-
     E = Ef(θ)
     h = hf(θ)
-
 
     #: forward pass
     opt_model = Model(optimizer)
@@ -143,6 +135,14 @@ function differentiate_QP(
     n_λ = length(λ)
 
     vars = [z; ν; λ]
+
+    #: KKT function
+    F(x, θ) = [
+        Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] - M' * x[(n_vars+n_ν).+(1:n_λ)]
+        Ef(θ) * x[1:n_vars] - d
+        diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
+    ]
+
 
     # #: ensure that KKT conditions are satisfied, so that implicit function theorem holds
     # @assert(maximum(abs.(F(vars, θ))) < kkt_check)
@@ -223,4 +223,50 @@ function qp_objective_measured(
 
     Q = diagm(q)
     return Q, c, n
+end
+
+
+function _block1(z, ν, λ, θ, opt_struct)
+    row_idxs = Int[]
+    col_idxs = Int[]
+    vals = Float64[]
+    ν_star = ν[(1+opt_struct.n_metabolites):end]
+
+    for (idx, jdx, v) in zip(opt_struct.row_idxs, opt_struct.col_idxs, opt_struct.vals)
+        coeff, kcat_idx = v
+        push!(col_idxs, kcat_idx)
+        push!(row_idxs, jdx)
+        push!(vals, ν_star[idx] * coeff * 1.0 / θ[kcat_idx]^2) # negative multiplied through
+    end
+    n_rows = opt_struct.n_reactions
+    n_cols = length(θ)
+    sparse(row_idxs, col_idxs, vals, n_rows, n_cols)
+end
+
+
+function _block2(z, ν, λ, θ, opt_struct)
+    row_idxs = Int[]
+    col_idxs = Int[]
+    vals = Float64[]
+
+    for (idx, jdx, v) in zip(opt_struct.row_idxs, opt_struct.col_idxs, opt_struct.vals)
+        coeff, kcat_idx = v
+        push!(col_idxs, kcat_idx)
+        push!(row_idxs, idx)
+        push!(vals, z[jdx] * coeff * -1.0 / θ[kcat_idx]^2)
+    end
+    n_rows = opt_struct.n_proteins
+    n_cols = length(θ)
+    sparse(row_idxs, col_idxs, vals, n_rows, n_cols)
+end
+
+function manual_diff(opt_struct)
+    (z, ν, λ, θ) -> [
+            _block1(z, ν, λ, θ, opt_struct)
+            zeros(opt_struct.n_proteins, length(θ))
+            zeros(opt_struct.n_metabolites, length(θ))
+            _block2(z, ν, λ, θ, opt_struct)
+            zeros(length(λ) - 1, length(θ))
+            [zeros(length(θ) - 1); -λ[end]]'
+        ]
 end

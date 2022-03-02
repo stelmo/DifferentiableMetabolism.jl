@@ -132,10 +132,10 @@ end
 
 function in_another_grr(model, current_rid, current_gid)
     for rid in reactions(model)
-        current_rid == rid && continue 
-        !COBREXA._has_grr(model, rid) && continue 
+        current_rid == rid && continue
+        !COBREXA._has_grr(model, rid) && continue
         for grr in reaction_gene_association(model, rid)
-            for gid in grr 
+            for gid in grr
                 current_gid == gid && return true
             end
         end
