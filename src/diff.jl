@@ -13,7 +13,6 @@ function differentiate_LP(
     scale = true,
     modifications = [],
     dFdθ = nothing,
-    kkt_check = 1e-3,
 )
     #: forward pass, solve the optimization problem
     Ef = opt.Ef
@@ -48,15 +47,6 @@ function differentiate_LP(
 
     vars = [z; ν; λ]
 
-    F(x, θ) = [
-        c - Ef(θ)' * x[n_vars.+(1:n_ν)] - M' * x[(n_vars+n_ν).+(1:n_λ)]
-        Ef(θ) * x[1:n_vars] - d
-        diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
-    ]
-
-    #: ensure that KKT conditions are satisfied, so that implicit function theorem holds
-    @assert(maximum(abs.(F(vars, θ))) < kkt_check)
-
     if use_analytic
         #: faster
         n_mets = size(E, 1)
@@ -68,18 +58,19 @@ function differentiate_LP(
             E zeros(n_mets, n_ν) zeros(n_mets, n_λ)
             diagm(λ)*M zeros(n_cons, n_ν) diagm(M * z - h)
         ]
-        if isnothing(dFdθ)
-            B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
-        else
-            B = dFdθ(z, ν, λ, θ)
-        end
+        B = dFdθ(z, ν, λ, θ)
     else
         #: slower
+        F(x, θ) = Array([
+            c - Ef(θ)' * x[n_vars.+(1:n_ν)] - M' * x[(n_vars+n_ν).+(1:n_λ)]
+            Ef(θ) * x[1:n_vars] - d
+            diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
+        ])
         A = ForwardDiff.jacobian(x -> F(x, θ), vars)
         B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
     end
 
-    dx = -A \ B #! will fail if det(A) = 0
+    dx = - sparse(A) \ Array(B) #! will fail if det(A) = 0
     dx = dx[1:n_vars, :] # only return derivatives of variables, not the duals
 
     # Scale dx/dy => dlog(x)/dlog(y)
@@ -110,7 +101,6 @@ function differentiate_QP(
     scale = true,
     modifications = [],
     dFdθ = nothing,
-    kkt_check = 1e-3,
 )
     Ef = opt.Ef
     hf = opt.hf
@@ -146,16 +136,6 @@ function differentiate_QP(
 
     vars = [z; ν; λ]
 
-    #: KKT function
-    F(x, θ) = [
-        Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] -
-        M' * x[(n_vars+n_ν).+(1:n_λ)]
-        Ef(θ) * x[1:n_vars] - d
-        diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
-    ]
-
-    @assert(maximum(abs.(F(vars, θ))) < kkt_check)
-    
     if use_analytic
         n_mets = size(Ef(θ), 1)
         n_cons = size(M, 1)
@@ -165,17 +145,21 @@ function differentiate_QP(
             Ef(θ) zeros(n_mets, n_ν) zeros(n_mets, n_λ)
             diagm(λ)*M zeros(n_cons, n_ν) diagm(M * z - hf(θ))
         ]
-        if isnothing(dFdθ)
-            B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
-        else
-            B = dFdθ(z, ν, λ, θ)
-        end
+        B = dFdθ(z, ν, λ, θ)
     else
+        #: KKT function
+        F(x, θ) = Array([
+            Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] -
+            M' * x[(n_vars+n_ν).+(1:n_λ)]
+            Ef(θ) * x[1:n_vars] - d
+            diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
+        ])
+
         A = ForwardDiff.jacobian(x -> F(x, θ), vars)
         B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
     end
 
-    dx = -A \ B #! will fail if det(A) = 0
+    dx = -sparse(A) \ Array(B) #! will fail if det(A) = 0
     dx = dx[1:n_vars, :] # only return derivatives of variables
 
     # normalize flux direction
@@ -202,7 +186,6 @@ function qp_objective_measured(
     vtol = 1e-3,
     etol = 1e-3,
     reg = 1e-1,
-    gsub = Dict(), # gene substitutions
 )
     n_vars = length(gids) + length(rids)
     c = zeros(n_vars)
@@ -220,22 +203,16 @@ function qp_objective_measured(
     end
     k = length(rids)
     for (i, gid) in enumerate(gids)
-        if haskey(gsub, gid)
-            scale = gsub[gid][2]
-        else
-            scale = 1.0
-        end
         if !haskey(obs_e_dict, gid) || abs(obs_e_dict[gid]) < etol
             q[k+i] = reg * scale
         else
-            c[k+i] = -1.0 / obs_e_dict[gid] * scale
-            q[k+i] = 1.0 / obs_e_dict[gid]^2 * scale^2
+            c[k+i] = -1.0 / obs_e_dict[gid]
+            q[k+i] = 1.0 / obs_e_dict[gid]^2
             n += 1
         end
     end
 
-    Q = diagm(q)
-    return Q, c, n
+    return spdiagm(q), sparse(c), n
 end
 
 

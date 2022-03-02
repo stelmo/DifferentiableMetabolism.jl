@@ -77,16 +77,16 @@ function differentiable_gecko_opt_problem(
         n_reactions,
     )
 
-    Ef(θ) = Array([
-        S zeros(n_metabolites, n_proteins)
+    Ef(θ) = [
+        S spzeros(n_metabolites, n_proteins)
         Se(θ) I(n_proteins)
-    ])
+    ]
 
     #: equality rhs
-    d = zeros(n_metabolites + n_proteins) #TODO handle fixed variables
+    d = spzeros(n_metabolites + n_proteins) #TODO handle fixed variables
 
     #: need to set objective reaction outside
-    c = zeros(n_vars)
+    c = spzeros(n_vars)
 
     #: inequality constraints
     M, hf = _gecko_build_inequality_constraints_as_functions(
@@ -176,7 +176,7 @@ function _gecko_build_inequality_constraints_as_functions(
 )
     #: inequality lhs
     mw_proteins = [protein_masses[pid] for pid in protein_ids]
-    M = Array(
+    M = sparse(
         [
             -I(n_reactions) zeros(n_reactions, n_proteins)
             I(n_reactions) zeros(n_reactions, n_proteins)
@@ -226,7 +226,7 @@ function _gecko_build_inequality_constraints_as_functions(
         pid in protein_ids
     ]
 
-    hf(θ) = Array([-lb_fluxes; ub_fluxes; -lb_proteins; ub_proteins; θ[end]])
+    hf(θ) = [-lb_fluxes; ub_fluxes; -lb_proteins; ub_proteins; θ[end]]
 
     return M, hf
 end
