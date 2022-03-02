@@ -70,7 +70,7 @@ function differentiate_LP(
         B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
     end
 
-    dx = - sparse(A) \ Array(B) #! will fail if det(A) = 0
+    dx = - sparse(A) \ B #! will fail if det(A) = 0
     dx = dx[1:n_vars, :] # only return derivatives of variables, not the duals
 
     # Scale dx/dy => dlog(x)/dlog(y)
@@ -159,7 +159,7 @@ function differentiate_QP(
         B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
     end
 
-    dx = -sparse(A) \ Array(B) #! will fail if det(A) = 0
+    dx = -sparse(A) \ B #! will fail if det(A) = 0
     dx = dx[1:n_vars, :] # only return derivatives of variables
 
     # normalize flux direction
@@ -251,12 +251,12 @@ function _block2(z, ν, λ, θ, opt_struct)
 end
 
 function manual_diff(opt_struct)
-    (z, ν, λ, θ) -> [
+    (z, ν, λ, θ) -> Array([
         _block1(z, ν, λ, θ, opt_struct)
         zeros(opt_struct.n_proteins, length(θ))
         zeros(opt_struct.n_metabolites, length(θ))
         _block2(z, ν, λ, θ, opt_struct)
         zeros(length(λ) - 1, length(θ))
         [zeros(length(θ) - 1); -λ[end]]'
-    ]
+    ]) # TODO is there a solver that works for A \ b with sparse b?
 end
