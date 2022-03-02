@@ -94,6 +94,7 @@ Implicitly differentiate the system and scale.
 function differentiate_QP(
     Q,
     c,
+    n,
     opt,
     θ,
     optimizer;
