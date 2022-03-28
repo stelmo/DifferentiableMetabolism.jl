@@ -142,3 +142,28 @@ function in_another_grr(model, current_rid, current_gid)
     end
     false
 end
+
+function rescale(mat, vec; verbose=false)
+    max_coeff_range = check_scaling(mat)
+    verbose && println("Coefficient range: ", max_coeff_range)
+    lb = -round(max_coeff_range, RoundUp) / 2.0
+    ub = round(max_coeff_range, RoundUp) / 2.0
+    
+    rsmat = similar(mat)
+    rsvec = similar(vec)
+    for (j, row) in enumerate(eachrow(mat))
+        llv, luv = extrema(log10 ∘ abs, row)
+        if lb <= llv && luv <= ub 
+            sf = 0.0
+        else # scale to upper bound
+            sf = ub - luv
+        end
+        rsmat[j, :] .= row .* 10^sf
+        rsvec[j] = vec[j] * 10^sf
+    end
+    
+    return rsmat, rsvec
+end
+
+check_scaling(mat) = maximum(maximum(desc.(mat), dims=2)[:] - minimum(desc.(mat), dims=2)[:])
+

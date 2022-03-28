@@ -10,7 +10,8 @@ function differentiate_LP(
     optimizer;
     sense = MOI.MIN_SENSE,
     use_analytic = true,
-    scale = true,
+    scale_input = false,
+    scale_output = true,
     modifications = [],
     dFdθ = nothing,
 )
@@ -21,6 +22,10 @@ function differentiate_LP(
     d = opt.d
 
     E = Ef(θ)
+    if scale_input
+        E, d = rescale(E, d)
+    end
+
     h = hf(θ)
 
     opt_model = Model(optimizer)
@@ -74,7 +79,7 @@ function differentiate_LP(
     dx = dx[1:n_vars, :] # only return derivatives of variables, not the duals
 
     # Scale dx/dy => dlog(x)/dlog(y)
-    if scale
+    if scale_output
         scaled_dx = similar(dx)
         for i = 1:size(dx, 1)
             for j = 1:size(dx, 2)
@@ -99,7 +104,8 @@ function differentiate_QP(
     θ,
     optimizer;
     use_analytic = true,
-    scale = true,
+    scale_input = false,
+    scale_output = true,
     modifications = [],
     dFdθ = nothing,
 )
@@ -109,6 +115,9 @@ function differentiate_QP(
     d = opt.d
 
     E = Ef(θ)
+    if scale_input
+        E, d = rescale(E, d)
+    end
     h = hf(θ)
 
     #: forward pass
@@ -164,7 +173,7 @@ function differentiate_QP(
     dx = dx[1:n_vars, :] # only return derivatives of variables
 
     # normalize flux direction
-    if scale
+    if scale_output
         ndx = similar(dx)
         for i = 1:size(dx, 1)
             for j = 1:size(dx, 2)
@@ -216,7 +225,6 @@ function qp_objective_measured(
     return spdiagm(q), sparse(c), n
 end
 
-
 function _block1(z, ν, λ, θ, opt_struct)
     row_idxs = Int[]
     col_idxs = Int[]
@@ -259,5 +267,5 @@ function manual_diff(opt_struct)
         _block2(z, ν, λ, θ, opt_struct)
         zeros(length(λ) - 1, length(θ))
         [zeros(length(θ) - 1); -λ[end]]'
-    ]) # TODO is there a solver that works for A \ b with sparse b?
+    ])
 end
