@@ -143,8 +143,8 @@ function in_another_grr(model, current_rid, current_gid)
     false
 end
 
-function rescale(mat, vec; verbose=false)
-    max_coeff_range = check_scaling(mat)
+function rescale(mat, vec; verbose=false, atol=1e-8)
+    max_coeff_range = check_scaling(mat; atol)
     verbose && println("Coefficient range: ", max_coeff_range)
     lb = -round(max_coeff_range, RoundUp) / 2.0
     ub = round(max_coeff_range, RoundUp) / 2.0
@@ -165,5 +165,6 @@ function rescale(mat, vec; verbose=false)
     return rsmat, rsvec
 end
 
-check_scaling(mat) = maximum(maximum(desc.(mat), dims=2)[:] - minimum(desc.(mat), dims=2)[:])
+desc(x; atol=1e-8) = abs(x) > atol && log10(abs(x))
+check_scaling(mat; atol=1e-8) = maximum(maximum(desc.(mat; atol), dims=2)[:] - minimum(desc.(mat; atol), dims=2)[:])
 
