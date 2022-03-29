@@ -5,6 +5,7 @@ using ForwardDiff
 using LinearAlgebra, SparseArrays, RowEchelon
 
 include("utils.jl")
+include("tgecko.jl")
 include("gecko.jl")
 include("smoment.jl")
 include("thermodynamic_smoment.jl")
