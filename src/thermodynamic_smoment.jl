@@ -17,7 +17,8 @@ function thermodynamic_smoment(
     sense = MOI.MAX_SENSE,
     modifications = [],
 )
-    _, E, d, M, h, reaction_map, _ = thermodynamic_smoment_opt_problem(
+
+    opt, opt_struct = thermodynamic_smoment_opt_problem(
         model;
         protein_stoichiometry,
         protein_masses,
@@ -26,10 +27,15 @@ function thermodynamic_smoment(
         lb_flux_measurements,
         ub_flux_measurements,
         metabolite_concentrations,
-        total_protein_mass,
         RT,
         ignore_reaction_ids,
     )
+
+    E = opt.E
+    d = opt.d
+    M = opt.M
+    h = opt.hf([total_protein_mass])
+    reaction_map = opt_struct.reaction_map
 
     opt_model = Model(optimizer)
     x = @variable(opt_model, x[1:size(E, 2)])
@@ -65,7 +71,6 @@ function thermodynamic_smoment_opt_problem(
     lb_flux_measurements = Dict(),
     ub_flux_measurements = Dict(),
     metabolite_concentrations = Dict(),
-    total_protein_mass = 0.0,
     RT = 298.15 * 8.314e-3,
     ignore_reaction_ids = [],
 )
@@ -134,7 +139,15 @@ function thermodynamic_smoment_opt_problem(
         reaction_map,
     )
 
-    return c, E, d, M, hf([total_protein_mass]), reaction_map, metabolite_map
+    opt = (c = c, E = E, d = d, M = M, hf = hf)
+    opt_struct = (
+        reaction_map = reaction_map,
+        metabolite_map = metabolite_map,
+        n_metabolites = n_metabolites,
+        n_reactions = n_reactions,
+    )
+
+    return opt, opt_struct 
 end
 
 """
@@ -255,5 +268,15 @@ function differentiable_thermodynamic_smoment_opt_problem(
         reaction_map,
     )
 
-    return c, Ef, d, M, hf, reaction_map, metabolite_map
+    opt = (c = c, Ef = Ef, d = d, M = M, hf = hf)
+    opt_struct = (
+        reaction_map = reaction_map,
+        metabolite_map = metabolite_map,
+        n_reactions = n_reactions,
+        n_metabolites = n_metabolites,
+        kcat_rid_order = kcat_rid_order,
+        met_conc_order = met_conc_order,
+    )
+
+    return opt, opt_struct
 end
