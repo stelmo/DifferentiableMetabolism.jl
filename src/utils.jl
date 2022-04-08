@@ -1,57 +1,4 @@
 """
-    remove_isozymes(model, reaction_kcats, protein_stoichiometry, gid_measurements)
-
-Remove isozymes that are not expressed.
-If multiple isozymes are expressed, pick one that has the highest expression.
-"""
-function remove_low_expressed_isozymes!(
-    model::StandardModel;
-    reaction_kcats = Dict(),
-    protein_stoichiometry = Dict(),
-    protein_masses = Dict(),
-    gid_measurements = Dict(),
-)
-
-    for rid in reactions(model)
-        if COBREXA._has_grr(model, rid)
-            measured_proteins = Float64[]
-            grrs = reaction_gene_association(model, rid)
-            for (i, grr) in enumerate(grrs)
-
-                push!(
-                    measured_proteins,
-                    sum(
-                        map(
-                            *,
-                            protein_stoichiometry[rid][i],
-                            [get(gid_measurements, gid, 0.0) for gid in grr],
-                            [protein_masses[gid] for gid in grr],
-                        ),
-                    ),
-                )
-            end
-            idx = argmax(measured_proteins)
-
-            model.reactions[rid].grr = [grrs[idx]]
-            reaction_kcats[rid] = [reaction_kcats[rid][idx]]
-            protein_stoichiometry[rid] = [protein_stoichiometry[rid][idx]]
-        end
-    end
-
-    curated_gids = String[]
-    for rid in reactions(model)
-        if COBREXA._has_grr(model, rid)
-            for grr in reaction_gene_association(model, rid)
-                append!(curated_gids, grr)
-            end
-        end
-    end
-    rm_gids = setdiff(genes(model), curated_gids)
-    delete!(model.genes, rm_gids) # remove genes that were deleted
-    return nothing
-end
-
-"""
     prune_model(
         model::StandardModel,
         reaction_fluxes;
@@ -143,17 +90,17 @@ function in_another_grr(model, current_rid, current_gid)
     false
 end
 
-function rescale(mat, vec; verbose=false, atol=1e-8)
+function rescale(mat, vec; verbose = false, atol = 1e-8)
     max_coeff_range, _ = check_scaling(mat; atol)
     verbose && println("Coefficient range: ", max_coeff_range)
     lb = -round(max_coeff_range, RoundUp) / 2.0
     ub = round(max_coeff_range, RoundUp) / 2.0
-    
+
     rsmat = similar(mat)
     rsvec = similar(vec)
     for (j, row) in enumerate(eachrow(mat))
         llv, luv = extrema(log10 ∘ abs, row)
-        if lb <= llv && luv <= ub 
+        if lb <= llv && luv <= ub
             sf = 0.0
         else # scale to upper bound
             sf = ub - luv
@@ -161,16 +108,18 @@ function rescale(mat, vec; verbose=false, atol=1e-8)
         rsmat[j, :] .= row .* 10^sf
         rsvec[j] = vec[j] * 10^sf
     end
-    
+
     return rsmat, rsvec
 end
 
-desc(x; atol=1e-8) = abs(x) > atol && log10(abs(x))
+desc(x; atol = 1e-8) = abs(x) > atol && log10(abs(x))
 
-function check_scaling(mat; atol=1e-8) 
-    best_case = maximum(maximum(desc.(mat; atol), dims=2)[:] - minimum(desc.(mat; atol), dims=2)[:])
+function check_scaling(mat; atol = 1e-8)
+    best_case = maximum(
+        maximum(desc.(mat; atol), dims = 2)[:] - minimum(desc.(mat; atol), dims = 2)[:],
+    )
     rlb, rub = log10.(extrema(filter(x -> x > atol, abs.(mat))))
     worst_case = rub - rlb
-    return best_case, worst_case 
+    return best_case, worst_case
 end
 

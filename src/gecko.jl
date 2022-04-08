@@ -1,5 +1,15 @@
 """
-
+    differentiate_gecko(
+        gm::GeckoModel,
+        optimizer;
+        objective_id = nothing,
+        ϵ = 1e-8,
+        stoich_digits_round = 8,
+        use_analytic = false,
+        scale_input = false,
+        scale_output = true,
+        modifications = [],
+    )
 
 Notes:
 1) `model` must be pruned, i.e. only active reactions, metabolites and genes.
@@ -8,27 +18,94 @@ Singularity issues will arise if not.
 isozyme.
 3) Rescale some columns to prevent numerical issues from arising
 """
+function differentiate_gecko(
+    gm::GeckoModel,
+    optimizer;
+    objective_id = nothing,
+    ϵ = 1e-8,
+    stoich_digits_round = 8,
+    use_analytic = false,
+    scale_input = false,
+    scale_output = true,
+    modifications = [],
+)
+
+    kcat_rid_order = [
+        rid for
+        rid in reactions(gm.smodel) if haskey(gm.enzymedata.reaction_kcats, rid) &&
+        COBREXA.has_reaction_grr(gm.smodel, rid)
+    ]
+    θ = [
+        [first(gm.enzymedata.reaction_kcats[rid][1]) for rid in kcat_rid_order]
+        gm.enzymedata.total_protein_mass
+    ]
+
+    opt, opt_struct =
+        differentiable_gecko_opt_problem(gm; kcat_rid_order, ϵ, stoich_digits_round)
+
+    if isnothing(objective_id)
+        obj_idx_orig = first(findnz(objective(gm.smodel))[1])
+        obj_id_orig = reactions(gm.smodel)[obj_idx_orig]
+        obj_idx = opt_struct.reaction_map[obj_id_orig*"§FOR"]
+    else
+        obj_idx = opt_struct.reaction_map[objective_id*"§FOR"]
+    end
+    opt.c[obj_idx] = -1.0 # max due to min sense
+
+    if use_analytic
+        dFdθ = analytic_gecko_derivatives(opt_struct)
+    else
+        dFdθ = nothing
+    end
+    x, dx, _ = differentiate_LP(
+        opt,
+        θ,
+        optimizer;
+        use_analytic,
+        scale_input,
+        scale_output,
+        modifications,
+        dFdθ,
+    )
+
+    # update geckomodel internals
+    gm.geckodata = GeckoData(
+        opt.c,
+        opt.Ef(θ),
+        opt.d,
+        opt.M,
+        opt.hf(θ),
+        opt_struct.reaction_map,
+        opt_struct.metabolite_map,
+        opt_struct.protein_ids,
+    )
+
+    return (
+        x = x,
+        dx = dx,
+        θ = θ,
+        rids = COBREXA._order_id_to_idx_dict(gm.geckodata.reaction_map),
+        pids = gm.geckodata.protein_ids,
+    )
+end
+
+"""
+Return optimization problem for gecko problem, but in differentiable format.
+"""
 function differentiable_gecko_opt_problem(
-    model::StandardModel;
-    protein_stoichiometry = Dict(),
-    protein_masses = Dict(),
-    reaction_kcats = Dict(),
-    lb_protein_measurements = Dict(),
-    ub_protein_measurements = Dict(),
-    lb_flux_measurements = Dict(),
-    ub_flux_measurements = Dict(),
+    model::GeckoModel;
     kcat_rid_order = [],
     ϵ = 1e-8,
     stoich_digits_round = 8,
 )
-    S_rank_issues, lb_fluxes, ub_fluxes, reaction_map, _ =
-        COBREXA._build_irreversible_stoichiometric_matrix(model)
+    S_rank_issues, lb_fluxes, ub_fluxes, reaction_map, metabolite_map =
+        COBREXA._build_irreversible_stoichiometric_matrix(model.smodel)
 
     #: make full rank
     S = round.(_remove_lin_dep_rows(S_rank_issues; ϵ), digits = stoich_digits_round)
 
     #: find all gene products that have kcats associated with them
-    protein_ids = COBREXA._get_proteins_with_kcats(model, reaction_kcats)
+    protein_ids = COBREXA._get_proteins_with_kcats(model)
 
     #: size of resultant model
     n_reactions = size(S, 2)
@@ -51,14 +128,13 @@ function differentiable_gecko_opt_problem(
             @warn "Isozyme found, unexpected!"
             continue
         end
-        !haskey(reaction_kcats, original_rid) && continue
+        !haskey(model.enzymedata.reaction_kcats, original_rid) && continue
 
         # add all entries to column of matrix
         #! no isozymes by assumption and all unidirectional
         _add_enzyme_variable_as_function(
             model,
             original_rid,
-            protein_stoichiometry,
             E_components,
             col_idx,
             protein_ids,
@@ -69,6 +145,7 @@ function differentiable_gecko_opt_problem(
         (pst, first(indexin([rid], kcat_rid_order))) for
         (pst, rid) in E_components.coeff_tuple
     ]
+
     Se(θ) = sparse(
         E_components.row_idxs,
         E_components.col_idxs,
@@ -89,23 +166,21 @@ function differentiable_gecko_opt_problem(
     c = spzeros(n_vars)
 
     #: inequality constraints
-    M, hf = _gecko_build_inequality_constraints_as_functions(
-        lb_protein_measurements,
-        ub_protein_measurements,
+    M, h = COBREXA._gecko_build_inequality_constraints(
+        model,
         protein_ids,
-        protein_masses,
         n_reactions,
         n_proteins,
-        lb_flux_measurements,
-        ub_flux_measurements,
         lb_fluxes,
         ub_fluxes,
         reaction_map,
     )
+    hf(θ) = [h[1:end-1]; last(θ)]
 
-    opt = (c = c, Ef = Ef, d = d, M = M, hf = hf)
+    opt = (c = c, Ef = Ef, d = d, M = sparse(M), hf = hf)
     opt_struct = (
         reaction_map = reaction_map,
+        metabolite_map = metabolite_map,
         protein_ids = protein_ids,
         kcat_rid_order = kcat_rid_order,
         row_idxs = E_components.row_idxs,
@@ -120,21 +195,18 @@ function differentiable_gecko_opt_problem(
 end
 
 """
-    _add_enzyme_variable_as_function(model, rid, original_rid, protein_stoichiometry, reaction_kcats, E_components, col_idx, protein_ids)
-
-Helper function to add an column into the enzyme stoichiometric matrix parametrically. Note, 
-assumes only one grr.
+Helper function to add an column into the enzyme stoichiometric matrix
+parametrically. Note, assumes only one grr.
 """
 function _add_enzyme_variable_as_function(
-    model,
+    model::GeckoModel,
     original_rid,
-    protein_stoichiometry,
     E_components,
     col_idx,
     protein_ids,
 )
     grr = reaction_gene_association(model, original_rid)[1] #! assumes both kcats are the same (appropriate one duplicated)
-    pstoich = protein_stoichiometry[original_rid][1] #! requires pruned protein_stoichiometry
+    pstoich = model.enzymedata.reaction_protein_stoichiometry[original_rid][1] #! requires pruned protein_stoichiometry
     for (idx, pid) in enumerate(grr)
         push!(E_components.row_idxs, first(indexin([pid], protein_ids)))
         push!(E_components.col_idxs, col_idx)
@@ -143,90 +215,57 @@ function _add_enzyme_variable_as_function(
 end
 
 """
-    _gecko_build_inequality_constraints_as_functions(
-        lb_protein_measurements,
-        ub_protein_measurements,
-        protein_ids,
-        protein_masses,
-        n_reactions,
-        n_proteins,
-        lb_flux_measurements,
-        ub_flux_measurements,
-        lb_fluxes,
-        ub_fluxes,
-        reaction_map,
-    )
-
-Helper function to build inequality constraints. Returns M and h, but h is a
-function taking a vector, θ (M is a matrix). The last element in θ is taken as
-the total protein content and is the only part of θ that is used.
+Helper function to get gecko problem derivatives analytically.
 """
-function _gecko_build_inequality_constraints_as_functions(
-    lb_protein_measurements,
-    ub_protein_measurements,
-    protein_ids,
-    protein_masses,
-    n_reactions,
-    n_proteins,
-    lb_flux_measurements,
-    ub_flux_measurements,
-    lb_fluxes,
-    ub_fluxes,
-    reaction_map,
-)
-    #: inequality lhs
-    mw_proteins = [protein_masses[pid] for pid in protein_ids]
-    M = sparse(
+function _block1_gecko_derivatives(z, ν, λ, θ, opt_struct)
+    row_idxs = Int[]
+    col_idxs = Int[]
+    vals = Float64[]
+    ν_star = ν[(1+opt_struct.n_metabolites):end]
+
+    for (idx, jdx, v) in zip(opt_struct.row_idxs, opt_struct.col_idxs, opt_struct.vals)
+        coeff, kcat_idx = v
+        push!(col_idxs, kcat_idx)
+        push!(row_idxs, jdx)
+        push!(vals, ν_star[idx] * coeff * 1.0 / θ[kcat_idx]^2) # negative multiplied through
+    end
+    n_rows = opt_struct.n_reactions
+    n_cols = length(θ)
+    sparse(row_idxs, col_idxs, vals, n_rows, n_cols)
+end
+
+"""
+Helper function to get gecko problem derivatives analytically.
+"""
+function _block2_gecko_derivatives(z, ν, λ, θ, opt_struct)
+    row_idxs = Int[]
+    col_idxs = Int[]
+    vals = Float64[]
+
+    for (idx, jdx, v) in zip(opt_struct.row_idxs, opt_struct.col_idxs, opt_struct.vals)
+        coeff, kcat_idx = v
+        push!(col_idxs, kcat_idx)
+        push!(row_idxs, idx)
+        push!(vals, z[jdx] * coeff * -1.0 / θ[kcat_idx]^2)
+    end
+    n_rows = opt_struct.n_proteins
+    n_cols = length(θ)
+    sparse(row_idxs, col_idxs, vals, n_rows, n_cols)
+end
+
+"""
+Analytic derivative of KKT conditions for GECKO type problems. 
+Much faster than autodiff approach.
+"""
+function analytic_gecko_derivatives(opt_struct)
+    (z, ν, λ, θ) -> Array(
         [
-            -I(n_reactions) zeros(n_reactions, n_proteins)
-            I(n_reactions) zeros(n_reactions, n_proteins)
-            zeros(n_proteins, n_reactions) -I(n_proteins)
-            zeros(n_proteins, n_reactions) I(n_proteins)
-            zeros(1, n_reactions) mw_proteins'
+            _block1_gecko_derivatives(z, ν, λ, θ, opt_struct)
+            zeros(opt_struct.n_proteins, length(θ))
+            zeros(opt_struct.n_metabolites, length(θ))
+            _block2_gecko_derivatives(z, ν, λ, θ, opt_struct)
+            zeros(length(λ) - 1, length(θ))
+            [zeros(length(θ) - 1); -λ[end]]'
         ],
     )
-
-    #: inequality rhs
-    for original_rid in keys(lb_flux_measurements) # only constrain if measurement available
-        lb = lb_flux_measurements[original_rid]
-        ub = ub_flux_measurements[original_rid]
-        rids = [rid for rid in keys(reaction_map) if startswith(rid, original_rid)]
-
-        any(contains(x, "§ISO") for x in rids) &&
-            @warn("Isozyme detected, unexpected behaviour!")
-
-        if lb > 0 # forward only
-            for rid in rids
-                contains(rid, "§REV") && (ub_fluxes[reaction_map[rid]] = 0.0)
-                contains(rid, "§FOR") &&
-                    (ub_fluxes[reaction_map[rid]] = ub; lb_fluxes[reaction_map[rid]] = lb)
-            end
-        elseif ub < 0 # reverse only
-            for rid in rids
-                contains(rid, "§FOR") && (ub_fluxes[reaction_map[rid]] = 0.0)
-                contains(rid, "§REV") &&
-                    (ub_fluxes[reaction_map[rid]] = -lb; lb_fluxes[reaction_map[rid]] = -ub)
-            end
-        else # measurement does not rule our reversibility
-            for rid in rids
-                contains(rid, "§FOR") &&
-                    (ub_fluxes[reaction_map[rid]] = ub; lb_fluxes[reaction_map[rid]] = 0)
-                contains(rid, "§REV") &&
-                    (ub_fluxes[reaction_map[rid]] = -lb; lb_fluxes[reaction_map[rid]] = 0)
-            end
-        end
-    end
-
-    lb_proteins = [
-        haskey(lb_protein_measurements, pid) ? lb_protein_measurements[pid] : 0.0 for
-        pid in protein_ids
-    ]
-    ub_proteins = [
-        haskey(ub_protein_measurements, pid) ? ub_protein_measurements[pid] : 1000.0 for
-        pid in protein_ids
-    ]
-
-    hf(θ) = [-lb_fluxes; ub_fluxes; -lb_proteins; ub_proteins; θ[end]]
-
-    return M, hf
 end

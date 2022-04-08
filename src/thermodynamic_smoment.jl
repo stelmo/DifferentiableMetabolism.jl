@@ -1,153 +1,84 @@
 """
 """
-function thermodynamic_smoment(
-    model::StandardModel,
+function differentiate_thermodynamic_smoment(
+    smm::SMomentModel,
     optimizer;
-    objective_id = "",
-    protein_stoichiometry = Dict(),
-    protein_masses = Dict(),
-    reaction_kcats = Dict(),
     reaction_dg0s = Dict(),
-    lb_flux_measurements = Dict(),
-    ub_flux_measurements = Dict(),
     metabolite_concentrations = Dict(),
-    total_protein_mass = 0.0,
     RT = 298.15 * 8.314e-3,
     ignore_reaction_ids = [],
-    sense = MOI.MAX_SENSE,
     modifications = [],
+    ϵ = 1e-8,
+    objective_id = nothing,
+    stoich_digits_round = 8,
+    scale_input = false,
+    scale_output = true,
 )
 
-    opt, opt_struct = thermodynamic_smoment_opt_problem(
-        model;
-        protein_stoichiometry,
-        protein_masses,
-        reaction_kcats,
-        reaction_dg0s,
-        lb_flux_measurements,
-        ub_flux_measurements,
-        metabolite_concentrations,
-        RT,
-        ignore_reaction_ids,
-    )
-
-    E = opt.E
-    d = opt.d
-    M = opt.M
-    h = opt.hf([total_protein_mass])
-    reaction_map = opt_struct.reaction_map
-
-    opt_model = Model(optimizer)
-    x = @variable(opt_model, x[1:size(E, 2)])
-    bid = reaction_map[objective_id]
-    @objective(opt_model, sense, x[bid])
-    @constraint(opt_model, E * x .== d)
-    @constraint(opt_model, M * x .<= h)
-
-    # apply the modifications, if any
-    for mod in modifications
-        mod(nothing, opt_model)
-    end
-
-    optimize!(opt_model)
-
-    COBREXA._map_irrev_to_rev_ids(reaction_map, value.(x))
-end
-
-"""
-
-Return structures that will allow the most basic form of 
-thermokinetic smoment to be solved. No enzyme constraints allowed.
-Most effective enzyme is the only GRR.
-
-Assume unidirectional reactions!
-"""
-function thermodynamic_smoment_opt_problem(
-    model::StandardModel;
-    protein_stoichiometry = Dict(),
-    protein_masses = Dict(),
-    reaction_kcats = Dict(),
-    reaction_dg0s = Dict(),
-    lb_flux_measurements = Dict(),
-    ub_flux_measurements = Dict(),
-    metabolite_concentrations = Dict(),
-    RT = 298.15 * 8.314e-3,
-    ignore_reaction_ids = [],
-)
-
-    S, lb_fluxes, ub_fluxes, reaction_map, metabolite_map =
-        COBREXA._build_irreversible_stoichiometric_matrix(model)
-
-    #: size of resultant model
-    n_reactions = size(S, 2)
-    n_metabolites = size(S, 1)
-    n_vars = n_reactions + 1
-
-    #: equality lhs
-    Se = zeros(1, n_reactions)
-
-    for (rid, col_idx) in reaction_map
-        original_rid = string(split(rid, "§")[1])
-
-        # skip these entries
-        !haskey(reaction_kcats, original_rid) && continue
-        original_rid in ignore_reaction_ids && continue
-
-        # these entries have kcats, only one GRR by assumption
-        grr = first(reaction_gene_association(model, original_rid))
-        pstoich = first(protein_stoichiometry[original_rid])
-        mw = dot(pstoich, [protein_masses[gid] for gid in grr])
-        kcat =
-            contains(rid, "§FOR") ? first(reaction_kcats[original_rid])[1] :
-            first(reaction_kcats[original_rid])[2]
-
-        thermo_factor = 1.0
-        if haskey(reaction_dg0s, original_rid)
-            rstoich = reaction_stoichiometry(model, original_rid)
-            if all(in.(keys(rstoich), Ref(keys(metabolite_concentrations))))
-                dg =
-                    reaction_dg0s[original_rid] +
-                    RT * sum(
-                        rstoich[mid] * log(metabolite_concentrations[mid]) for
-                        mid in keys(rstoich)
-                    )
-                sf = dg < 0.0 ? 1.0 : -1.0
-                thermo_factor = 1 - exp(sf * dg / RT)
-            end
-        end
-        Se[1, col_idx] = -mw / (kcat * thermo_factor)
-    end
-
-    E = [
-        S zeros(n_metabolites, 1)
-        Se 1.0
+    kcat_rid_order = [
+        rid for
+        rid in reactions(smm.smodel) if haskey(smm.enzymedata.reaction_kcats, rid) &&
+        COBREXA.has_reaction_grr(smm.smodel, rid)
     ]
 
-    #: equality rhs
-    d = zeros(n_metabolites + 1)
+    met_conc_order =
+        [mid for mid in metabolites(smm.smodel) if haskey(metabolite_concentrations, mid)]
 
-    #: need to set objective reaction outside
-    c = spzeros(n_vars)
+    θ = [
+        [first(smm.enzymedata.reaction_kcats[rid][1]) for rid in kcat_rid_order]
+        [metabolite_concentrations[mid] for mid in met_conc_order]
+        smm.enzymedata.total_protein_mass
+    ]
 
-    #: inequality constraints
-    M, hf = _smoment_build_inequality_constraints_as_functions(
-        n_reactions,
-        lb_flux_measurements,
-        ub_flux_measurements,
-        lb_fluxes,
-        ub_fluxes,
-        reaction_map,
+    opt, opt_struct = differentiable_thermodynamic_smoment_opt_problem(
+        smm;
+        reaction_dg0s,
+        kcat_rid_order,
+        met_conc_order,
+        ϵ,
+        RT,
+        ignore_reaction_ids,
+        stoich_digits_round,
     )
 
-    opt = (c = c, E = E, d = d, M = M, hf = hf)
-    opt_struct = (
-        reaction_map = reaction_map,
-        metabolite_map = metabolite_map,
-        n_metabolites = n_metabolites,
-        n_reactions = n_reactions,
+    if isnothing(objective_id)
+        obj_idx_orig = first(findnz(objective(smm.smodel))[1])
+        obj_id_orig = reactions(smm.smodel)[obj_idx_orig]
+        obj_idx = opt_struct.reaction_map[obj_id_orig*"§FOR"]
+    else
+        obj_idx = opt_struct.reaction_map[objective_id*"§FOR"]
+    end
+    opt.c[obj_idx] = -1.0 # max due to min sense
+
+    x, dx, _ = differentiate_LP(
+        opt,
+        θ,
+        optimizer;
+        use_analytic = false, # no analytic option
+        scale_input,
+        scale_output,
+        modifications,
     )
 
-    return opt, opt_struct 
+    # update smoment internals
+    smm.smomentdata = SMomentData(
+        opt.c,
+        opt.Ef(θ),
+        opt.d,
+        opt.M,
+        opt.hf(θ),
+        opt_struct.reaction_map,
+        opt_struct.metabolite_map,
+    )
+
+    return (
+        x = x,
+        dx = dx,
+        θ = θ,
+        rids = COBREXA._order_id_to_idx_dict(opt_struct.reaction_map),
+        kcat_rid_order,
+        met_conc_order,
+    )
 end
 
 """
@@ -156,25 +87,21 @@ smoment to be solved. No enzyme constraints allowed.
 Most effective enzyme is the only GRR. Assume unidirectional reactions.
 """
 function differentiable_thermodynamic_smoment_opt_problem(
-    model::StandardModel;
-    protein_stoichiometry = Dict(),
-    protein_masses = Dict(),
+    smm::SMomentModel;
     reaction_dg0s = Dict(),
-    reaction_kcats = Dict(),
-    lb_flux_measurements = Dict(),
-    ub_flux_measurements = Dict(),
     kcat_rid_order = [],
     met_conc_order = [],
     ϵ = 1e-8,
     RT = 298.15 * 8.314e-3,
     ignore_reaction_ids = [],
+    stoich_digits_round = 8,
 )
 
     S_rank_issues, lb_fluxes, ub_fluxes, reaction_map, metabolite_map =
-        COBREXA._build_irreversible_stoichiometric_matrix(model)
+        COBREXA._build_irreversible_stoichiometric_matrix(smm.smodel)
 
     #: make full rank
-    S = _remove_lin_dep_rows(S_rank_issues; ϵ)
+    S = round.(_remove_lin_dep_rows(S_rank_issues; ϵ), digits = stoich_digits_round)
 
     #: size of resultant model
     n_reactions = size(S, 2)
@@ -192,15 +119,15 @@ function differentiable_thermodynamic_smoment_opt_problem(
         original_rid = string(split(rid, "§")[1])
 
         # skip these entries
-        !haskey(reaction_kcats, original_rid) && continue
+        !haskey(smm.enzymedata.reaction_kcats, original_rid) && continue
         original_rid in ignore_reaction_ids && continue
 
         # these entries have kcats, only one GRR by assumption
-        grr = first(reaction_gene_association(model, original_rid))
-        pstoich = first(protein_stoichiometry[original_rid])
-        mw = dot(pstoich, [protein_masses[gid] for gid in grr])
-        rs = reaction_stoichiometry(model, original_rid)
-        dir = COBREXA._is_forward_only(model, original_rid) ? 1.0 : -1.0 # unidirectional by assumption
+        grr = first(reaction_gene_association(smm.smodel, original_rid))
+        pstoich = first(smm.enzymedata.reaction_protein_stoichiometry[original_rid])
+        mw = dot(pstoich, [smm.enzymedata.protein_masses[gid] for gid in grr])
+        rs = reaction_stoichiometry(smm.smodel, original_rid)
+        dir = COBREXA.is_reaction_forward_only(smm.smodel, original_rid) ? 1.0 : -1.0 # unidirectional by assumption
 
         # kinetic info
         push!(kcat_original_rid_order, original_rid)
@@ -253,22 +180,22 @@ function differentiable_thermodynamic_smoment_opt_problem(
     ]
 
     #: equality rhs
-    d = zeros(n_metabolites + 1)
+    d = spzeros(n_metabolites + 1)
 
     #: need to set objective reaction outside
-    c = zeros(n_vars)
+    c = spzeros(n_vars)
 
     #: inequality constraints
-    M, hf = _smoment_build_inequality_constraints_as_functions(
+    M, h = COBREXA._smoment_build_inequality_constraints(
+        smm,
         n_reactions,
-        lb_flux_measurements,
-        ub_flux_measurements,
         lb_fluxes,
         ub_fluxes,
         reaction_map,
     )
+    hf(θ) = [h[1:end-1]; last(θ)]
 
-    opt = (c = c, Ef = Ef, d = d, M = M, hf = hf)
+    opt = (c = c, Ef = Ef, d = d, M = sparse(M), hf = hf)
     opt_struct = (
         reaction_map = reaction_map,
         metabolite_map = metabolite_map,

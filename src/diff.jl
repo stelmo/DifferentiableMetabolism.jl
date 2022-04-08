@@ -1,16 +1,13 @@
 """
-
 Implicitly differentiate the system and scale.
 
 """
 function differentiate_LP(
-    c,
     opt,
     θ,
     optimizer;
-    sense = MOI.MIN_SENSE,
-    use_analytic = true,
-    scale_input = false,
+    use_analytic = false,
+    scale_input = true,
     scale_output = true,
     modifications = [],
     dFdθ = nothing,
@@ -23,6 +20,8 @@ function differentiate_LP(
 
     E = Ef(θ)
     if scale_input
+        !use_analytic &&
+            throw(ArgumentError("Can only scale if user supplies parameter derivative.")) # can only scale if using analytic deriv
         E, d = rescale(E, d)
     end
 
@@ -31,7 +30,7 @@ function differentiate_LP(
     opt_model = Model(optimizer)
     set_silent(opt_model)
     x = @variable(opt_model, x[1:size(E, 2)])
-    @objective(opt_model, sense, c' * x)
+    @objective(opt_model, Min, opt.c' * x)
     @constraint(opt_model, eq, E * x .== d)
     @constraint(opt_model, ineq, M * x .<= h)
 
@@ -63,19 +62,22 @@ function differentiate_LP(
             E zeros(n_mets, n_ν) zeros(n_mets, n_λ)
             diagm(λ)*M zeros(n_cons, n_ν) diagm(M * z - h)
         ]
+        isnothing(dFdθ) && throw(
+            ArgumentError("Need to supply analytic derivative of parameter functions."),
+        )
         B = dFdθ(z, ν, λ, θ)
     else
-        #: slower
-        F(x, θ) = Array([
-            c - Ef(θ)' * x[n_vars.+(1:n_ν)] - M' * x[(n_vars+n_ν).+(1:n_λ)]
-            Ef(θ) * x[1:n_vars] - d
-            diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
-        ])
+        #: slower (need to cast to arrays for ForwardDiff)
+        F(x, θ) = [
+            Array(opt.c) - Ef(θ)' * x[n_vars.+(1:n_ν)] - M' * x[(n_vars+n_ν).+(1:n_λ)]
+            Ef(θ) * x[1:n_vars] - Array(d)
+            diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (Array(M) * x[1:n_vars] - hf(θ))
+        ]
         A = ForwardDiff.jacobian(x -> F(x, θ), vars)
         B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
     end
 
-    dx = - sparse(A) \ B #! will fail if det(A) = 0
+    dx = -sparse(A) \ B #! will fail if det(A) = 0
     dx = dx[1:n_vars, :] # only return derivatives of variables, not the duals
 
     # Scale dx/dy => dlog(x)/dlog(y)
@@ -93,7 +95,6 @@ function differentiate_LP(
 end
 
 """
-
 Implicitly differentiate the system and scale.
 """
 function differentiate_QP(
@@ -158,12 +159,14 @@ function differentiate_QP(
         B = dFdθ(z, ν, λ, θ)
     else
         #: KKT function
-        F(x, θ) = Array([
-            Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] -
-            M' * x[(n_vars+n_ν).+(1:n_λ)]
-            Ef(θ) * x[1:n_vars] - d
-            diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
-        ])
+        F(x, θ) = Array(
+            [
+                Q * x[1:n_vars] + c - Ef(θ)' * x[n_vars.+(1:n_ν)] -
+                M' * x[(n_vars+n_ν).+(1:n_λ)]
+                Ef(θ) * x[1:n_vars] - d
+                diagm(x[(n_vars+n_ν).+(1:n_λ)]) * (M * x[1:n_vars] - hf(θ))
+            ],
+        )
 
         A = ForwardDiff.jacobian(x -> F(x, θ), vars)
         B = ForwardDiff.jacobian(θ -> F(vars, θ), θ)
@@ -225,47 +228,4 @@ function qp_objective_measured(
     return spdiagm(q), sparse(c), n
 end
 
-function _block1(z, ν, λ, θ, opt_struct)
-    row_idxs = Int[]
-    col_idxs = Int[]
-    vals = Float64[]
-    ν_star = ν[(1+opt_struct.n_metabolites):end]
 
-    for (idx, jdx, v) in zip(opt_struct.row_idxs, opt_struct.col_idxs, opt_struct.vals)
-        coeff, kcat_idx = v
-        push!(col_idxs, kcat_idx)
-        push!(row_idxs, jdx)
-        push!(vals, ν_star[idx] * coeff * 1.0 / θ[kcat_idx]^2) # negative multiplied through
-    end
-    n_rows = opt_struct.n_reactions
-    n_cols = length(θ)
-    sparse(row_idxs, col_idxs, vals, n_rows, n_cols)
-end
-
-
-function _block2(z, ν, λ, θ, opt_struct)
-    row_idxs = Int[]
-    col_idxs = Int[]
-    vals = Float64[]
-
-    for (idx, jdx, v) in zip(opt_struct.row_idxs, opt_struct.col_idxs, opt_struct.vals)
-        coeff, kcat_idx = v
-        push!(col_idxs, kcat_idx)
-        push!(row_idxs, idx)
-        push!(vals, z[jdx] * coeff * -1.0 / θ[kcat_idx]^2)
-    end
-    n_rows = opt_struct.n_proteins
-    n_cols = length(θ)
-    sparse(row_idxs, col_idxs, vals, n_rows, n_cols)
-end
-
-function manual_diff(opt_struct)
-    (z, ν, λ, θ) -> Array([
-        _block1(z, ν, λ, θ, opt_struct)
-        zeros(opt_struct.n_proteins, length(θ))
-        zeros(opt_struct.n_metabolites, length(θ))
-        _block2(z, ν, λ, θ, opt_struct)
-        zeros(length(λ) - 1, length(θ))
-        [zeros(length(θ) - 1); -λ[end]]'
-    ])
-end
