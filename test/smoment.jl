@@ -1,52 +1,52 @@
 @testset "Differentiable SMOMENT" begin
     #: Set problem up 
-    model, rid_isozymes = import_core_model_and_data();
-    change_bound!(model, "EX_glc__D_e"; lower = -1000.0)
-    total_protein_mass = 100 # mg/gdW
-    
-    remove_slow_isozymes!(
-        model,
-        rid_isozymes,
-    )
-    smm = SMomentModel(
-        model;
-        rid_isozymes,
-        enzyme_capacity = total_protein_mass,
+    stdmodel, reaction_isozymes, _, gene_product_molar_mass, _ = create_test_model()
+
+    smm = make_smoment_model(
+        stdmodel;
+        reaction_isozyme = Dict(k => first(v) for (k, v) in reaction_isozymes),
+        gene_product_molar_mass,
+        total_enzyme_capacity = 1.0,
     )
 
-    rxn_fluxes = flux_balance_analysis_dict(smm, CPLEX.Optimizer)
+    rid_enzyme = Dict(
+        k => isozyme_to_enzyme(first(v), gene_product_molar_mass; direction = :forward)
+        for (k, v) in reaction_isozymes
+    )
 
-    pruned_model = prune_model(model, rxn_fluxes)
-    
-    #: remove isozymes no longer in model 
-    delete!.(
-        Ref(rid_isozymes), 
-        filter(x->!haskey(pruned_model.reactions, x), keys(rid_isozymes)),
-    );
-    
-    simplified_smm = SMomentModel(
-        pruned_model;
-        rid_isozymes,
-        enzyme_capacity = total_protein_mass,
-    ) 
-    rxn_fluxes = flux_balance_analysis_dict(simplified_smm, CPLEX.Optimizer)
+    #: Get SMoment solution for comparison
+    fluxes = flux_balance_analysis_dict(
+        smm,
+        Tulip.Optimizer;
+        modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
+    )
 
-    rid_enzyme = isozyme_to_enzyme(model, rid_isozymes) 
-
-    #: differentiate model 
-    diffmodel = with_parameters(
-        simplified_smm, 
-        rid_enzyme,
-    ) 
+    #: Diffeentiate model 
+    diffmodel = with_parameters(smm, rid_enzyme)
 
     x, dx = differentiate(
         diffmodel,
-        CPLEX.Optimizer,
+        Tulip.Optimizer;
+        use_analytic = false,
+        modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
     )
+    
+    # test if COBREXA Smoment is the same as the differentiable one 
+    sol = Dict(reactions(smm) .=> x)
+    @test isapprox(sol["r1"], fluxes["r1"]; atol = TEST_TOLERANCE)
+    @test isapprox(sol["r6"], fluxes["r6"]; atol = TEST_TOLERANCE)
 
-    @test isapprox(
-        sum(round.(dx, digits = 6)),
-        95.23119400000002;
-        atol = TEST_TOLERANCE,
-    )
+    # test if reference solution is attained
+    dx_ref = [
+        0.251908  0.160305  0.587786
+        0.251908  0.160305  0.587786
+        0.251908  0.160305  0.587786
+        0.251908  0.160305  0.587786
+        0.251908  0.160305  0.587786
+        0.251908  0.160305  0.587786
+        0.251908  0.160305  0.587786
+    ]
+    @test all([
+        isapprox(dx_ref[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx)
+    ])
 end

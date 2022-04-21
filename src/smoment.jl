@@ -1,38 +1,48 @@
 """
     $(TYPEDSIGNATURES)
 
-Construct a [`DifferentiableModel`](@ref) from a [`SMomentModel`]. Each variable
-in `gm` is differentiated with respect to the kcats in the dictionary
-`rid_enzyme`, which is a dictionary mapping reaction ids to [`Enzyme`](@ref)s.
-Only an active solution may be differentiated, i.e. the model should not possess
-any isozymes, all reactions are unidirectinal, and the kcats in `rid_enzyme`
-should be for the appropriate direction used in the model. Use
-[`prune_model`](@ref) to ensure that an appropriate model is differentiated.  
+Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.SMomentModel`](@ref).
+Each variable in `smm` is differentiated with respect to the kcats in the
+dictionary `rid_enzyme`, which is a dictionary mapping reaction ids to
+[`Enzyme`](@ref)s.Enzyme constraints are only taken with respect to the entries
+of `rid_enzyme`.
+
+The analytic derivative of the optimality conditions with respect to the
+parameters can be supplied through `analytic_parameter_derivatives`. Internally,
+`ϵ`, `atol`, and `digits`, are forwarded to [`_remove_lin_dep_rows`](@ref). 
+
+Note, to ensure differentiability, preprocessing of the model is required. In short,
+only an active solution may be differentiated, this required that:
+- the model does not possess any isozymes
+- all the reactions should be unidirectinal
+- the kcats in `rid_enzyme` are for the appropriate direction used in the model
 """
 function with_parameters(
     smm::SMomentModel, 
     rid_enzyme::Dict{String, Enzyme};
-    analytic_parameter_derivatives= x -> nothing,
+    analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
-    stoich_digits_round = 8
+    atol = 1e-12,
+    digits = 8,
 )   
     param_ids = "k#" .* collect(keys(rid_enzyme))
     θ = [x.kcat for x in values(rid_enzyme)]
 
-    c, Sf, d, M, hf, var_ids = differentiable_smoment_opt_problem(
+    c, E, d, M, h, var_ids = differentiable_smoment_opt_problem(
         smm,
         rid_enzyme;
         ϵ,
-        stoich_digits_round,
+        atol,
+        digits,
     )
 
     return DifferentiableModel(
-        spzeros(0,0),
+        _ -> spzeros(length(var_ids),length(var_ids)),
         c,
-        Sf,
+        E,
         d,
         M, 
-        hf,
+        h,
         θ,
         analytic_parameter_derivatives,
         param_ids,
@@ -48,68 +58,70 @@ No enzyme constraints allowed. Assume preprocessing changes model such that most
 effective enzyme is the only GRR.
 """
 function differentiable_smoment_opt_problem(
-    model::SMomentModel,
+    smm::SMomentModel,
     rid_enzyme::Dict{String, Enzyme};
     ϵ = 1e-8,
-    stoich_digits_round = 8,
+    atol = 1e-12,
+    digits = 8,
 )
 
     #: get irreverible stoichiometric matrix from model
-    irrev_S = model.S[1:length(model.metabolites), 1:length(model.irrev_reaction_ids)]
+    irrev_S = stoichiometry(smm.inner) * COBREXA._smoment_column_reactions(smm)
 
     #: make full rank
-    S = round.(_remove_lin_dep_rows(irrev_S; ϵ), digits = stoich_digits_round)
+    S = DifferentiableMetabolism._remove_lin_dep_rows(irrev_S; ϵ, digits, atol)
 
     #: size of resultant model
     num_reactions = size(S, 2)
     num_metabolites = size(S, 1)
-    num_vars = num_reactions + 1
 
     #: equality lhs
+    E = _ -> S
+
+    #: equality rhs
+    d = _ -> spzeros(num_metabolites) #TODO handle fixed variables
+
+    #: objective inferred from model
+    c = _ -> -objective(smm)
+
+    #: coupling to kcats
     kcat_original_rid_order = String[]
     col_idxs = Int[]
-    neg_mws = Float64[]
-    for (col_idx, rid) in enumerate(model.irrev_reaction_ids)
-        original_rid = string(split(rid, "§")[1])
+    mws = Float64[]
+    for (col_idx, rid) in enumerate(reactions(smm))
+        original_rid = string(first(split(rid, "#")))
 
         # skip these entries
         !haskey(rid_enzyme, original_rid) && continue
 
         # these entries have kcats, only one GRR by assumption
-        mw = sum([pstoich * rid_enzyme[original_rid].molar_masses[gid] for (gid, pstoich) in rid_enzyme[original_rid].stoichiometry])
+        mw = sum([pstoich * rid_enzyme[original_rid].gene_product_mass[gid] for (gid, pstoich) in rid_enzyme[original_rid].gene_product_count])
         push!(kcat_original_rid_order, original_rid)
         push!(col_idxs, col_idx)
-        push!(neg_mws, -mw)
+        push!(mws, mw)
     end
 
     kcat_idxs = [
-        (first(indexin([rid], collect(keys(rid_enzyme)))), nmw) for
-        (rid, nmw) in zip(kcat_original_rid_order, neg_mws)
+        (first(indexin([rid], collect(keys(rid_enzyme)))), mw) for
+        (rid, mw) in zip(kcat_original_rid_order, mws)
     ]
 
-    fSe(θ) = sparsevec(col_idxs, [nmw / θ[x] for (x, nmw) in kcat_idxs], num_reactions)
+    kcat_coupling(θ) = sparsevec(col_idxs, [mw / θ[x] for (x, mw) in kcat_idxs], num_reactions)
 
-    Ef(θ) = [
-        Array(S) zeros(num_metabolites, 1)
-        fSe(θ)' 1.0
+    #: inequality rhs
+    Cp = coupling(smm.inner)
+    M(θ) = [
+        -1.0 * I(num_reactions)
+        1.0 * I(num_reactions)
+        Cp
+        -kcat_coupling(θ)'
+        kcat_coupling(θ)'
     ]
 
-    #: equality rhs
-    d = spzeros(num_metabolites + 1)
+    #: inequality lhs
+    xlb, xub = bounds(smm)
+    clb, cub = coupling_bounds(smm.inner)
+    h = _ -> [-xlb; xub; -clb; cub; 0; smm.total_enzyme_capacity]
 
-    #: objective inferred from model
-    c = -objective(model)
-
-    #: inequality constraints
-    xlb, xub = bounds(model)
-    M = [
-        -1.0 * I(num_vars)
-        1.0 * I(num_vars)
-    ]
-
-    h = [-xlb; xub]
-
-    hf(x) = h
-
-    return c, Ef, d, M, hf, model.irrev_reaction_ids
+    return c, E, d, M, h, reactions(smm)
 end

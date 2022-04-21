@@ -146,7 +146,7 @@ function _build_equality_enzyme_constraints(gm::GeckoModel, rid_enzyme)
 
     gids = genes(gm)
     for (col_idx, rid) in enumerate(reactions(gm))
-        original_rid = string(split(rid, "#")[1])
+        original_rid = string(first(split(rid, "#")))
 
         !haskey(rid_enzyme, original_rid) && continue
 

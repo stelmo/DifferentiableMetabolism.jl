@@ -12,7 +12,7 @@ include("scale.jl")
 include("utils.jl")
 include("gecko.jl")
 include("gecko_analytic_derivatives.jl")
-# include("smoment.jl")
+include("smoment.jl")
 # include("thermodynamic_smoment.jl")
 # include("thermokinetic_fba.jl")
 
