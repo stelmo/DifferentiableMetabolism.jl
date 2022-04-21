@@ -78,7 +78,6 @@ function differentiable_thermodynamic_smoment_opt_problem(
     digits = 8,
     RT = 298.15 * 8.314e-3,
     ignore_reaction_ids = [],
-    stoich_digits_round = 8,
 )
 
     #: get irreverible stoichiometric matrix from model
@@ -147,13 +146,8 @@ function differentiable_thermodynamic_smoment_opt_problem(
         col_idxs,
         [
             mw / (
-                (θ[rid_idx]) * DifferentiableMetabolism._dg(
-                    rid,
-                    nus,
-                    θ[mconcs_idxs],
-                    rid_dg0,
-                    RT,
-                )
+                (θ[rid_idx]) *
+                DifferentiableMetabolism._dg(rid, nus, θ[mconcs_idxs], rid_dg0, RT)
             ) for ((rid, rid_idx, mw), (nus, mconcs_idxs)) in zip(kcat_idxs, mid_idxs)
         ],
         n_reactions(smm),
@@ -186,8 +180,6 @@ function _dg(rid, nus, mconcs, rid_dg0s, RT)
     # return 1.0
     isempty(nus) && return 1.0
 
-    dg_val =
-        rid_dg0s[rid] +
-        RT * sum(nu * log(mconc) for (nu, mconc) in zip(nus, mconcs))
+    dg_val = rid_dg0s[rid] + RT * sum(nu * log(mconc) for (nu, mconc) in zip(nus, mconcs))
     return 1.0 - exp(dg_val / RT)
 end

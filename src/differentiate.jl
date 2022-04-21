@@ -126,8 +126,8 @@ function _differentiate_kkt(
         However, the any sparse arrays encoded in the model structure must be cast to dense arrays for ForwardDiff to work. 
         =#
         F(x, ν, λ, θ) = [
-            (Array(Q(θ))+Array(regQ)) * x + Array(c(θ)) - (row_factors .* Array(E(θ)))' * ν -
-            Array(M(θ))' * λ
+            (Array(Q(θ)) + Array(regQ)) * x + Array(c(θ)) -
+            (row_factors .* Array(E(θ)))' * ν - Array(M(θ))' * λ
             (row_factors .* Array(E(θ))) * x - (row_factors .* Array(d(θ)))
             diagm(λ) * (Array(M(θ)) * x - Array(h(θ)))
         ]

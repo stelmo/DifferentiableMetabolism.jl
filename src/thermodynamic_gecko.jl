@@ -20,17 +20,35 @@ only an active solution may be differentiated, this required that:
 """
 function with_parameters(
     gm::GeckoModel,
-    rid_enzyme::Dict{String,Enzyme};
+    rid_enzyme::Dict{String,Enzyme},
+    rid_dg0::Dict{String,Float64},
+    mid_concentration::Dict{String,Float64};
     analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
+    RT = 298.15 * 8.314e-3,
+    ignore_reaction_ids = [],
 )
-    param_ids = "k_" .* collect(keys(rid_enzyme))
-    θ = [x.kcat for x in values(rid_enzyme)]
+    param_ids = [
+        "k#" .* collect(keys(rid_enzyme))
+        "c#" .* metabolites(smm)
+    ]
+    θ = [
+        [x.kcat for x in values(rid_enzyme)]
+        [mid_concentration[mid] for mid in metabolites(smm)]
+    ]
 
-    c, E, d, M, h, var_ids =
-        differentiable_gecko_opt_problem(gm, rid_enzyme; ϵ, atol, digits)
+    c, E, d, M, h, var_ids = differentiable_thermodynamic_gecko_opt_problem(
+        gm,
+        rid_enzyme,
+        rid_dg0;
+        ϵ,
+        atol,
+        digits,
+        RT,
+        ignore_reaction_ids,
+    )
 
     return DifferentiableModel(
         _ -> spzeros(length(var_ids), length(var_ids)),
@@ -51,12 +69,15 @@ end
 
 Return optimization problem for gecko problem, but in differentiable format.
 """
-function differentiable_gecko_opt_problem(
+function differentiable_thermodynamic_gecko_opt_problem(
     gm::GeckoModel,
-    rid_enzyme::Dict{String,Enzyme};
+    rid_enzyme::Dict{String,Enzyme},
+    rid_dg0::Dict{String,Float64};
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
+    RT = 298.15 * 8.314e-3,
+    ignore_reaction_ids = [],
 )
     #: get irreverible stoichiometric matrix from model
     irrev_S = stoichiometry(gm.inner) * COBREXA._gecko_reaction_column_reactions(gm)
@@ -106,60 +127,4 @@ function differentiable_gecko_opt_problem(
     h = _ -> [-xlb; xub; -clb; cub]
 
     return c, E, d, M, h, [reactions(gm); genes(gm)]
-end
-
-"""
-    $(TYPEDSIGNATURES)
-
-Helper function to add an column into the enzyme stoichiometric matrix
-parametrically.
-"""
-function _add_enzyme_variable_as_function(
-    rid_enzyme,
-    original_rid,
-    E_components,
-    col_idx,
-    gene_ids,
-)
-    for (gid, stoich) in rid_enzyme[original_rid].gene_product_count
-        push!(E_components.row_idxs, first(indexin([gid], gene_ids)))
-        push!(E_components.col_idxs, col_idx)
-        push!(E_components.coeff_tuple, (-stoich, original_rid))
-    end
-end
-
-"""
-    $(TYPEDSIGNATURES)
-
-Helper function to build the equality enzyme constraints.
-"""
-function _build_equality_enzyme_constraints(gm::GeckoModel, rid_enzyme)
-    E_components = ( #TODO add size hints if possible
-        row_idxs = Vector{Int}(),
-        col_idxs = Vector{Int}(),
-        coeff_tuple = Vector{Tuple{Float64,String}}(),
-    )
-
-    gids = genes(gm)
-    for (col_idx, rid) in enumerate(reactions(gm))
-        original_rid = string(first(split(rid, "#")))
-
-        !haskey(rid_enzyme, original_rid) && continue
-
-        #: add all entries to column of matrix
-        DifferentiableMetabolism._add_enzyme_variable_as_function(
-            rid_enzyme,
-            original_rid,
-            E_components,
-            col_idx,
-            gids,
-        )
-    end
-
-    kcat_stoich_idx = [
-        (stoich, first(indexin([rid], collect(keys(rid_enzyme))))) for
-        (stoich, rid) in E_components.coeff_tuple
-    ]
-
-    return E_components, kcat_stoich_idx
 end

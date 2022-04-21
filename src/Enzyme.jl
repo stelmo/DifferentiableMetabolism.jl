@@ -31,7 +31,7 @@ function isozyme_to_enzyme(
     _gpmlu =
         gene_product_mass_lookup isa Function ? gene_product_mass_lookup :
         (gid -> gene_product_mass_lookup[gid])
-    
+
     Enzyme(
         direction == :forward ? isozyme.kcat_forward : isozyme.kcat_reverse,
         isozyme.gene_product_count,
