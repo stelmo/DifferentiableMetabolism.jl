@@ -16,32 +16,28 @@ only an active solution may be differentiated, this required that:
 - the model does not possess any isozymes
 - all the reactions should be unidirectinal
 - the kcats in `rid_enzyme` are for the appropriate direction used in the model
+- all rids in `rid_enzyme` are used in the model
 """
 function with_parameters(
-    smm::SMomentModel, 
-    rid_enzyme::Dict{String, Enzyme};
+    smm::SMomentModel,
+    rid_enzyme::Dict{String,Enzyme};
     analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
-)   
+)
     param_ids = "k#" .* collect(keys(rid_enzyme))
     θ = [x.kcat for x in values(rid_enzyme)]
 
-    c, E, d, M, h, var_ids = differentiable_smoment_opt_problem(
-        smm,
-        rid_enzyme;
-        ϵ,
-        atol,
-        digits,
-    )
+    c, E, d, M, h, var_ids =
+        differentiable_smoment_opt_problem(smm, rid_enzyme; ϵ, atol, digits)
 
     return DifferentiableModel(
-        _ -> spzeros(length(var_ids),length(var_ids)),
+        _ -> spzeros(length(var_ids), length(var_ids)),
         c,
         E,
         d,
-        M, 
+        M,
         h,
         θ,
         analytic_parameter_derivatives,
@@ -59,7 +55,7 @@ effective enzyme is the only GRR.
 """
 function differentiable_smoment_opt_problem(
     smm::SMomentModel,
-    rid_enzyme::Dict{String, Enzyme};
+    rid_enzyme::Dict{String,Enzyme};
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
@@ -95,7 +91,10 @@ function differentiable_smoment_opt_problem(
         !haskey(rid_enzyme, original_rid) && continue
 
         # these entries have kcats, only one GRR by assumption
-        mw = sum([pstoich * rid_enzyme[original_rid].gene_product_mass[gid] for (gid, pstoich) in rid_enzyme[original_rid].gene_product_count])
+        mw = sum([
+            pstoich * rid_enzyme[original_rid].gene_product_mass[gid] for
+            (gid, pstoich) in rid_enzyme[original_rid].gene_product_count
+        ])
         push!(kcat_original_rid_order, original_rid)
         push!(col_idxs, col_idx)
         push!(mws, mw)
@@ -106,7 +105,8 @@ function differentiable_smoment_opt_problem(
         (rid, mw) in zip(kcat_original_rid_order, mws)
     ]
 
-    kcat_coupling(θ) = sparsevec(col_idxs, [mw / θ[x] for (x, mw) in kcat_idxs], num_reactions)
+    kcat_coupling(θ) =
+        sparsevec(col_idxs, [mw / θ[x] for (x, mw) in kcat_idxs], num_reactions)
 
     #: inequality rhs
     Cp = coupling(smm.inner)

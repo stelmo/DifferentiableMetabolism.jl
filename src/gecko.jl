@@ -16,6 +16,7 @@ only an active solution may be differentiated, this required that:
 - the model does not possess any isozymes
 - all the reactions should be unidirectinal
 - the kcats in `rid_enzyme` are for the appropriate direction used in the model
+- all rids in `rid_enzyme` are used in the model
 """
 function with_parameters(
     gm::GeckoModel, 

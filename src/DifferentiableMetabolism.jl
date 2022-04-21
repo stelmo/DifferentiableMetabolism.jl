@@ -13,7 +13,7 @@ include("utils.jl")
 include("gecko.jl")
 include("gecko_analytic_derivatives.jl")
 include("smoment.jl")
-# include("thermodynamic_smoment.jl")
+include("thermodynamic_smoment.jl")
 # include("thermokinetic_fba.jl")
 
 # export everything that isn't prefixed with _ (inspired by JuMP.jl, thanks!)
