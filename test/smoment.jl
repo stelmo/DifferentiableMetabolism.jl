@@ -30,7 +30,7 @@
         use_analytic = false,
         modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
     )
-    
+
     # test if COBREXA Smoment is the same as the differentiable one 
     sol = Dict(reactions(smm) .=> x)
     @test isapprox(sol["r1"], fluxes["r1"]; atol = TEST_TOLERANCE)
@@ -38,15 +38,13 @@
 
     # test if reference solution is attained
     dx_ref = [
-        0.251908  0.160305  0.587786
-        0.251908  0.160305  0.587786
-        0.251908  0.160305  0.587786
-        0.251908  0.160305  0.587786
-        0.251908  0.160305  0.587786
-        0.251908  0.160305  0.587786
-        0.251908  0.160305  0.587786
+        0.251908 0.160305 0.587786
+        0.251908 0.160305 0.587786
+        0.251908 0.160305 0.587786
+        0.251908 0.160305 0.587786
+        0.251908 0.160305 0.587786
+        0.251908 0.160305 0.587786
+        0.251908 0.160305 0.587786
     ]
-    @test all([
-        isapprox(dx_ref[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx)
-    ])
+    @test all([isapprox(dx_ref[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx)])
 end

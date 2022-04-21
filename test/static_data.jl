@@ -44,7 +44,7 @@ function create_test_model()
 
     gene_product_molar_mass = Dict("g1" => 1.0, "g2" => 2.0, "g3" => 3.0, "g4" => 4.0)
 
-    gene_product_mass_group_bound = Dict("uncategorized" => 1.)
+    gene_product_mass_group_bound = Dict("uncategorized" => 1.0)
 
     return m,
     reaction_isozymes,
