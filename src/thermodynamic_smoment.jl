@@ -134,7 +134,7 @@ function differentiable_thermodynamic_smoment_opt_problem(
     end
 
     kcat_idxs = [
-        (first(indexin([rid], collect(keys(rid_enzyme)))), mw) for
+        (rid, first(indexin([rid], collect(keys(rid_enzyme)))), mw) for
         (rid, mw) in zip(kcat_original_rid_order, mws)
     ]
 
@@ -148,14 +148,13 @@ function differentiable_thermodynamic_smoment_opt_problem(
         [
             mw / (
                 (θ[rid_idx]) * DifferentiableMetabolism._dg(
-                    rid_idx,
+                    rid,
                     nus,
                     θ[mconcs_idxs],
                     rid_dg0,
                     RT,
-                    rid_enzyme,
                 )
-            ) for ((rid_idx, mw), (nus, mconcs_idxs)) in zip(kcat_idxs, mid_idxs)
+            ) for ((rid, rid_idx, mw), (nus, mconcs_idxs)) in zip(kcat_idxs, mid_idxs)
         ],
         n_reactions(smm),
     )
@@ -183,12 +182,12 @@ end
 
 Helper function to assign the thermodynamic driving to a reaction.
 """
-function _dg(rid_idx, nus, mconcs, rid_dg0s, RT, rid_enzyme)
+function _dg(rid, nus, mconcs, rid_dg0s, RT)
     # return 1.0
     isempty(nus) && return 1.0
 
     dg_val =
-        rid_dg0s[collect(keys(rid_enzyme))[rid_idx]] +
+        rid_dg0s[rid] +
         RT * sum(nu * log(mconc) for (nu, mconc) in zip(nus, mconcs))
     return 1.0 - exp(dg_val / RT)
 end
