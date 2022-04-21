@@ -49,7 +49,7 @@
     @test isapprox(sol["r3#forward#1"], gecko_fluxes["r3"]; atol = TEST_TOLERANCE)
 
     # test if automatic and manual derivatives are the same
-    x_anal, dx_anal = differentiate(diffmodel, optimizer; use_analytic = true)
+    x_anal, dx_anal = differentiate(diffmodel, Tulip.Optimizer; use_analytic = true)
     @test all([
         isapprox(dx_auto[i], dx_anal[i]; atol = TEST_TOLERANCE) for i in eachindex(dx_anal)
     ])

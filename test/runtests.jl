@@ -2,7 +2,6 @@ using DifferentiableMetabolism
 using Test
 using Tulip, Ipopt
 using COBREXA
-using JSON
 
 # Testing infrastructure taken from COBREXA
 TEST_TOLERANCE = 1e-6
