@@ -1,5 +1,12 @@
 """
-    $(TYPEDSIGNATURES)
+    with_parameters(
+        gm::GeckoModel,
+        rid_enzyme::Dict{String,Enzyme};
+        analytic_parameter_derivatives = x -> nothing,
+        ϵ = 1e-8,
+        atol = 1e-12,
+        digits = 8,
+    )
 
 Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.GeckoModel`](@ref).
 Each variable in `gm` is differentiated with respect to the kcats in the
@@ -47,7 +54,13 @@ function with_parameters(
 end
 
 """
-    $(TYPEDSIGNATURES)
+    _differentiable_gecko_opt_problem(
+        gm::GeckoModel,
+        rid_enzyme::Dict{String,Enzyme};
+        ϵ = 1e-8,
+        atol = 1e-12,
+        digits = 8,
+    )
 
 Return optimization problem for gecko problem, but in differentiable format.
 """
@@ -110,7 +123,13 @@ function _differentiable_gecko_opt_problem(
 end
 
 """
-    $(TYPEDSIGNATURES)
+    _add_gecko_enzyme_variable_as_function(
+        rid_enzyme,
+        original_rid,
+        E_components,
+        col_idx,
+        gene_ids,
+    )
 
 Helper function to add an column into the enzyme stoichiometric matrix
 parametrically.
@@ -130,7 +149,7 @@ function _add_gecko_enzyme_variable_as_function(
 end
 
 """
-    $(TYPEDSIGNATURES)
+    _build_gecko_equality_enzyme_constraints(gm::GeckoModel, rid_enzyme)
 
 Helper function to build the equality enzyme constraints.
 """

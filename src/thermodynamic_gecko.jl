@@ -1,22 +1,31 @@
 """
-    $(TYPEDSIGNATURES)
+    with_parameters(
+        gm::GeckoModel,
+        rid_enzyme::Dict{String,Enzyme},
+        rid_dg0::Dict{String,Float64},
+        mid_concentration::Dict{String,Float64};
+        analytic_parameter_derivatives = x -> nothing,
+        ϵ = 1e-8,
+        atol = 1e-12,
+        digits = 8,
+        RT = 298.15 * 8.314e-3,
+        ignore_reaction_ids = [],
+    )
 
 Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.GeckoModel`](@ref).
 Each variable in `gm` is differentiated with respect to the kcats in the
 dictionary `rid_enzyme`, which is a dictionary mapping reaction ids to
 [`Enzyme`](@ref)s. Enzyme constraints are only taken with respect to the entries
-of `rid_enzyme`.
+of `rid_enzyme`. Incorporates thermodynamic constraints through `rid_dg0`. See
+`with_parameters(::GeckoModel,...)` without the thermodynamic effects for
+further details.
 
-The analytic derivative of the optimality conditions with respect to the
-parameters can be supplied through `analytic_parameter_derivatives`. Internally,
-`ϵ`, `atol`, and `digits`, are forwarded to [`_remove_lin_dep_rows`](@ref). 
-
-Note, to ensure differentiability, preprocessing of the model is required. In short,
-only an active solution may be differentiated, this required that:
-- the model does not possess any isozymes
-- all the reactions should be unidirectinal
-- the kcats in `rid_enzyme` are for the appropriate direction used in the model
-- all rids in `rid_enzyme` are used in the model
+Note, thermodynamic parameters require special attention. To ignore some
+reactions when calculating the thermodynamic factor, include them in
+`ignore_reaction_ids`. The units used for the Gibbs free energy are kJ/mol, and
+concentrations should be in molar. Importantly, the standard Gibbs free energy
+of reaction is assumed to be given *in the forward direction of the reaction* in
+the model.
 """
 function with_parameters(
     gm::GeckoModel,
@@ -65,9 +74,19 @@ function with_parameters(
 end
 
 """
-    $(TYPEDSIGNATURES)
+    _differentiable_thermodynamic_gecko_opt_problem(
+        gm::GeckoModel,
+        rid_enzyme::Dict{String,Enzyme},
+        rid_dg0::Dict{String,Float64};
+        ϵ = 1e-8,
+        atol = 1e-12,
+        digits = 8,
+        RT = 298.15 * 8.314e-3,
+        ignore_reaction_ids = [],
+    )
 
-Return optimization problem for a thermodynamic gecko problem, but in differentiable format.
+Return optimization problem for a thermodynamic gecko problem, but in
+differentiable format.
 """
 function _differentiable_thermodynamic_gecko_opt_problem(
     gm::GeckoModel,

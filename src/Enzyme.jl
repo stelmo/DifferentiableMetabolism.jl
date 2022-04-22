@@ -1,5 +1,5 @@
 """
-    $(TYPEDEF)
+    mutable struct Enzyme
 
 A struct used to store information about an enzyme. A simplified version of
 [`COBREXA.Isozyme`](@ref), which stores only the turnover number (kcat) that
@@ -7,7 +7,11 @@ should be used by the differentiable model, as well as information about the
 protein complex (stoichiometry and molar mass).
 
 # Fields
-$(TYPEDFIELDS)
+```
+kcat::Float64
+gene_product_count::Dict{String,Int}
+gene_product_mass::Dict{String,Float64}
+```
 """
 mutable struct Enzyme
     kcat::Float64
@@ -16,7 +20,11 @@ mutable struct Enzyme
 end
 
 """
-    $(TYPEDSIGNATURES)
+    isozyme_to_enzyme(
+        isozyme::Isozyme,
+        gene_product_mass_lookup::Union{Function,Dict{String,Float64}};
+        direction = :forward,
+    )
 
 Convert a [`COBREXA.Isozyme`](@ref) to an [`Enzyme`](@ref) using the turnover
 number in `direction` (either `:forward` or `:reverse`), as well as

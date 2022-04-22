@@ -1,5 +1,5 @@
 """
-    $(TYPEDSIGNATURES)
+    derivative_of_enzyme_equality(gm::GeckoModel, rid_enzyme)
 
 Return the analytic derivative of the optimality conditions with respect to 
 the parameters.

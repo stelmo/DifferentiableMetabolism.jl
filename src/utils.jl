@@ -1,5 +1,5 @@
 """
-    $(TYPEDSIGNATURES)
+    _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8, digits = 16)
 
 Remove linearly dependent rows in `A` deduced by reducing the matrix to row
 echelon form. Adjust sensitivity to numerical issues with `ϵ`. After row echelon
@@ -23,7 +23,15 @@ function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8, digits = 16)
 end
 
 """
-    $(TYPEDSIGNATURES)
+    _dg(
+        model,
+        rid_enzyme,
+        rid_dg0,
+        rid,
+        θ;
+        RT = 298.15 * 8.314e-3,
+        ignore_reaction_ids = [],
+    )
 
 Helper function to assign the thermodynamic driving force to a reaction.
 """
@@ -51,7 +59,15 @@ function _dg(
 end
 
 """
-$(TYPEDSIGNATURES)
+    _saturation(
+        model,
+        rid_enzyme,
+        rid_km,
+        rid,
+        mangled_rid,
+        θ;
+        ignore_reaction_ids = [],
+    )
 
 A helper function to incorporate saturation effects.
 """
@@ -86,7 +102,13 @@ function _saturation(
 end
 
 """
-    $(TYPEDSIGNATURES)
+    prune_model(
+        model::StandardModel,
+        reaction_fluxes,
+        gene_product_concentrations = Dict{String,Float64}();
+        atol = 1e-9,
+        verbose = true,
+    )
 
 Return a simplified version of `model` that contains only reactions (and the
 associated metabolites) that are active, i.e. carry fluxes (from

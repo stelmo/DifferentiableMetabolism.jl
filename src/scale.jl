@@ -1,5 +1,5 @@
 """
-    $(TYPEDSIGNATURES)
+    scaling_factor(A, b; atol = 1e-8)
 
 Return scaling factor used to rescale constraints in matrix format (row-wise).
 Arguments are assumed to be of the form `A ∝ b` where `∝` are usually `=` or `≤`
@@ -30,14 +30,14 @@ function scaling_factor(A, b; atol = 1e-8)
 end
 
 """
-    $(TYPEDSIGNATURES)
+    _get_exponent_or_cutoff(x; atol = 1e-8)
 
 Return `log₁₀(|x|)` or `x` if `|x| ≤ atol`.
 """
 _get_exponent_or_cutoff(x; atol = 1e-8) = abs(x) > atol && log10(abs(x))
 
 """
-    $(TYPEDSIGNATURES)
+    check_scaling(mat; atol = 1e-8)
 
 Return the best case (if rescaled using [`scaling_factor`](@ref)) and current
 scaling of a matrix `mat`. Scaling is defined as the largest difference between
