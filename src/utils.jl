@@ -56,9 +56,17 @@ end
 Return a simplified version of `model` that contains only reactions (and the
 associated metabolites) that are active, i.e. carry fluxes (from
 `reaction_fluxes`) absolutely bigger than `atol`. All reactions are set
-unidirectional based on `reaction_fluxes`. No gene information is copied.
+unidirectional based on `reaction_fluxes`. If `gene_product_concentrations` is supplied,
+then genes that have a concentration bigger than `atol` are also included in the pruned model,
+otherwise no gene information is retained.
 """
-function prune_model(model::StandardModel, reaction_fluxes; atol = 1e-9, verbose = true)
+function prune_model(
+    model::StandardModel,
+    reaction_fluxes,
+    gene_product_concentrations = Dict{String,Float64}();
+    atol = 1e-9,
+    verbose = true,
+)
     pruned_model = StandardModel("pruned_model")
 
     rxns = Vector{Reaction}()
@@ -87,9 +95,14 @@ function prune_model(model::StandardModel, reaction_fluxes; atol = 1e-9, verbose
         push!(mets, model.metabolites[mid])
     end
 
+    for (gid, conc) in gene_product_concentrations
+        abs(conc) <= atol && continue
+        push!(gs, model.genes[gid])
+    end
+
     add_reactions!(pruned_model, rxns)
     add_metabolites!(pruned_model, mets)
-    add_genes!(pruned_model, gs) #  no genes are added, unnecessary
+    add_genes!(pruned_model, gs)
 
     #: print some info about process
     if verbose
