@@ -14,7 +14,7 @@ function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8, digits = 16)
 
     idxs = Int[]
     for i = 1:size(rA, 1)
-        if all(abs.(rA[i, :]) .<= atol) # remove rows of all zero
+        if !all(abs.(rA[i, :]) .<= atol) # remove rows of all zero
             push!(idxs, i)
         end
     end
