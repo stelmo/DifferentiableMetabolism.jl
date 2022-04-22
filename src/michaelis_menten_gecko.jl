@@ -70,7 +70,17 @@ function with_parameters(
 end
 
 """
-    $(TYPEDSIGNATURES)
+    _differentiable_michaelis_menten_gecko_opt_problem(
+        gm::GeckoModel,
+        rid_enzyme::Dict{String,Enzyme},
+        rid_dg0::Dict{String,Float64},
+        rid_km::Dict{String,Dict{String,Float64}};
+        ϵ = 1e-8,
+        atol = 1e-12,
+        digits = 8,
+        RT = 298.15 * 8.314e-3,
+        ignore_reaction_ids = [],
+    )
 
 Return optimization problem where thermodynamic and saturation effects are
 incorporated into the gecko problem, but in differentiable format.
