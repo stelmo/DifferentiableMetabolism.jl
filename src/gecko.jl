@@ -26,7 +26,7 @@ function with_parameters(
     atol = 1e-12,
     digits = 8,
 )
-    param_ids = "k_" .* collect(keys(rid_enzyme))
+    param_ids = "k#" .* collect(keys(rid_enzyme))
     θ = [x.kcat for x in values(rid_enzyme)]
 
     c, E, d, M, h, var_ids =
