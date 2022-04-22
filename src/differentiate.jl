@@ -8,7 +8,7 @@ be scaled relative to the parameters and the solved variables with
 through `modifications`. Analytic derivatives of the optimality conditions can
 be used by setting `use_analytic` to true.
 
-Internally calls [`differentiate_kkt`](@ref).
+Internally calls [`_differentiate_kkt`](@ref).
 """
 function differentiate(
     diffmodel::DifferentiableModel,

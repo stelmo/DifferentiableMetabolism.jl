@@ -105,7 +105,7 @@ function _differentiable_smoment_opt_problem(
 end
 
 """
-$(TYPEDSIGNATURES)
+    $(TYPEDSIGNATURES)
 
 Helper function to build kcat coupling in parametric form for smoment problems.
 """
