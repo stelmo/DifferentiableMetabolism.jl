@@ -10,8 +10,8 @@ function derivative_of_enzyme_equality(gm::GeckoModel, rid_enzyme)
     row_col_stoich_tidx = zip(
         E_components.row_idxs,
         E_components.col_idxs,
-        [stoich for (stoich, _) in kcat_stoich_idx],
-        [idx for (_, idx) in kcat_stoich_idx],
+        [stoich for (_, _, stoich) in kcat_stoich_idx],
+        [idx for (_, idx, _) in kcat_stoich_idx],
     )
 
     function db1(x, ν, λ, θ, reg)

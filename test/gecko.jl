@@ -1,4 +1,4 @@
-@testset "Gecko" begin
+@testset "Differentiable GECKO" begin
     #: Set problem up 
     stdmodel,
     reaction_isozymes,

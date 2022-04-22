@@ -121,15 +121,15 @@ function differentiable_thermodynamic_smoment_opt_problem(
         push!(col_idxs, col_idx)
         push!(mws, mw)
 
-        # thermo info
-        rs = reaction_stoichiometry(smm.inner, original_rid)
-        if haskey(rid_dg0, original_rid)
-            push!(met_order, collect(keys(rs)))
-            push!(nus_vec, collect(values(rs)))
-        else
-            push!(met_order, collect(keys(rs)))
-            push!(nus_vec, Float64[]) # acts like a flag
-        end
+        # # thermo info
+        # rs = reaction_stoichiometry(smm.inner, original_rid)
+        # if haskey(rid_dg0, original_rid)
+        #     push!(met_order, collect(keys(rs)))
+        #     push!(nus_vec, collect(values(rs)))
+        # else
+        #     push!(met_order, collect(keys(rs)))
+        #     push!(nus_vec, Float64[]) # acts like a flag
+        # end
     end
 
     kcat_idxs = [
@@ -137,18 +137,13 @@ function differentiable_thermodynamic_smoment_opt_problem(
         (rid, mw) in zip(kcat_original_rid_order, mws)
     ]
 
-    mid_idxs = [
-        (nus, Int.(indexin(mids, metabolites(smm))) .+ length(rid_enzyme)) for
-        (nus, mids) in zip(nus_vec, met_order)
-    ]
-
     kcat_thermo_coupling(θ) = sparsevec(
         col_idxs,
         [
             mw / (
                 (θ[rid_idx]) *
-                DifferentiableMetabolism._dg(rid, nus, θ[mconcs_idxs], rid_dg0, RT)
-            ) for ((rid, rid_idx, mw), (nus, mconcs_idxs)) in zip(kcat_idxs, mid_idxs)
+                DifferentiableMetabolism._dg(smm, rid_enzyme, rid_dg0, rid, θ; RT)
+            ) for (rid, rid_idx, mw) in kcat_idxs
         ],
         n_reactions(smm),
     )
@@ -169,17 +164,4 @@ function differentiable_thermodynamic_smoment_opt_problem(
     h = _ -> [-xlb; xub; -clb; cub; 0; smm.total_enzyme_capacity]
 
     return c, E, d, M, h, reactions(smm)
-end
-
-"""
-    $(TYPEDSIGNATURES)
-
-Helper function to assign the thermodynamic driving to a reaction.
-"""
-function _dg(rid, nus, mconcs, rid_dg0s, RT)
-    # return 1.0
-    isempty(nus) && return 1.0
-
-    dg_val = rid_dg0s[rid] + RT * sum(nu * log(mconc) for (nu, mconc) in zip(nus, mconcs))
-    return 1.0 - exp(dg_val / RT)
 end

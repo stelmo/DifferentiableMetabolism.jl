@@ -19,6 +19,7 @@ run_test_file("static_data.jl")
 
 @testset "DifferentiableMetabolism.jl" begin
     run_test_file("enzyme.jl")
+    run_test_file("prune.jl")
     run_test_file("gecko.jl")
     run_test_file("smoment.jl")
     run_test_file("thermodynamic_smoment.jl")

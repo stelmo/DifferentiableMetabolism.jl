@@ -1,4 +1,4 @@
-@testset "Enzyme" begin
+@testset "Enzyme type and conversion" begin
     # create dummy isozyme
     isozyme = Isozyme(Dict("g1" => 1, "g2" => 3), 10.0, 2.0)
 

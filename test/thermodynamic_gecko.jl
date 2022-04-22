@@ -1,4 +1,4 @@
-@testset "Differentiable Thermodynamic SMOMENT" begin
+@testset "Differentiable Thermodynamic GECKO" begin
     #: Set problem up 
     stdmodel,
     reaction_isozymes,

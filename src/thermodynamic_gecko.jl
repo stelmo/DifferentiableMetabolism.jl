@@ -92,12 +92,12 @@ function differentiable_thermodynamic_gecko_opt_problem(
     num_vars = num_reactions + num_genes
 
     #: equality lhs
-    E_components, kcat_stoich_idx = _build_equality_enzyme_constraints(gm, rid_enzyme)
+    E_components, kcat_rid_ridx_stoich = _build_equality_enzyme_constraints(gm, rid_enzyme)
 
     Se(θ) = sparse(
         E_components.row_idxs,
         E_components.col_idxs,
-        [stoich / θ[idx] for (stoich, idx) in kcat_stoich_idx],
+        [stoich / θ[idx] for (rid, ridx, stoich) in kcat_rid_ridx_stoich],
         num_genes,
         num_reactions,
     )

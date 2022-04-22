@@ -22,110 +22,71 @@ function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-12, digits = 16)
     return rA[idxs, :]
 end
 
-# """
-#     $(TYPEDSIGNATURES)
+"""
+    $(TYPEDSIGNATURES)
 
-# Return a simplified version of `model` that contains only reactions 
-# (and the associated metabolites and genes) that are active, i.e. carry 
-# fluxes (from `reaction_fluxes`) absolutely bigger than `rtol`. All 
-# reactions are unidirectional. 
-# """
-# function prune_model(
-#     model::StandardModel, 
-#     reaction_fluxes; 
-#     rtol = 1e-9
-# )
-#     pruned_model = StandardModel("pruned_model")
+Helper function to assign the thermodynamic driving force to a reaction.
+"""
+function _dg(model, rid_enzyme, rid_dg0, rid, θ; RT = 298.15 * 8.314e-3)
+    rs = reaction_stoichiometry(model, rid)
+    stoich = values(rs)
+    mids = collect(keys(rs))
+    midxs = Int.(indexin(mids, metabolites(model))) .+ length(rid_enzyme)
+    if haskey(rid_dg0, rid)
+        dg_val =
+            rid_dg0[rid] + RT * sum(nu * log(θ[midx]) for (nu, midx) in zip(stoich, midxs))
+        return 1.0 - exp(dg_val / RT)
+    else # no kinetic info
+        return 1.0
+    end
+end
 
-#     rxns = Vector{Reaction}()
-#     mets = Vector{Metabolite}()
-#     gs = Vector{Gene}()
+"""
+    $(TYPEDSIGNATURES)
 
-#     for rid in reactions(model)
-#         isapprox(abs(reaction_fluxes[rid]), 0; atol = rtol) && continue
+Return a simplified version of `model` that contains only reactions (and the
+associated metabolites) that are active, i.e. carry fluxes (from
+`reaction_fluxes`) absolutely bigger than `atol`. All reactions are set
+unidirectional based on `reaction_fluxes`. No gene information is copied.
+"""
+function prune_model(model::StandardModel, reaction_fluxes; atol = 1e-9, verbose = true)
+    pruned_model = StandardModel("pruned_model")
 
-#         rxn = deepcopy(model.reactions[rid])
-#         if reaction_fluxes[rid] > 0
-#             rxn.lb = max(0, rxn.lb)
-#         else
-#             rxn.ub = min(0, rxn.ub)
-#         end
-#         push!(rxns, rxn)
+    rxns = Vector{Reaction}()
+    mets = Vector{Metabolite}()
+    gs = Vector{Gene}()
+    mids = String[]
 
-#         rs = reaction_stoichiometry(model, rid)
-#         for mid in keys(rs)
-#             push!(mets, model.metabolites[mid])
-#         end
+    for rid in reactions(model)
+        abs(reaction_fluxes[rid]) <= atol && continue
 
-#         !has_reaction_grr(model, rid) && continue
-#         for grr in reaction_gene_association(model, rid)
-#             for gid in grr
-#                 push!(gs, model.genes[gid])
-#             end
-#         end
-#     end
+        rxn = deepcopy(model.reactions[rid])
+        if reaction_fluxes[rid] > 0
+            rxn.lb = max(0, rxn.lb)
+        else
+            rxn.ub = min(0, rxn.ub)
+        end
+        push!(rxns, rxn)
 
-#     add_reactions!(pruned_model, rxns)
-#     add_metabolites!(pruned_model, mets)
-#     add_genes!(pruned_model, gs)
+        rs = reaction_stoichiometry(model, rid)
+        for mid in keys(rs)
+            push!(mids, mid)
+        end
+    end
 
-#     #: print some info about process
-#     rrn = n_reactions(model) - n_reactions(pruned_model)
-#     @info "Removed $rrn reactions."
+    for mid in unique(mids)
+        push!(mets, model.metabolites[mid])
+    end
 
-#     return pruned_model
-# end
+    add_reactions!(pruned_model, rxns)
+    add_metabolites!(pruned_model, mets)
+    add_genes!(pruned_model, gs) #  no genes are added, unnecessary
 
-# function in_another_grr(model, current_rid, current_gid)
-#     for rid in reactions(model)
-#         current_rid == rid && continue
-#         !COBREXA._has_grr(model, rid) && continue
-#         for grr in reaction_gene_association(model, rid)
-#             for gid in grr
-#                 current_gid == gid && return true
-#             end
-#         end
-#     end
-#     false
-# end
+    #: print some info about process
+    if verbose
+        rrn = n_reactions(model) - n_reactions(pruned_model)
+        @info "Removed $rrn reactions."
+    end
 
-
-
-# """
-# """
-# function qp_objective_measured(
-#     rids,
-#     gids,
-#     obs_v_dict,
-#     obs_e_dict;
-#     vtol = 1e-3,
-#     etol = 1e-3,
-#     reg = 1e-1,
-# )
-#     n_vars = length(gids) + length(rids)
-#     c = zeros(n_vars)
-#     q = zeros(n_vars)
-#     n = 0
-
-#     for (i, rid) in enumerate(rids)
-#         if !haskey(obs_v_dict, rid) || abs(obs_v_dict[rid]) < vtol
-#             q[i] = reg
-#         else
-#             c[i] = -1.0 / abs(obs_v_dict[rid]) #! fluxes are positive in model
-#             q[i] = 1.0 / obs_v_dict[rid]^2
-#             n += 1
-#         end
-#     end
-#     k = length(rids)
-#     for (i, gid) in enumerate(gids)
-#         if !haskey(obs_e_dict, gid) || abs(obs_e_dict[gid]) < etol
-#             q[k+i] = reg
-#         else
-#             c[k+i] = -1.0 / obs_e_dict[gid]
-#             q[k+i] = 1.0 / obs_e_dict[gid]^2
-#             n += 1
-#         end
-#     end
-
-#     return spdiagm(q), sparse(c), n
-# end
+    return pruned_model
+end
