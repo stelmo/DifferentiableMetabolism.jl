@@ -42,11 +42,46 @@ function _dg(
     midxs = Int.(indexin(mids, metabolites(model))) .+ length(rid_enzyme)
     if !haskey(rid_dg0, rid) || rid in ignore_reaction_ids
         # no kinetic info or should be ignore thermodynamically
-        return 1.0
+        1.0
     else
         dg_val =
             rid_dg0[rid] + RT * sum(nu * log(θ[midx]) for (nu, midx) in zip(stoich, midxs))
-        return 1.0 - exp(dg_val / RT)
+        1.0 - exp(dg_val / RT)
+    end
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+A helper function to incorporate saturation effects.
+"""
+function _saturation(
+    model,
+    rid_enzyme,
+    rid_km,
+    rid,
+    mangled_rid,
+    θ;
+    ignore_reaction_ids = [],
+)
+    rs = reaction_stoichiometry(model, rid)
+    stoich = values(rs)
+    mids = collect(keys(rs))
+    midxs = Int.(indexin(mids, metabolites(model))) .+ length(rid_enzyme)
+    is_forward = contains(mangled_rid, "#forward") ? true : false
+    @assert(contains(mangled_rid, rid)) #TODO sanity check, remove
+    if !haskey(rid_km, rid) || rid in ignore_reaction_ids
+        1.0
+    else
+        s_term = prod(
+            (θ[midx] / rid_km[rid][mid])^nu for
+            (nu, midx, mid) in zip(stoich, midxs, mids) if nu > 0
+        )
+        p_term = prod(
+            (θ[midx] / rid_km[rid][mid])^nu for
+            (nu, midx, mid) in zip(stoich, midxs, mids) if nu < 0
+        )
+        is_forward ? s_term / (1.0 + s_term + p_term) : p_term / (1.0 + s_term + p_term)
     end
 end
 

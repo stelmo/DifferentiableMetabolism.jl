@@ -43,7 +43,7 @@ Pretty printing of a differentiable model.
 """
 function Base.show(io::IO, ::MIME"text/plain", m::DifferentiableModel)
     println(io, "", "Differentiable metabolic with: ")
-    println(io, "    ",  length(m.var_ids),  " variables")
-    println(io, "    ",  length(m.param_ids), " parameters")
+    println(io, "    ", length(m.var_ids), " variables")
+    println(io, "    ", length(m.param_ids), " parameters")
 end
 
