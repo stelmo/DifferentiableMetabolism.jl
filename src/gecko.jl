@@ -30,7 +30,7 @@ function with_parameters(
     θ = [x.kcat for x in values(rid_enzyme)]
 
     c, E, d, M, h, var_ids =
-        differentiable_gecko_opt_problem(gm, rid_enzyme; ϵ, atol, digits)
+        _differentiable_gecko_opt_problem(gm, rid_enzyme; ϵ, atol, digits)
 
     return DifferentiableModel(
         _ -> spzeros(length(var_ids), length(var_ids)),
@@ -51,7 +51,7 @@ end
 
 Return optimization problem for gecko problem, but in differentiable format.
 """
-function differentiable_gecko_opt_problem(
+function _differentiable_gecko_opt_problem(
     gm::GeckoModel,
     rid_enzyme::Dict{String,Enzyme};
     ϵ = 1e-8,
@@ -72,7 +72,7 @@ function differentiable_gecko_opt_problem(
 
     #: equality lhs
     E_components, kcat_rid_ridx_stoich =
-        DifferentiableMetabolism._build_equality_enzyme_constraints(gm, rid_enzyme)
+        DifferentiableMetabolism._build_gecko_equality_enzyme_constraints(gm, rid_enzyme)
 
     Se(θ) = sparse(
         E_components.row_idxs,
@@ -115,7 +115,7 @@ end
 Helper function to add an column into the enzyme stoichiometric matrix
 parametrically.
 """
-function _add_enzyme_variable_as_function(
+function _add_gecko_enzyme_variable_as_function(
     rid_enzyme,
     original_rid,
     E_components,
@@ -134,7 +134,7 @@ end
 
 Helper function to build the equality enzyme constraints.
 """
-function _build_equality_enzyme_constraints(gm::GeckoModel, rid_enzyme)
+function _build_gecko_equality_enzyme_constraints(gm::GeckoModel, rid_enzyme;)
     E_components = ( #TODO add size hints if possible
         row_idxs = Vector{Int}(),
         col_idxs = Vector{Int}(),
@@ -148,7 +148,7 @@ function _build_equality_enzyme_constraints(gm::GeckoModel, rid_enzyme)
         !haskey(rid_enzyme, original_rid) && continue
 
         #: add all entries to column of matrix
-        DifferentiableMetabolism._add_enzyme_variable_as_function(
+        DifferentiableMetabolism._add_gecko_enzyme_variable_as_function(
             rid_enzyme,
             original_rid,
             E_components,

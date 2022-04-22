@@ -30,7 +30,7 @@ function with_parameters(
     θ = [x.kcat for x in values(rid_enzyme)]
 
     c, E, d, M, h, var_ids =
-        differentiable_smoment_opt_problem(smm, rid_enzyme; ϵ, atol, digits)
+        _differentiable_smoment_opt_problem(smm, rid_enzyme; ϵ, atol, digits)
 
     return DifferentiableModel(
         _ -> spzeros(length(var_ids), length(var_ids)),
@@ -53,7 +53,7 @@ Return structures that will allow the most basic form of smoment to be solved.
 No enzyme constraints allowed. Assume preprocessing changes model such that most
 effective enzyme is the only GRR.
 """
-function differentiable_smoment_opt_problem(
+function _differentiable_smoment_opt_problem(
     smm::SMomentModel,
     rid_enzyme::Dict{String,Enzyme};
     ϵ = 1e-8,
@@ -81,6 +81,35 @@ function differentiable_smoment_opt_problem(
     c = _ -> -objective(smm)
 
     #: coupling to kcats
+    col_idxs, kcat_idxs = _build_smoment_kcat_coupling(smm, rid_enzyme)
+
+    kcat_coupling(θ) =
+        sparsevec(col_idxs, [mw / θ[idx] for (_, idx, mw) in kcat_idxs], num_reactions)
+
+    #: inequality rhs
+    Cp = coupling(smm.inner)
+    M(θ) = [
+        -1.0 * I(num_reactions)
+        1.0 * I(num_reactions)
+        Cp
+        -kcat_coupling(θ)'
+        kcat_coupling(θ)'
+    ]
+
+    #: inequality lhs
+    xlb, xub = bounds(smm)
+    clb, cub = coupling_bounds(smm.inner)
+    h = _ -> [-xlb; xub; -clb; cub; 0; smm.total_enzyme_capacity]
+
+    return c, E, d, M, h, reactions(smm)
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Helper function to build kcat coupling in parametric form for smoment problems.
+"""
+function _build_smoment_kcat_coupling(smm::SMomentModel, rid_enzyme)
     kcat_original_rid_order = String[]
     col_idxs = Int[]
     mws = Float64[]
@@ -101,27 +130,9 @@ function differentiable_smoment_opt_problem(
     end
 
     kcat_idxs = [
-        (first(indexin([rid], collect(keys(rid_enzyme)))), mw) for
+        (rid, first(indexin([rid], collect(keys(rid_enzyme)))), mw) for
         (rid, mw) in zip(kcat_original_rid_order, mws)
     ]
 
-    kcat_coupling(θ) =
-        sparsevec(col_idxs, [mw / θ[x] for (x, mw) in kcat_idxs], num_reactions)
-
-    #: inequality rhs
-    Cp = coupling(smm.inner)
-    M(θ) = [
-        -1.0 * I(num_reactions)
-        1.0 * I(num_reactions)
-        Cp
-        -kcat_coupling(θ)'
-        kcat_coupling(θ)'
-    ]
-
-    #: inequality lhs
-    xlb, xub = bounds(smm)
-    clb, cub = coupling_bounds(smm.inner)
-    h = _ -> [-xlb; xub; -clb; cub; 0; smm.total_enzyme_capacity]
-
-    return c, E, d, M, h, reactions(smm)
+    return col_idxs, kcat_idxs
 end

@@ -39,7 +39,7 @@ function with_parameters(
         [mid_concentration[mid] for mid in metabolites(smm)]
     ]
 
-    c, E, d, M, h, var_ids = differentiable_thermodynamic_gecko_opt_problem(
+    c, E, d, M, h, var_ids = _differentiable_thermodynamic_gecko_opt_problem(
         gm,
         rid_enzyme,
         rid_dg0;
@@ -67,9 +67,9 @@ end
 """
     $(TYPEDSIGNATURES)
 
-Return optimization problem for gecko problem, but in differentiable format.
+Return optimization problem for a thermodynamic gecko problem, but in differentiable format.
 """
-function differentiable_thermodynamic_gecko_opt_problem(
+function _differentiable_thermodynamic_gecko_opt_problem(
     gm::GeckoModel,
     rid_enzyme::Dict{String,Enzyme},
     rid_dg0::Dict{String,Float64};
@@ -97,7 +97,11 @@ function differentiable_thermodynamic_gecko_opt_problem(
     Se(θ) = sparse(
         E_components.row_idxs,
         E_components.col_idxs,
-        [stoich / θ[idx] for (rid, ridx, stoich) in kcat_rid_ridx_stoich],
+        [
+            stoich / (
+                θ[ridx] * DifferentiableMetabolism._dg(gm, rid_enzyme, rid_dg0, rid, θ; RT)
+            ) for (rid, ridx, stoich) in kcat_rid_ridx_stoich
+        ],
         num_genes,
         num_reactions,
     )

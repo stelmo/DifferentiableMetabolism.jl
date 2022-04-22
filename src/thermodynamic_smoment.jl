@@ -37,7 +37,7 @@ function with_parameters(
         [mid_concentration[mid] for mid in metabolites(smm)]
     ]
 
-    c, E, d, M, h, var_ids = differentiable_thermodynamic_smoment_opt_problem(
+    c, E, d, M, h, var_ids = _differentiable_thermodynamic_smoment_opt_problem(
         smm,
         rid_enzyme,
         rid_dg0;
@@ -69,7 +69,7 @@ Return structures that will allow the most basic form of smoment to be solved.
 No enzyme constraints allowed. Most effective enzyme is the only GRR. Assume
 unidirectional reactions.
 """
-function differentiable_thermodynamic_smoment_opt_problem(
+function _differentiable_thermodynamic_smoment_opt_problem(
     smm::SMomentModel,
     rid_enzyme::Dict{String,Enzyme},
     rid_dg0::Dict{String,Float64};
@@ -100,49 +100,22 @@ function differentiable_thermodynamic_smoment_opt_problem(
     c = _ -> -objective(smm)
 
     #: coupling kcats and thermodynamics
-    kcat_original_rid_order = String[]
-    met_order = Vector{Vector{String}}()
-    nus_vec = Vector{Vector{Float64}}()
-    col_idxs = Int[]
-    mws = Float64[]
-    for (col_idx, rid) in enumerate(reactions(smm))
-        original_rid = string(first(split(rid, "#")))
-
-        # skip these entries
-        !haskey(rid_enzyme, original_rid) && continue
-        original_rid in ignore_reaction_ids && continue
-
-        # kinetic info
-        mw = sum([
-            pstoich * rid_enzyme[original_rid].gene_product_mass[gid] for
-            (gid, pstoich) in rid_enzyme[original_rid].gene_product_count
-        ])
-        push!(kcat_original_rid_order, original_rid)
-        push!(col_idxs, col_idx)
-        push!(mws, mw)
-
-        # # thermo info
-        # rs = reaction_stoichiometry(smm.inner, original_rid)
-        # if haskey(rid_dg0, original_rid)
-        #     push!(met_order, collect(keys(rs)))
-        #     push!(nus_vec, collect(values(rs)))
-        # else
-        #     push!(met_order, collect(keys(rs)))
-        #     push!(nus_vec, Float64[]) # acts like a flag
-        # end
-    end
-
-    kcat_idxs = [
-        (rid, first(indexin([rid], collect(keys(rid_enzyme)))), mw) for
-        (rid, mw) in zip(kcat_original_rid_order, mws)
-    ]
+    col_idxs, kcat_idxs =
+        DifferentiableMetabolism._build_smoment_kcat_coupling(smm, rid_enzyme)
 
     kcat_thermo_coupling(θ) = sparsevec(
         col_idxs,
         [
             mw / (
-                (θ[rid_idx]) *
-                DifferentiableMetabolism._dg(smm, rid_enzyme, rid_dg0, rid, θ; RT)
+                (θ[rid_idx]) * DifferentiableMetabolism._dg(
+                    smm,
+                    rid_enzyme,
+                    rid_dg0,
+                    rid,
+                    θ;
+                    RT,
+                    ignore_reaction_ids,
+                )
             ) for (rid, rid_idx, mw) in kcat_idxs
         ],
         n_reactions(smm),

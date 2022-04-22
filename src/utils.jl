@@ -27,17 +27,26 @@ end
 
 Helper function to assign the thermodynamic driving force to a reaction.
 """
-function _dg(model, rid_enzyme, rid_dg0, rid, θ; RT = 298.15 * 8.314e-3)
+function _dg(
+    model,
+    rid_enzyme,
+    rid_dg0,
+    rid,
+    θ;
+    RT = 298.15 * 8.314e-3,
+    ignore_reaction_ids = [],
+)
     rs = reaction_stoichiometry(model, rid)
     stoich = values(rs)
     mids = collect(keys(rs))
     midxs = Int.(indexin(mids, metabolites(model))) .+ length(rid_enzyme)
-    if haskey(rid_dg0, rid)
+    if !haskey(rid_dg0, rid) || rid in ignore_reaction_ids
+        # no kinetic info or should be ignore thermodynamically
+        return 1.0
+    else
         dg_val =
             rid_dg0[rid] + RT * sum(nu * log(θ[midx]) for (nu, midx) in zip(stoich, midxs))
         return 1.0 - exp(dg_val / RT)
-    else # no kinetic info
-        return 1.0
     end
 end
 

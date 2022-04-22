@@ -5,7 +5,7 @@ Return the analytic derivative of the optimality conditions with respect to
 the parameters.
 """
 function derivative_of_enzyme_equality(gm::GeckoModel, rid_enzyme)
-    E_components, kcat_stoich_idx = _build_equality_enzyme_constraints(gm, rid_enzyme)
+    E_components, kcat_stoich_idx = _build_gecko_equality_enzyme_constraints(gm, rid_enzyme)
 
     row_col_stoich_tidx = zip(
         E_components.row_idxs,
