@@ -7,14 +7,14 @@ reduction, all elements are rounded to `digits` after the decimal. Rows of all z
 (absolute value of the each element in row ≤ `atol`) are removed. Beware, this
 operation is expensive for very large matrices.
 """
-function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-12, digits = 16)
+function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8, digits = 16)
     #TODO this method is suboptimal and can be improved for numerical stability
     #TODO improve RowEchelon, SVD does not work due to column reordering
     rA = round.(rref!(copy(Array(A)), ϵ); digits)
 
     idxs = Int[]
     for i = 1:size(rA, 1)
-        if !all(abs.(rA[i, :]) .> atol) # remove rows of all zero
+        if all(abs.(rA[i, :]) .<= atol) # remove rows of all zero
             push!(idxs, i)
         end
     end
@@ -56,9 +56,9 @@ end
 Return a simplified version of `model` that contains only reactions (and the
 associated metabolites) that are active, i.e. carry fluxes (from
 `reaction_fluxes`) absolutely bigger than `atol`. All reactions are set
-unidirectional based on `reaction_fluxes`. If `gene_product_concentrations` is supplied,
-then genes that have a concentration bigger than `atol` are also included in the pruned model,
-otherwise no gene information is retained.
+unidirectional based on `reaction_fluxes`. If `gene_product_concentrations` is
+supplied, then genes that have a concentration bigger than `atol` are also
+included in the pruned model, otherwise no gene information is retained.
 """
 function prune_model(
     model::StandardModel,

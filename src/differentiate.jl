@@ -88,7 +88,7 @@ function _differentiate_kkt(
     if all(Q(θ) + regQ .== 0)
         @objective(opt_model, Min, c(θ)' * x)
     else
-        @objective(opt_model, Min, 0.5 * x' * Q(θ) * x + c(θ)' * x)
+        @objective(opt_model, Min, 0.5 * x' * (Q(θ) + regQ) * x + c(θ)' * x)
     end
 
     @constraint(opt_model, eq, row_factors .* E(θ) * x .== row_factors .* d(θ))
