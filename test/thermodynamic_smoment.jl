@@ -14,7 +14,7 @@
         for (k, v) in reaction_isozymes
     )
 
-    rid_dg0 = Dict("r4" => -1.0, "r5" => -10.0)
+    rid_dg0 = Dict("r4" => -1.0, "r5" => -10.0, "r6" => 10.0)
 
     mid_concentration = Dict(
         "m6" => 0.001,
@@ -26,7 +26,13 @@
     )
 
     #: Differentiate model 
-    diffmodel = with_parameters(smm, rid_enzyme, rid_dg0, mid_concentration)
+    diffmodel = with_parameters(
+        smm,
+        rid_enzyme,
+        rid_dg0,
+        mid_concentration;
+        ignore_reaction_ids = ["r6"],
+    )
 
     x, dx = differentiate(
         diffmodel,

@@ -14,7 +14,7 @@ include("gecko.jl")
 include("gecko_analytic_derivatives.jl")
 include("smoment.jl")
 include("thermodynamic_smoment.jl")
-# include("thermokinetic_fba.jl")
+include("thermodynamic_gecko.jl")
 
 # export everything that isn't prefixed with _ (inspired by JuMP.jl, thanks!)
 for sym in names(@__MODULE__, all = true)

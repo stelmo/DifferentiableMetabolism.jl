@@ -32,11 +32,11 @@ function with_parameters(
 )
     param_ids = [
         "k#" .* collect(keys(rid_enzyme))
-        "c#" .* metabolites(smm)
+        "c#" .* metabolites(gm.inner)
     ]
     θ = [
         [x.kcat for x in values(rid_enzyme)]
-        [mid_concentration[mid] for mid in metabolites(smm)]
+        [mid_concentration[mid] for mid in metabolites(gm.inner)]
     ]
 
     c, E, d, M, h, var_ids = _differentiable_thermodynamic_gecko_opt_problem(
@@ -92,14 +92,23 @@ function _differentiable_thermodynamic_gecko_opt_problem(
     num_vars = num_reactions + num_genes
 
     #: equality lhs
-    E_components, kcat_rid_ridx_stoich = _build_equality_enzyme_constraints(gm, rid_enzyme)
+    E_components, kcat_rid_ridx_stoich =
+        DifferentiableMetabolism._build_gecko_equality_enzyme_constraints(gm, rid_enzyme)
 
     Se(θ) = sparse(
         E_components.row_idxs,
         E_components.col_idxs,
         [
             stoich / (
-                θ[ridx] * DifferentiableMetabolism._dg(gm, rid_enzyme, rid_dg0, rid, θ; RT)
+                θ[ridx] * DifferentiableMetabolism._dg(
+                    gm,
+                    rid_enzyme,
+                    rid_dg0,
+                    rid,
+                    θ;
+                    RT,
+                    ignore_reaction_ids,
+                )
             ) for (rid, ridx, stoich) in kcat_rid_ridx_stoich
         ],
         num_genes,

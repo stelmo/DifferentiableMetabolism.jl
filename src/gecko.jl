@@ -134,7 +134,7 @@ end
 
 Helper function to build the equality enzyme constraints.
 """
-function _build_gecko_equality_enzyme_constraints(gm::GeckoModel, rid_enzyme;)
+function _build_gecko_equality_enzyme_constraints(gm::GeckoModel, rid_enzyme)
     E_components = ( #TODO add size hints if possible
         row_idxs = Vector{Int}(),
         col_idxs = Vector{Int}(),
