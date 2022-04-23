@@ -2,6 +2,7 @@
     with_parameters(
         gm::GeckoModel,
         rid_enzyme::Dict{String,Enzyme};
+        scale_equality = false,
         analytic_parameter_derivatives = x -> nothing,
         ϵ = 1e-8,
         atol = 1e-12,
@@ -16,7 +17,8 @@ of `rid_enzyme`.
 
 The analytic derivative of the optimality conditions with respect to the
 parameters can be supplied through `analytic_parameter_derivatives`. Internally,
-`ϵ`, `atol`, and `digits`, are forwarded to [`_remove_lin_dep_rows`](@ref). 
+`ϵ`, `atol`, and `digits`, are forwarded to [`_remove_lin_dep_rows`](@ref).
+Optionally, scale the equality constraints with `scale_equality`
 
 Note, to ensure differentiability, preprocessing of the model is required. In short,
 only an active solution may be differentiated, this required that:
@@ -28,6 +30,7 @@ only an active solution may be differentiated, this required that:
 function with_parameters(
     gm::GeckoModel,
     rid_enzyme::Dict{String,Enzyme};
+    scale_equality = false,
     analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
     atol = 1e-12,
@@ -36,20 +39,25 @@ function with_parameters(
     param_ids = "k#" .* collect(keys(rid_enzyme))
     θ = [x.kcat for x in values(rid_enzyme)]
 
-    c, E, d, M, h, var_ids =
-        _differentiable_gecko_opt_problem(gm, rid_enzyme; ϵ, atol, digits)
+    c, _E, d, M, h, var_ids = DifferentiableMetabolism._differentiable_gecko_opt_problem(
+        gm,
+        rid_enzyme;
+        ϵ,
+        atol,
+        digits,
+    )
 
-    return DifferentiableModel(
-        _ -> spzeros(length(var_ids), length(var_ids)),
+    _make_differentiable_model(
         c,
-        E,
+        _E,
         d,
         M,
         h,
         θ,
         analytic_parameter_derivatives,
         param_ids,
-        var_ids,
+        var_ids;
+        scale_equality,
     )
 end
 

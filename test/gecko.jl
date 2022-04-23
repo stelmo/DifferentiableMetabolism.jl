@@ -54,9 +54,9 @@
         isapprox(dx_auto[i], dx_anal[i]; atol = TEST_TOLERANCE) for i in eachindex(dx_anal)
     ])
 
-    #: Add a regularizer and test QP
-    x_qp, dx_qp =
-        differentiate(diffmodel, Ipopt.Optimizer; use_analytic = false, regularizer = 0.1)
+    #: Add a regularizer and test QP 
+    update_Q!(diffmodel, _ -> spdiagm(fill(0.1, length(diffmodel.var_ids))))
+    x_qp, dx_qp = differentiate(diffmodel, Ipopt.Optimizer; use_analytic = false)
 
     # test if reproduceable solutions
     x_qp_ref = [
@@ -77,17 +77,17 @@
     ])
 
     dx_qp_ref = [
-        0.000376045   0.00153551   0.00192548
-        0.000376045   0.00153551   0.00192548
-        0.000376045   0.00153551   0.00192548
-        0.000376045   0.00153551   0.00192548
-        0.000376045   0.00153551   0.00192548
-        0.000376045   0.00153551   0.00192548
-        0.000376045   0.00153551   0.00192548
-        0.000376045  -0.998464     0.00192548
-        0.000376045   0.00153551  -0.998075
-       -0.124624      0.00153551  -0.873075
-       -0.999624      0.00153551   0.00192548
+        0.000376045 0.00153551 0.00192548
+        0.000376045 0.00153551 0.00192548
+        0.000376045 0.00153551 0.00192548
+        0.000376045 0.00153551 0.00192548
+        0.000376045 0.00153551 0.00192548
+        0.000376045 0.00153551 0.00192548
+        0.000376045 0.00153551 0.00192548
+        0.000376045 -0.998464 0.00192548
+        0.000376045 0.00153551 -0.998075
+        -0.124624 0.00153551 -0.873075
+        -0.999624 0.00153551 0.00192548
     ]
     @test all([
         isapprox(dx_qp_ref[i], dx_qp[i]; atol = TEST_TOLERANCE) for i in eachindex(dx_qp)

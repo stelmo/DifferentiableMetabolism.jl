@@ -4,6 +4,7 @@
         rid_enzyme::Dict{String,Enzyme},
         rid_dg0::Dict{String,Float64},
         mid_concentration::Dict{String,Float64};
+        scale_equality = false,
         analytic_parameter_derivatives = x -> nothing,
         ϵ = 1e-8,
         atol = 1e-12,
@@ -32,6 +33,7 @@ function with_parameters(
     rid_enzyme::Dict{String,Enzyme},
     rid_dg0::Dict{String,Float64},
     mid_concentration::Dict{String,Float64};
+    scale_equality = false,
     analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
     atol = 1e-12,
@@ -48,7 +50,7 @@ function with_parameters(
         [mid_concentration[mid] for mid in metabolites(smm)]
     ]
 
-    c, E, d, M, h, var_ids = _differentiable_thermodynamic_smoment_opt_problem(
+    c, _E, d, M, h, var_ids = _differentiable_thermodynamic_smoment_opt_problem(
         smm,
         rid_enzyme,
         rid_dg0;
@@ -59,17 +61,17 @@ function with_parameters(
         ignore_reaction_ids,
     )
 
-    return DifferentiableModel(
-        _ -> spzeros(length(var_ids), length(var_ids)),
+    _make_differentiable_model(
         c,
-        E,
+        _E,
         d,
         M,
         h,
         θ,
         analytic_parameter_derivatives,
         param_ids,
-        var_ids,
+        var_ids;
+        scale_equality,
     )
 end
 

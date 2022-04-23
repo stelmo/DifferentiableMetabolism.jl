@@ -14,7 +14,7 @@ function derivative_of_enzyme_equality(gm::GeckoModel, rid_enzyme)
         [idx for (_, idx, _) in kcat_stoich_idx],
     )
 
-    function db1(x, ν, λ, θ, reg)
+    function db1(x, ν, λ, θ)
         deriv_block = zeros(length(x), length(rid_enzyme))
         for j = 1:length(x)
             for (_r, c, s, i) in row_col_stoich_tidx
@@ -27,7 +27,7 @@ function derivative_of_enzyme_equality(gm::GeckoModel, rid_enzyme)
         deriv_block
     end
 
-    function db2(x, ν, λ, θ, reg)
+    function db2(x, ν, λ, θ)
         deriv_block = zeros(n_genes(gm), length(rid_enzyme))
         for j = 1:n_genes(gm)
             for (r, c, s, i) in row_col_stoich_tidx
@@ -44,9 +44,9 @@ function derivative_of_enzyme_equality(gm::GeckoModel, rid_enzyme)
 
     num_ineq_cons = n_genes(gm) * 2 + n_reactions(gm) * 2 + n_coupling_constraints(gm) * 2
 
-    return (x, ν, λ, θ, reg) -> [
-        db1(x, ν, λ, θ, reg)
-        db2(x, ν, λ, θ, reg)
+    return (x, ν, λ, θ) -> [
+        db1(x, ν, λ, θ)
+        db2(x, ν, λ, θ)
         zeros(num_ineq_cons, length(rid_enzyme))
     ]
 end

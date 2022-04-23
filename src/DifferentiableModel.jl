@@ -1,13 +1,5 @@
 """
-    struct DifferentiableModel{
-        F1<:Function,
-        F2<:Function,
-        F3<:Function,
-        F4<:Function,
-        F5<:Function,
-        F6<:Function,
-        F7<:Function,
-    }
+    mutable struct DifferentiableModel
 
 A struct representing a generalized differentiable constraint based model.
 Format of the model is:
@@ -24,35 +16,29 @@ a function taking 4 arguments, `(x, ν, λ, θ)`.
 
 # Fields
 ```
-Q::F1
-c::F2
-E::F3
-d::F4
-M::F5
-h::F6
+Q::Function
+c::Function
+E::Function
+d::Function
+M::Function
+h::Function
 θ::Vector{Float64}
-param_derivs::F7
+auto_derivs::Function
+param_derivs::Function
 param_ids::Vector{String}
 var_ids::Vector{String}
 ```
 """
-struct DifferentiableModel{
-    F1<:Function,
-    F2<:Function,
-    F3<:Function,
-    F4<:Function,
-    F5<:Function,
-    F6<:Function,
-    F7<:Function,
-}
-    Q::F1
-    c::F2
-    E::F3
-    d::F4
-    M::F5
-    h::F6
+mutable struct DifferentiableModel
+    Q::Function
+    c::Function
+    E::Function
+    d::Function
+    M::Function
+    h::Function
     θ::Vector{Float64}
-    param_derivs::F7
+    auto_derivs::Function
+    param_derivs::Function
     param_ids::Vector{String}
     var_ids::Vector{String}
 end

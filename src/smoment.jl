@@ -2,6 +2,7 @@
     with_parameters(
         smm::SMomentModel,
         rid_enzyme::Dict{String,Enzyme};
+        scale_equality = false,
         analytic_parameter_derivatives = x -> nothing,
         ϵ = 1e-8,
         atol = 1e-12,
@@ -28,6 +29,7 @@ only an active solution may be differentiated, this required that:
 function with_parameters(
     smm::SMomentModel,
     rid_enzyme::Dict{String,Enzyme};
+    scale_equality = false,
     analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
     atol = 1e-12,
@@ -36,20 +38,20 @@ function with_parameters(
     param_ids = "k#" .* collect(keys(rid_enzyme))
     θ = [x.kcat for x in values(rid_enzyme)]
 
-    c, E, d, M, h, var_ids =
+    c, _E, d, M, h, var_ids =
         _differentiable_smoment_opt_problem(smm, rid_enzyme; ϵ, atol, digits)
 
-    return DifferentiableModel(
-        _ -> spzeros(length(var_ids), length(var_ids)),
+    _make_differentiable_model(
         c,
-        E,
+        _E,
         d,
         M,
         h,
         θ,
         analytic_parameter_derivatives,
         param_ids,
-        var_ids,
+        var_ids;
+        scale_equality,
     )
 end
 
