@@ -1,10 +1,12 @@
 """
-    make_analytic_derivatives(diffmodel::DifferentiableModel)
+    make_symbolic_derivatives(diffmodel::DifferentiableModel)
 
-Creates analytic derivative functions of the `diffmodel` using symbolic
-variables.
+Creates analytic derivative functions of the `diffmodel` internals, using
+symbolic variables. Note, this function can take some time to construct the
+derivatives, but substantially speeds up repeated calls to
+[`differentiate`](@ref).
 """
-function make_analytic_derivatives(diffmodel::DifferentiableModel)
+function make_symbolic_derivatives(diffmodel::DifferentiableModel)
     dm = diffmodel # convenience
 
     xidxs = 1:length(dm.c(dm.θ))
@@ -41,11 +43,11 @@ function make_analytic_derivatives(diffmodel::DifferentiableModel)
     #TODO only get jacobian of theta
     sj = sparse(Symbolics.jacobian(sparse_F(sz), sz)[:, end-(length(sθ)-1):end])
     (nr, nc) = size(sj)
-    
+
     f_expr = build_function(sj, [sx; sν; sλ; sθ])
     myf = eval(first(f_expr))
 
-    dm.analytic_par_derivs = (x, ν, λ, θ) -> reshape(myf([x; ν; λ; θ]), nr, nc) 
+    dm.analytic_par_derivs = (x, ν, λ, θ) -> reshape(myf([x; ν; λ; θ]), nr, nc)
 
     dm.analytic_var_derivs =
         (x, ν, λ, θ) -> [

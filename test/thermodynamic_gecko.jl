@@ -94,4 +94,11 @@
         -0.805446 0.123807 0.681638 -0.0 -1.42566e-7 0.341868 -0.341868 -0.341868 1.42566e-7
     ]
     @test all([isapprox(dx_ref[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx)])
+
+    # test if automatic and symbolic derivatives are the same
+    make_symbolic_derivatives(diffmodel)
+    _, dx_sym = differentiate(diffmodel, Tulip.Optimizer; use_analytic = true)
+    @test all([
+        isapprox(dx_sym[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx_sym)
+    ])
 end
