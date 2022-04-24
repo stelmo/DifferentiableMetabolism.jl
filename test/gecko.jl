@@ -30,11 +30,7 @@
     gene_product_mass_group_dict(gm, opt_model)
 
     #: Differentiate an optimal solution
-    diffmodel = with_parameters(
-        gm,
-        rid_enzyme;
-        analytic_parameter_derivatives = derivative_of_enzyme_equality(gm, rid_enzyme),
-    )
+    diffmodel = with_parameters(gm, rid_enzyme;)
 
     x_auto, dx_auto = differentiate(
         diffmodel,
@@ -49,6 +45,7 @@
     @test isapprox(sol["r3#forward#1"], gecko_fluxes["r3"]; atol = TEST_TOLERANCE)
 
     # test if automatic and manual derivatives are the same
+    make_analytic_derivatives(diffmodel)
     x_anal, dx_anal = differentiate(diffmodel, Tulip.Optimizer; use_analytic = true)
     @test all([
         isapprox(dx_auto[i], dx_anal[i]; atol = TEST_TOLERANCE) for i in eachindex(dx_anal)

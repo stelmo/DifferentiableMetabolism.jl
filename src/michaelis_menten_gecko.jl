@@ -57,18 +57,7 @@ function with_parameters(
         ignore_reaction_ids,
     )
 
-    _make_differentiable_model(
-        c,
-        _E,
-        d,
-        M,
-        h,
-        θ,
-        analytic_parameter_derivatives,
-        param_ids,
-        var_ids;
-        scale_equality,
-    )
+    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality)
 end
 
 """
@@ -147,7 +136,7 @@ function _differentiable_michaelis_menten_gecko_opt_problem(
 
     E(θ) = [
         S spzeros(num_metabolites, num_genes)
-        Se(θ) I(num_genes)
+        Se(θ) spdiagm(fill(1.0, num_genes))
     ]
 
     #: equality rhs
@@ -161,8 +150,8 @@ function _differentiable_michaelis_menten_gecko_opt_problem(
     clb, cub = coupling_bounds(gm)
     xlb, xub = bounds(gm)
     M = _ -> [
-        -I(num_vars)
-        I(num_vars)
+        -spdiagm(fill(1.0, num_vars))
+        spdiagm(fill(1.0, num_vars))
         -Cp
         Cp
     ]

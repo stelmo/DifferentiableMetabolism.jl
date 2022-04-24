@@ -41,18 +41,7 @@ function with_parameters(
     c, _E, d, M, h, var_ids =
         _differentiable_smoment_opt_problem(smm, rid_enzyme; ϵ, atol, digits)
 
-    _make_differentiable_model(
-        c,
-        _E,
-        d,
-        M,
-        h,
-        θ,
-        analytic_parameter_derivatives,
-        param_ids,
-        var_ids;
-        scale_equality,
-    )
+    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality)
 end
 
 """
@@ -104,8 +93,8 @@ function _differentiable_smoment_opt_problem(
     #: inequality rhs
     Cp = coupling(smm.inner)
     M(θ) = [
-        -1.0 * I(num_reactions)
-        1.0 * I(num_reactions)
+        -1.0 * spdiagm(fill(1.0, num_reactions))
+        1.0 * spdiagm(fill(1.0, num_reactions))
         Cp
         -kcat_coupling(θ)'
         kcat_coupling(θ)'

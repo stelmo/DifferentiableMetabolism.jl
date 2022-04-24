@@ -171,36 +171,17 @@ function prune_model(
 end
 
 """
-This is slower but works for any model and the user does not have to
-supply any analytic derivatives. However, the any sparse arrays encoded
-in the model structure must be cast to dense arrays for ForwardDiff to
-work. Note, if the internal structures of diffmodel are changes, then
-auto_derivs MUST be updated. 
-"""
-function get_auto_derivs(Q, c, E, d, M, h, len_vars, len_eqs, len_ineqs, len_params)
-    xidxs = 1:len_vars
-    νidxs = len_vars .+ (1:len_eqs)
-    λidxs = (len_vars + len_eqs) .+ (1:len_ineqs)
-    θidxs = (len_vars + len_eqs + len_ineqs) .+ (1:len_params)
-
-    F(z) = [
-        Array(Q(z[θidxs])) * z[xidxs] + Array(c(z[θidxs])) -
-        Array(E(z[θidxs]))' * z[νidxs] - Array(M(z[θidxs]))' * z[λidxs]
-        Array(E(z[θidxs])) * z[xidxs] - Array(d(z[θidxs]))
-        diagm(z[λidxs]) * (Array(M(z[θidxs])) * z[xidxs] - Array(h(z[θidxs])))
-    ]
-
-    # slow to generate
-    fdz(z) = ForwardDiff.jacobian(z -> F(z), z)
-
-    (x, ν, λ, θ) -> begin
-        z = [x; ν; λ; θ]
-        dz = fdz(z)
-        (dz[:, [xidxs; νidxs; λidxs]], dz[:, θidxs])
-    end
-end
-
-"""
+    _make_differentiable_model(
+        c,
+        _E,
+        d,
+        M,
+        h,
+        θ,
+        var_ids,
+        param_ids;
+        scale_equality = false,
+    )
 
 Internal helper function to construct a basic linear program representing a
 differentiable metabolic model.
@@ -212,9 +193,8 @@ function _make_differentiable_model(
     M,
     h,
     θ,
-    analytic_parameter_derivatives,
-    param_ids,
-    var_ids;
+    var_ids,
+    param_ids;
     scale_equality = false,
 )
 
@@ -228,19 +208,6 @@ function _make_differentiable_model(
 
     E(θ) = row_factors .* _E(θ)
 
-    auto_derivs = get_auto_derivs(
-        Q,
-        c,
-        E,
-        d,
-        M,
-        h,
-        length(c(θ)),
-        size(E(θ), 1),
-        size(M(θ), 1),
-        length(θ),
-    )
-
     return DifferentiableModel(
         Q,
         c,
@@ -249,9 +216,9 @@ function _make_differentiable_model(
         M,
         h,
         θ,
-        auto_derivs,
-        analytic_parameter_derivatives,
-        param_ids,
+        _ -> throw(MissingException("Missing method: analytic derivatives of variables.")),
+        _ -> throw(MissingException("Missing method: analytic derivatives of parameters.")),
         var_ids,
+        param_ids,
     )
 end

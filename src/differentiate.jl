@@ -64,61 +64,83 @@ function _differentiate_kkt(
     modifications = [],
     use_analytic = false,
 )
-    #: forward pass, solve the optimization problem
-    Q = diffmodel.Q
-    c = diffmodel.c
-    E = diffmodel.E
-    d = diffmodel.d
-    M = diffmodel.M
-    h = diffmodel.h
-    θ = diffmodel.θ
+    to = TimerOutput() #TODO remove
 
-    opt_model = Model(optimizer)
-    set_silent(opt_model)
-    @variable(opt_model, x[1:size(E(θ), 2)])
+    @timeit to "Optimization" begin
 
-    if all(Q(θ) .== 0)
-        @objective(opt_model, Min, c(θ)' * x)
-    else
-        @objective(opt_model, Min, 0.5 * x' * Q(θ) * x + c(θ)' * x)
+        #: forward pass, solve the optimization problem
+        Q = diffmodel.Q
+        c = diffmodel.c
+        E = diffmodel.E
+        d = diffmodel.d
+        M = diffmodel.M
+        h = diffmodel.h
+        θ = diffmodel.θ
+
+        opt_model = Model(optimizer)
+        set_silent(opt_model)
+        @variable(opt_model, x[1:size(E(θ), 2)])
+
+        if all(Q(θ) .== 0) # is LP
+            @objective(opt_model, Min, c(θ)' * x)
+        else
+            @objective(opt_model, Min, 0.5 * x' * Q(θ) * x + c(θ)' * x)
+        end
+
+        @constraint(opt_model, eq, E(θ) * x .== d(θ))
+        @constraint(opt_model, ineq, M(θ) * x .<= h(θ))
+
+        # apply the modifications
+        for mod in modifications
+            mod(nothing, opt_model)
+        end
+
+        optimize!(opt_model)
+
+        @assert(termination_status(opt_model) in [JuMP.OPTIMAL, JuMP.LOCALLY_SOLVED])
     end
 
-    @constraint(opt_model, eq, E(θ) * x .== d(θ))
-    @constraint(opt_model, ineq, M(θ) * x .<= h(θ))
+    @timeit to "Differentiate" begin
+        #: differentiate the optimal solution
+        x = value.(opt_model[:x])
+        ν = dual.(opt_model[:eq])
+        λ = dual.(opt_model[:ineq])
 
-    # apply the modifications
-    for mod in modifications
-        mod(nothing, opt_model)
+        if use_analytic
+            #=
+            This is much faster than using automatic differentiation, but more labor
+            intensive because the derivative of the parameters with respect to the
+            KKT function needs to be manually supplied. Ideally, use symbolic code 
+            to generate the derivatives for you.
+            =#
+            A = diffmodel.analytic_var_derivs(x, ν, λ, θ)
+            B = diffmodel.analytic_par_derivs(x, ν, λ, θ)
+        else
+            #=
+            This is slower but works for any model and the user does not have to
+            supply any analytic derivatives. However, the any sparse arrays encoded
+            in the model structure must be cast to dense arrays for ForwardDiff to
+            work. The densification restriction can be dropped once #481 here 
+            https://github.com/JuliaDiff/ForwardDiff.jl/pull/481 gets merged into 
+            ForwardDiff.
+            =#
+            xidxs = 1:length(x)
+            νidxs = last(xidxs) .+ (1:length(ν))
+            λidxs = last(νidxs) .+ (1:length(λ))
+            θidxs = last(λidxs) .+ (1:length(θ))
+
+            F(z) = [
+                Array(Q(z[θidxs])) * z[xidxs] + Array(c(z[θidxs])) -
+                Array(E(z[θidxs]))' * z[νidxs] - Array(M(z[θidxs]))' * z[λidxs]
+                Array(E(z[θidxs])) * z[xidxs] - Array(d(z[θidxs]))
+                diagm(z[λidxs]) * (Array(M(z[θidxs])) * z[xidxs] - Array(h(z[θidxs])))
+            ]
+
+            J = ForwardDiff.jacobian(F, [x; ν; λ; θ])
+            A = J[:, 1:last(λidxs)] #TODO this can be analytic by default
+            B = J[:, (1+last(λidxs)):end]
+        end
     end
-
-    optimize!(opt_model)
-
-    @assert(termination_status(opt_model) in [JuMP.OPTIMAL, JuMP.LOCALLY_SOLVED])
-
-    #: differentiate the optimal solution
-    x = value.(opt_model[:x])
-    ν = dual.(opt_model[:eq])
-    λ = dual.(opt_model[:ineq])
-
-    if use_analytic
-        #=
-        This is much faster than using automatic differentiation, but more labor
-        intensive because the derivative of the parameters with respect to the
-        KKT function needs to be manually supplied.
-        =#
-        A = [
-            Q(θ) -E(θ)' -M(θ)'
-            E(θ) zeros(size(E(θ), 1), length(ν)) zeros(size(E(θ), 1), length(λ))
-            diagm(λ)*M(θ) zeros(size(M(θ), 1), length(ν)) diagm(M(θ) * x - h(θ))
-        ]
-        B = diffmodel.param_derivs(x, ν, λ, θ)
-    else
-        #=
-        Note, if the internal structures of diffmodel are changes, then
-        auto_derivs MUST be updated. 
-        =#
-        A, B = diffmodel.auto_derivs(x, ν, λ, θ)
-    end
-
+    println(to)
     return A, B, x
 end

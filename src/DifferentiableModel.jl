@@ -8,11 +8,7 @@ minimize    ½ * x' * Q(θ) * x + c(θ)' * x
 s.t.        E(θ) * x = d(θ) 
             M(θ) * x ≤ h(θ)
 ```
-Nominally, every component can be differentiated. Analytic derivatives of the
-KKT function with respect to the variables and parameters can be used to speed
-up the derivative calculation. For this, the derivative of `θ` with respect to
-the KKT conditions should be supplied through `param_derivs`, which should be 
-a function taking 4 arguments, `(x, ν, λ, θ)`.
+Nominally, every component can be differentiated.
 
 # Fields
 ```
@@ -23,11 +19,19 @@ d::Function
 M::Function
 h::Function
 θ::Vector{Float64}
-auto_derivs::Function
-param_derivs::Function
-param_ids::Vector{String}
+analytic_var_derivs::Function
+analytic_par_derivs::Function
 var_ids::Vector{String}
+param_ids::Vector{String}
 ```
+Note, to ensure differentiability, preprocessing of the model used to derive the
+[`DifferentiableModel`](@ref) is required. In short, only an active solution may
+be differentiated, this requires that:
+- the base model does not possess any isozymes, each reaction may be catalyzed
+  by one enzyme (complex) only,
+- all the reactions should be unidirectinal,
+- the kcats in `rid_enzyme` are for the appropriate direction used in the model,
+- all rids in `rid_enzyme` are used in the model.
 """
 mutable struct DifferentiableModel
     Q::Function
@@ -37,10 +41,10 @@ mutable struct DifferentiableModel
     M::Function
     h::Function
     θ::Vector{Float64}
-    auto_derivs::Function
-    param_derivs::Function
-    param_ids::Vector{String}
+    analytic_var_derivs::Function
+    analytic_par_derivs::Function
     var_ids::Vector{String}
+    param_ids::Vector{String}
 end
 
 """

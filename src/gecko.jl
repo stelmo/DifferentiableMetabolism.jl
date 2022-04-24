@@ -3,7 +3,6 @@
         gm::GeckoModel,
         rid_enzyme::Dict{String,Enzyme};
         scale_equality = false,
-        analytic_parameter_derivatives = x -> nothing,
         ϵ = 1e-8,
         atol = 1e-12,
         digits = 8,
@@ -15,23 +14,14 @@ dictionary `rid_enzyme`, which is a dictionary mapping reaction ids to
 [`Enzyme`](@ref)s. Enzyme constraints are only taken with respect to the entries
 of `rid_enzyme`.
 
-The analytic derivative of the optimality conditions with respect to the
-parameters can be supplied through `analytic_parameter_derivatives`. Internally,
-`ϵ`, `atol`, and `digits`, are forwarded to [`_remove_lin_dep_rows`](@ref).
-Optionally, scale the equality constraints with `scale_equality`
-
-Note, to ensure differentiability, preprocessing of the model is required. In short,
-only an active solution may be differentiated, this required that:
-- the model does not possess any isozymes
-- all the reactions should be unidirectinal
-- the kcats in `rid_enzyme` are for the appropriate direction used in the model
-- all rids in `rid_enzyme` are used in the model
+Internally, `ϵ`, `atol`, and `digits`, are forwarded to
+[`_remove_lin_dep_rows`](@ref). Optionally, scale the equality constraints with
+`scale_equality`, see [`scaling_factor`](@ref) for more information.
 """
 function with_parameters(
     gm::GeckoModel,
     rid_enzyme::Dict{String,Enzyme};
     scale_equality = false,
-    analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
@@ -47,18 +37,7 @@ function with_parameters(
         digits,
     )
 
-    _make_differentiable_model(
-        c,
-        _E,
-        d,
-        M,
-        h,
-        θ,
-        analytic_parameter_derivatives,
-        param_ids,
-        var_ids;
-        scale_equality,
-    )
+    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality)
 end
 
 """
@@ -70,7 +49,7 @@ end
         digits = 8,
     )
 
-Return optimization problem for gecko problem, but in differentiable format.
+Return optimization problem for a gecko model, but in differentiable format.
 """
 function _differentiable_gecko_opt_problem(
     gm::GeckoModel,
@@ -105,7 +84,7 @@ function _differentiable_gecko_opt_problem(
 
     E(θ) = [
         S spzeros(num_metabolites, num_genes)
-        Se(θ) I(num_genes)
+        Se(θ) spdiagm(fill(1.0, num_genes))
     ]
 
     #: equality rhs
@@ -119,8 +98,8 @@ function _differentiable_gecko_opt_problem(
     clb, cub = coupling_bounds(gm)
     xlb, xub = bounds(gm)
     M = _ -> [
-        -I(num_vars)
-        I(num_vars)
+        -spdiagm(fill(1.0, num_vars))
+        spdiagm(fill(1.0, num_vars))
         -Cp
         Cp
     ]

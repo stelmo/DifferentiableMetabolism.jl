@@ -1,8 +1,9 @@
 module DifferentiableMetabolism
 
 using COBREXA, JuMP
-using ForwardDiff
+using ForwardDiff, Symbolics
 using LinearAlgebra, SparseArrays, RowEchelon
+using TimerOutputs
 
 include("DifferentiableModel.jl")
 include("Enzyme.jl")
@@ -11,11 +12,11 @@ include("scale.jl")
 include("utils.jl")
 include("update.jl")
 include("gecko.jl")
-include("gecko_analytic_derivatives.jl")
 include("smoment.jl")
 include("thermodynamic_smoment.jl")
 include("thermodynamic_gecko.jl")
 include("michaelis_menten_gecko.jl")
+include("analytic_derivatives.jl")
 
 # export everything that isn't prefixed with _ (inspired by JuMP.jl, thanks!)
 for sym in names(@__MODULE__, all = true)
