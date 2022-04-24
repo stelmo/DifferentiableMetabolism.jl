@@ -36,14 +36,16 @@ function make_analytic_derivatives(diffmodel::DifferentiableModel)
         spdiagm(z[λidxs]) * (dm.M(z[θidxs]) * z[xidxs] - dm.h(z[θidxs]))
     ]
     sz = [sx; sν; sλ; sθ]
-    # sparse_F(sz)
+    sparse_F(sz)
 
-    sj = Symbolics.jacobian(sparse_F(sz), sz)[:, end-(length(sθ)-1):end] #TODO only get jacobian of theta
-
+    #TODO only get jacobian of theta
+    sj = sparse(Symbolics.jacobian(sparse_F(sz), sz)[:, end-(length(sθ)-1):end])
+    (nr, nc) = size(sj)
+    
     f_expr = build_function(sj, [sx; sν; sλ; sθ])
     myf = eval(first(f_expr))
 
-    dm.analytic_par_derivs = (x, ν, λ, θ) -> myf([x; ν; λ; θ])
+    dm.analytic_par_derivs = (x, ν, λ, θ) -> reshape(myf([x; ν; λ; θ]), nr, nc) 
 
     dm.analytic_var_derivs =
         (x, ν, λ, θ) -> [
