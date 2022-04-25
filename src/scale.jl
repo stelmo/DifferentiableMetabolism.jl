@@ -53,3 +53,11 @@ function check_scaling(mat; atol = 1e-8)
     worst_case = rub - rlb
     return best_case, worst_case
 end
+
+"""
+    check_scaling(diffmodel::DifferentiableModel; atol = 1e-8)
+
+Helper function to check the scaling of the equality constraint matrix.
+"""
+check_scaling(diffmodel::DifferentiableModel; atol = 1e-8) = 
+    check_scaling(diffmodel.E(diffmodel.θ); atol)
