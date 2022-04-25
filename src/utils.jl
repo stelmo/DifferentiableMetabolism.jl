@@ -201,7 +201,7 @@ function _make_differentiable_model(
     Q = _ -> spzeros(length(var_ids), length(var_ids))
 
     if scale_equality
-        row_factors = scaling_factor(_E(θ), d(θ))
+        row_factors = scaling_factor(_E(θ), _d(θ))
     else
         row_factors = fill(1.0, size(_E(θ), 1))
     end
