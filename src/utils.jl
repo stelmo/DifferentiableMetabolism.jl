@@ -189,7 +189,7 @@ differentiable metabolic model.
 function _make_differentiable_model(
     c,
     _E,
-    d,
+    _d,
     M,
     h,
     θ,
@@ -207,6 +207,7 @@ function _make_differentiable_model(
     end
 
     E(θ) = row_factors .* _E(θ)
+    d(θ) = row_factors .* _d(θ)
 
     return DifferentiableModel(
         Q,
