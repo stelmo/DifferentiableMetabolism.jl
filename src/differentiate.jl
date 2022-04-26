@@ -93,7 +93,9 @@ function _differentiate_kkt(
 
     optimize!(opt_model)
 
-    @assert(termination_status(opt_model) in [JuMP.OPTIMAL, JuMP.LOCALLY_SOLVED])
+    if termination_status(opt_model) ∉ [JuMP.OPTIMAL, JuMP.LOCALLY_SOLVED]
+        throw(DomainError(termination_status(opt_model), " model not solved optimally!"))
+    end
 
     #: differentiate the optimal solution
     x = value.(opt_model[:x])
