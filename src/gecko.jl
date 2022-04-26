@@ -38,7 +38,7 @@ function with_parameters(
         digits,
     )
 
-    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality)
+    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality, scale_inequality)
 end
 
 """

@@ -30,7 +30,6 @@ function with_parameters(
     mid_concentration::Dict{String,Float64};
     scale_equality = false,
     scale_inequality = false,
-    analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
@@ -58,7 +57,7 @@ function with_parameters(
         ignore_reaction_ids,
     )
 
-    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality)
+    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality, scale_inequality)
 end
 
 """
