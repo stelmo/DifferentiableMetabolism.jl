@@ -39,7 +39,7 @@
         modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
     )
 
-    (slb, sub) = check_scaling(diffmodel)
+    (slb, sub), _, _ = check_scaling(diffmodel)
 
     @test isapprox(slb, 1.845098040014257; atol = TEST_TOLERANCE)
     @test isapprox(sub, 2.146128035678238; atol = TEST_TOLERANCE)

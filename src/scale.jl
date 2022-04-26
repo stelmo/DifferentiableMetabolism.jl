@@ -55,9 +55,21 @@ function check_scaling(mat; atol = 1e-8)
 end
 
 """
-    check_scaling(diffmodel::DifferentiableModel; atol = 1e-8)
+    check_scaling(diffmodel::DifferentiableModel; atol = 1e-8, verbose=false)
 
 Helper function to check the scaling of the equality constraint matrix.
 """
-check_scaling(diffmodel::DifferentiableModel; atol = 1e-8) = 
-    check_scaling(diffmodel.E(diffmodel.θ); atol)
+function check_scaling(diffmodel::DifferentiableModel; atol = 1e-8, verbose=false)
+    eq = check_scaling([diffmodel.E(diffmodel.θ) diffmodel.d(diffmodel.θ)]; atol)
+    ineq = check_scaling([diffmodel.M(diffmodel.θ) diffmodel.h(diffmodel.θ)]; atol)
+    obj = all(diffmodel.Q(diffmodel.θ) .== 0.0) ? (0.0, 0.0) : check_scaling(diffmodel.Q(diffmodel.θ); atol)
+    if verbose 
+        println("Equality: ", eq)
+        println("Inequality: ", ineq)
+        println("Quadratic objective: ", obj)
+        return nothing
+    else
+        return eq, ineq, obj
+    end
+end
+    
