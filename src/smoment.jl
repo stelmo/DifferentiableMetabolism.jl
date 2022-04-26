@@ -69,7 +69,7 @@ function _differentiable_smoment_opt_problem(
     irrev_S = stoichiometry(smm.inner) * COBREXA._smoment_column_reactions(smm)
 
     #: make full rank
-    S = DifferentiableMetabolism._remove_lin_dep_rows(irrev_S; ϵ, digits, atol)
+    S = sparse(DifferentiableMetabolism._remove_lin_dep_rows(irrev_S; ϵ, digits, atol))
 
     #: size of resultant model
     num_reactions = size(S, 2)
