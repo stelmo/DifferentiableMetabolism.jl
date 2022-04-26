@@ -227,8 +227,8 @@ function _make_differentiable_model(
         M,
         h,
         θ,
-        _ -> throw(MissingException("Missing method: analytic derivatives of variables.")),
-        _ -> throw(MissingException("Missing method: analytic derivatives of parameters.")),
+        (_,_,_,_) -> throw(MissingException("Missing method: analytic derivatives of variables.")),
+        (_,_,_,_) -> throw(MissingException("Missing method: analytic derivatives of parameters.")),
         var_ids,
         param_ids,
     )

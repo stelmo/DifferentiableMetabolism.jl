@@ -7,8 +7,17 @@ derivatives, but substantially speeds up repeated calls to
 [`differentiate`](@ref).
 """
 function make_symbolic_derivatives(diffmodel::DifferentiableModel)
-    dm = diffmodel # convenience
+    diffmodel.analytic_par_derivs = make_symbolic_param_derivative(diffmodel)
+    diffmodel.analytic_var_derivs = make_symbolic_var_derivative(diffmodel)
+    return nothing
+end
 
+function _transpose(mat)
+    I, J, V = findnz(mat)
+    sparse(J, I, V)
+end
+
+function make_symbolic_param_derivative(dm::DifferentiableModel)
     xidxs = 1:length(dm.c(dm.θ))
     νidxs = last(xidxs) .+ (1:length(dm.d(dm.θ)))
     λidxs = last(νidxs) .+ (1:length(dm.h(dm.θ)))
@@ -28,23 +37,30 @@ function make_symbolic_derivatives(diffmodel::DifferentiableModel)
     ] #TODO remove transpose once #575 on Symbolics gets fixed
     # sparse_F(sx, sν, sλ, sθ)
 
-    sj = Symbolics.jacobian(Symbolics.scalarize.(sparse_F(sx, sν, sλ, sθ)), sθ)
+    sj = Symbolics.sparsejacobian(Symbolics.scalarize.(sparse_F(sx, sν, sλ, sθ)), sθ)
 
     f_expr = build_function(sj, sx, sν, sλ, sθ)
     myf = eval(first(f_expr))
 
-    dm.analytic_par_derivs = (x, ν, λ, θ) -> myf(x, ν, λ, θ)
-
-    dm.analytic_var_derivs =
-        (x, ν, λ, θ) -> [
-            dm.Q(θ) -dm.E(θ)' -dm.M(θ)'
-            dm.E(θ) spzeros(size(dm.E(θ), 1), length(ν)) spzeros(size(dm.E(θ), 1), length(λ))
-            spdiagm(λ)*dm.M(θ) spzeros(size(dm.M(θ), 1), length(ν)) spdiagm(dm.M(θ) * x - dm.h(θ))
-        ]
-    return nothing
+    (x, ν, λ, θ) -> myf(x, ν, λ, θ)
 end
 
-function _transpose(mat)
-    I, J, V = findnz(mat)
-    sparse(J, I, V)
-end
+make_symbolic_var_derivative(dm::DifferentiableModel) = 
+    (x, ν, λ, θ) -> [
+        dm.Q(θ) -dm.E(θ)' -dm.M(θ)'
+        dm.E(θ) spzeros(size(dm.E(θ), 1), length(ν)) spzeros(size(dm.E(θ), 1), length(λ))
+        spdiagm(λ)*dm.M(θ) spzeros(size(dm.M(θ), 1), length(ν)) spdiagm(dm.M(θ) * x - dm.h(θ))
+    ]
+
+# function _tranpose_mul_vec(A, b)
+#     rows = rowvals(A)
+#     vals = nonzeros(A)
+#     _, n = size(A)
+#     for j = 1:n
+#        for i in nzrange(A, j)
+#           row = rows[i]
+#           val = vals[i]
+#           # perform sparse wizardry...
+#        end
+#     end
+# end
