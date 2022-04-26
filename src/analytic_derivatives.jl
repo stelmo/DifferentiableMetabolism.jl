@@ -30,19 +30,36 @@ function make_symbolic_param_derivative(dm::DifferentiableModel)
         sθ[1:length(θidxs)]
     end
 
-    sparse_F(x, ν, λ, θ) = [
-        dm.Q(θ) * x + dm.c(θ) - _transpose(dm.E(θ)) * ν - _transpose(dm.M(θ)) * λ
-        dm.E(θ) * x - dm.d(θ)
-        λ .* (dm.M(θ) * x - dm.h(θ))
-    ] #TODO remove transpose once #575 on Symbolics gets fixed
-    # sparse_F(sx, sν, sλ, sθ)
+    # sparse_F(x, ν, λ, θ) = [
+    #     dm.Q(θ) * x + dm.c(θ) - _transpose(dm.E(θ)) * ν - _transpose(dm.M(θ)) * λ
+    #     dm.E(θ) * x - dm.d(θ)
+    #     λ .* (dm.M(θ) * x - dm.h(θ))
+    # ] #TODO remove transpose once #575 on Symbolics gets fixed
+    # # sparse_F(sx, sν, sλ, sθ)
 
-    sj = Symbolics.sparsejacobian(Symbolics.scalarize.(sparse_F(sx, sν, sλ, sθ)), sθ)
+    # sj = Symbolics.sparsejacobian(Symbolics.scalarize.(sparse_F(sx, sν, sλ, sθ)), sθ)
 
-    f_expr = build_function(sj, sx, sν, sλ, sθ)
+    # f_expr = build_function(sj, sx, sν, sλ, sθ)
+    # myf = eval(first(f_expr))
+
+    # (x, ν, λ, θ) -> myf(x, ν, λ, θ)
+
+    sparse_F(z) = [
+        dm.Q(z[θidxs]) * z[xidxs] + dm.c(z[θidxs]) - dm.E(z[θidxs])' * z[νidxs] - dm.M(z[θidxs])' * z[λidxs]
+        dm.E(z[θidxs]) * z[xidxs] - dm.d(z[θidxs])
+        z[λidxs] .* (dm.M(z[θidxs]) * z[xidxs] - dm.h(z[θidxs]))
+    ]
+    sz = [sx; sν; sλ; sθ]
+    # sparse_F(sz)
+
+    #TODO only get jacobian of theta
+    sj = sparse(Symbolics.jacobian(sparse_F(sz), sz)[:, end-(length(sθ)-1):end])
+    (nr, nc) = size(sj)
+
+    f_expr = build_function(sj, [sx; sν; sλ; sθ])
     myf = eval(first(f_expr))
 
-    (x, ν, λ, θ) -> myf(x, ν, λ, θ)
+    (x, ν, λ, θ) -> reshape(myf([x; ν; λ; θ]), nr, nc)
 end
 
 make_symbolic_var_derivative(dm::DifferentiableModel) = 
