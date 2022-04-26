@@ -190,24 +190,34 @@ function _make_differentiable_model(
     c,
     _E,
     _d,
-    M,
-    h,
+    _M,
+    _h,
     θ,
     var_ids,
     param_ids;
     scale_equality = false,
+    scale_inequality = false,
 )
 
     Q = _ -> spzeros(length(var_ids), length(var_ids))
 
     if scale_equality
-        row_factors = scaling_factor(_E(θ), _d(θ))
+        eq_row_factors = scaling_factor(_E(θ), _d(θ))
     else
-        row_factors = fill(1.0, size(_E(θ), 1))
+        eq_row_factors = fill(1.0, size(_E(θ), 1))
     end
 
-    E(θ) = row_factors .* _E(θ)
-    d(θ) = row_factors .* _d(θ)
+    if scale_inequality
+        ineq_row_factors = scaling_factor(_M(θ), _h(θ))
+    else
+        ineq_row_factors = fill(1.0, size(_M(θ), 1))
+    end
+
+    E(θ) = eq_row_factors .* _E(θ)
+    d(θ) = eq_row_factors .* _d(θ)
+
+    M(θ) = ineq_row_factors .* _M(θ)
+    h(θ) = ineq_row_factors .* _h(θ)
 
     return DifferentiableModel(
         Q,

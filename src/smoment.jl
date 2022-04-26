@@ -30,6 +30,7 @@ function with_parameters(
     smm::SMomentModel,
     rid_enzyme::Dict{String,Enzyme};
     scale_equality = false,
+    scale_inequality = false,
     analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
     atol = 1e-12,

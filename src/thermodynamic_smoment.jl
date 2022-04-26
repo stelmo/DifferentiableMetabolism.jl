@@ -34,6 +34,7 @@ function with_parameters(
     rid_dg0::Dict{String,Float64},
     mid_concentration::Dict{String,Float64};
     scale_equality = false,
+    scale_inequality = false,
     analytic_parameter_derivatives = x -> nothing,
     ϵ = 1e-8,
     atol = 1e-12,

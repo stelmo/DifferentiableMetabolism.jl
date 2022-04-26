@@ -22,6 +22,7 @@ function with_parameters(
     gm::GeckoModel,
     rid_enzyme::Dict{String,Enzyme};
     scale_equality = false,
+    scale_inequality = false,
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
