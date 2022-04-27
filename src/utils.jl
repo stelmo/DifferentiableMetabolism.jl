@@ -1,5 +1,5 @@
 """
-    _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8, digits = 16)
+$(TYPEDSIGNATURES)
 
 Remove linearly dependent rows in `A` deduced by reducing the matrix to row
 echelon form. Adjust sensitivity to numerical issues with `ϵ`. After row echelon
@@ -23,15 +23,7 @@ function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8, digits = 16)
 end
 
 """
-    _dg(
-        model,
-        rid_enzyme,
-        rid_dg0,
-        rid,
-        θ;
-        RT = 298.15 * 8.314e-3,
-        ignore_reaction_ids = [],
-    )
+$(TYPEDSIGNATURES)
 
 Helper function to assign the thermodynamic driving force to a reaction.
 """
@@ -59,16 +51,8 @@ function _dg(
 end
 
 """
-    _saturation(
-        model,
-        rid_enzyme,
-        rid_km,
-        rid,
-        mangled_rid,
-        θ;
-        ignore_reaction_ids = [],
-    )
-
+$(TYPEDSIGNATURES)
+    
 A helper function to incorporate saturation effects.
 """
 function _saturation(
@@ -102,13 +86,7 @@ function _saturation(
 end
 
 """
-    prune_model(
-        model::StandardModel,
-        reaction_fluxes,
-        gene_product_concentrations = Dict{String,Float64}();
-        atol = 1e-9,
-        verbose = true,
-    )
+$(TYPEDSIGNATURES)
 
 Return a simplified version of `model` that contains only reactions (and the
 associated metabolites) that are active, i.e. carry fluxes (from
@@ -171,17 +149,7 @@ function prune_model(
 end
 
 """
-    _make_differentiable_model(
-        c,
-        _E,
-        d,
-        M,
-        h,
-        θ,
-        var_ids,
-        param_ids;
-        scale_equality = false,
-    )
+$(TYPEDSIGNATURES)
 
 Internal helper function to construct a basic linear program representing a
 differentiable metabolic model.
@@ -227,8 +195,10 @@ function _make_differentiable_model(
         M,
         h,
         θ,
-        (_,_,_,_) -> throw(MissingException("Missing method: analytic derivatives of variables.")),
-        (_,_,_,_) -> throw(MissingException("Missing method: analytic derivatives of parameters.")),
+        (_, _, _, _) ->
+            throw(MissingException("Missing method: analytic derivatives of variables.")),
+        (_, _, _, _) ->
+            throw(MissingException("Missing method: analytic derivatives of parameters.")),
         var_ids,
         param_ids,
     )

@@ -1,5 +1,5 @@
 """
-    scaling_factor(A, b; atol = 1e-8)
+$(TYPEDSIGNATURES)
 
 Return scaling factor used to rescale constraints in matrix format (row-wise).
 Arguments are assumed to be of the form `A ∝ b` where `∝` are usually `=` or `≤`
@@ -30,14 +30,14 @@ function scaling_factor(A, b; atol = 1e-8)
 end
 
 """
-    _get_exponent_or_cutoff(x; atol = 1e-8)
+$(TYPEDSIGNATURES)
 
 Return `log₁₀(|x|)` or `x` if `|x| ≤ atol`.
 """
 _get_exponent_or_cutoff(x; atol = 1e-8) = abs(x) > atol && log10(abs(x))
 
 """
-    check_scaling(mat; atol = 1e-8)
+$(TYPEDSIGNATURES)
 
 Return the best case (if rescaled using [`scaling_factor`](@ref)) and current
 scaling of a matrix `mat`. Scaling is defined as the largest difference between
@@ -55,15 +55,17 @@ function check_scaling(mat; atol = 1e-8)
 end
 
 """
-    check_scaling(diffmodel::DifferentiableModel; atol = 1e-8, verbose=false)
+$(TYPEDSIGNATURES)
 
 Helper function to check the scaling of the equality constraint matrix.
 """
-function check_scaling(diffmodel::DifferentiableModel; atol = 1e-8, verbose=false)
+function check_scaling(diffmodel::DifferentiableModel; atol = 1e-8, verbose = false)
     eq = check_scaling([diffmodel.E(diffmodel.θ) diffmodel.d(diffmodel.θ)]; atol)
     ineq = check_scaling([diffmodel.M(diffmodel.θ) diffmodel.h(diffmodel.θ)]; atol)
-    obj = all(diffmodel.Q(diffmodel.θ) .== 0.0) ? (0.0, 0.0) : check_scaling(diffmodel.Q(diffmodel.θ); atol)
-    if verbose 
+    obj =
+        all(diffmodel.Q(diffmodel.θ) .== 0.0) ? (0.0, 0.0) :
+        check_scaling(diffmodel.Q(diffmodel.θ); atol)
+    if verbose
         println("Equality: ", eq)
         println("Inequality: ", ineq)
         println("Quadratic objective: ", obj)
@@ -72,4 +74,3 @@ function check_scaling(diffmodel::DifferentiableModel; atol = 1e-8, verbose=fals
         return eq, ineq, obj
     end
 end
-    

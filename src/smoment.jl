@@ -1,13 +1,5 @@
 """
-    with_parameters(
-        smm::SMomentModel,
-        rid_enzyme::Dict{String,Enzyme};
-        scale_equality = false,
-        analytic_parameter_derivatives = x -> nothing,
-        ϵ = 1e-8,
-        atol = 1e-12,
-        digits = 8,
-    )
+$(TYPEDSIGNATURES)
 
 Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.SMomentModel`](@ref).
 Each variable in `smm` is differentiated with respect to the kcats in the
@@ -41,17 +33,22 @@ function with_parameters(
     c, _E, d, M, h, var_ids =
         _differentiable_smoment_opt_problem(smm, rid_enzyme; ϵ, atol, digits)
 
-    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality, scale_inequality)
+    _make_differentiable_model(
+        c,
+        _E,
+        d,
+        M,
+        h,
+        θ,
+        var_ids,
+        param_ids;
+        scale_equality,
+        scale_inequality,
+    )
 end
 
 """
-    _differentiable_smoment_opt_problem(
-        smm::SMomentModel,
-        rid_enzyme::Dict{String,Enzyme};
-        ϵ = 1e-8,
-        atol = 1e-12,
-        digits = 8,
-    )
+$(TYPEDSIGNATURES)
 
 Return structures that will allow the most basic form of smoment to be solved.
 No enzyme constraints allowed. Assume preprocessing changes model such that most
@@ -109,7 +106,7 @@ function _differentiable_smoment_opt_problem(
 end
 
 """
-    _build_smoment_kcat_coupling(smm::SMomentModel, rid_enzyme)
+$(TYPEDSIGNATURES)
 
 Helper function to build kcat coupling in parametric form for smoment problems.
 """

@@ -3,6 +3,7 @@ module DifferentiableMetabolism
 using COBREXA, JuMP
 using ForwardDiff, Symbolics
 using LinearAlgebra, SparseArrays, RowEchelon
+using DocStringExtensions
 
 include("DifferentiableModel.jl")
 include("Enzyme.jl")

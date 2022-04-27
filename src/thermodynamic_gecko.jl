@@ -1,17 +1,5 @@
 """
-    with_parameters(
-        gm::GeckoModel,
-        rid_enzyme::Dict{String,Enzyme},
-        rid_dg0::Dict{String,Float64},
-        mid_concentration::Dict{String,Float64};
-        scale_equality = false,
-        analytic_parameter_derivatives = x -> nothing,
-        ϵ = 1e-8,
-        atol = 1e-12,
-        digits = 8,
-        RT = 298.15 * 8.314e-3,
-        ignore_reaction_ids = [],
-    )
+$(TYPEDSIGNATURES)
 
 Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.GeckoModel`](@ref).
 Each variable in `gm` is differentiated with respect to the kcats in the
@@ -61,20 +49,22 @@ function with_parameters(
         ignore_reaction_ids,
     )
 
-    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality, scale_inequality)
+    _make_differentiable_model(
+        c,
+        _E,
+        d,
+        M,
+        h,
+        θ,
+        var_ids,
+        param_ids;
+        scale_equality,
+        scale_inequality,
+    )
 end
 
 """
-    _differentiable_thermodynamic_gecko_opt_problem(
-        gm::GeckoModel,
-        rid_enzyme::Dict{String,Enzyme},
-        rid_dg0::Dict{String,Float64};
-        ϵ = 1e-8,
-        atol = 1e-12,
-        digits = 8,
-        RT = 298.15 * 8.314e-3,
-        ignore_reaction_ids = [],
-    )
+$(TYPEDSIGNATURES)
 
 Return optimization problem for a thermodynamic gecko problem, but in
 differentiable format.

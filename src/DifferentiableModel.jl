@@ -1,5 +1,5 @@
 """
-    mutable struct DifferentiableModel
+$(TYPEDEF)
 
 A struct representing a generalized differentiable constraint based model.
 Format of the model is:
@@ -10,20 +10,8 @@ s.t.        E(θ) * x = d(θ)
 ```
 Nominally, every component can be differentiated.
 
-# Fields
-```
-Q::Function
-c::Function
-E::Function
-d::Function
-M::Function
-h::Function
-θ::Vector{Float64}
-analytic_var_derivs::Function
-analytic_par_derivs::Function
-var_ids::Vector{String}
-param_ids::Vector{String}
-```
+$(TYPEDFIELDS)
+
 Note, to ensure differentiability, preprocessing of the model used to derive the
 [`DifferentiableModel`](@ref) is required. In short, only an active solution may
 be differentiated, this requires that:

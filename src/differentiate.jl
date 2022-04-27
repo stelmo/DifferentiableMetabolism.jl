@@ -1,11 +1,5 @@
 """
-    differentiate(
-        diffmodel::DifferentiableModel,
-        optimizer;
-        use_analytic = false,
-        scale_output = true,
-        modifications = [],
-    )
+$(TYPEDSIGNATURES)
 
 Solve and differentiate an optimization problem using the optimality conditions.
 The output can be scaled relative to the parameters and the solved variables
@@ -43,12 +37,7 @@ function differentiate(
 end
 
 """
-    _differentiate_kkt(
-        diffmodel::DifferentiableModel,
-        optimizer;
-        modifications = [],
-        use_analytic = false,
-    )
+$(TYPEDSIGNATURES)
 
 Implicitly differentiate a convex quadratic or linear program using the KKT
 conditions. Suppose `F(z(θ), θ) = 0` represents the optimality (KKT) conditions

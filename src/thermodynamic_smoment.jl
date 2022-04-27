@@ -1,17 +1,5 @@
 """
-    with_parameters(
-        smm::SMomentModel,
-        rid_enzyme::Dict{String,Enzyme},
-        rid_dg0::Dict{String,Float64},
-        mid_concentration::Dict{String,Float64};
-        scale_equality = false,
-        analytic_parameter_derivatives = x -> nothing,
-        ϵ = 1e-8,
-        atol = 1e-12,
-        digits = 8,
-        RT = 298.15 * 8.314e-3,
-        ignore_reaction_ids = [],
-    )
+$(TYPEDSIGNATURES)
 
 Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.SMomentModel`](@ref),
 which includes kinetic as well as thermodynamic parameters. Add the standard
@@ -61,20 +49,22 @@ function with_parameters(
         ignore_reaction_ids,
     )
 
-    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality, scale_inequality)
+    _make_differentiable_model(
+        c,
+        _E,
+        d,
+        M,
+        h,
+        θ,
+        var_ids,
+        param_ids;
+        scale_equality,
+        scale_inequality,
+    )
 end
 
 """
-    _differentiable_thermodynamic_smoment_opt_problem(
-        smm::SMomentModel,
-        rid_enzyme::Dict{String,Enzyme},
-        rid_dg0::Dict{String,Float64};
-        ϵ = 1e-8,
-        atol = 1e-12,
-        digits = 8,
-        RT = 298.15 * 8.314e-3,
-        ignore_reaction_ids = [],
-    )
+$(TYPEDSIGNATURES)
 
 Return structures that will allow the most basic form of smoment to be solved.
 No enzyme constraints allowed. Most effective enzyme is the only GRR. Assume

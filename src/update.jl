@@ -1,40 +1,40 @@
 """
-    update_Q!(diffmodel::DifferentiableModel, Q)
+$(TYPEDSIGNATURES)
 
 Update Q.
 """
 update_Q!(diffmodel::DifferentiableModel, Q) = diffmodel.Q = Q
 
 """
-    update_c!(diffmodel::DifferentiableModel, c)
+$(TYPEDSIGNATURES)
 
 Update c.
 """
 update_c!(diffmodel::DifferentiableModel, c) = diffmodel.c = c
 
 """
-    update_E!(diffmodel::DifferentiableModel, E)
+$(TYPEDSIGNATURES)
 
 Update E.
 """
 update_E!(diffmodel::DifferentiableModel, E) = diffmodel.E = E
 
 """
-    update_d!(diffmodel::DifferentiableModel, d)
+$(TYPEDSIGNATURES)
 
 Update d.
 """
 update_d!(diffmodel::DifferentiableModel, d) = diffmodel.d = d
 
 """
-    update_M!(diffmodel::DifferentiableModel, M)
+$(TYPEDSIGNATURES)
 
 Update M.
 """
 update_M!(diffmodel::DifferentiableModel, M) = diffmodel.M = M
 
 """
-    update_h!(diffmodel::DifferentiableModel, h)
+$(TYPEDSIGNATURES)
 
 Update h.
 """

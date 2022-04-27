@@ -1,12 +1,5 @@
 """
-    with_parameters(
-        gm::GeckoModel,
-        rid_enzyme::Dict{String,Enzyme};
-        scale_equality = false,
-        ϵ = 1e-8,
-        atol = 1e-12,
-        digits = 8,
-    )
+$(TYPEDSIGNATURES)
 
 Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.GeckoModel`](@ref).
 Each variable in `gm` is differentiated with respect to the kcats in the
@@ -38,17 +31,22 @@ function with_parameters(
         digits,
     )
 
-    _make_differentiable_model(c, _E, d, M, h, θ, var_ids, param_ids; scale_equality, scale_inequality)
+    _make_differentiable_model(
+        c,
+        _E,
+        d,
+        M,
+        h,
+        θ,
+        var_ids,
+        param_ids;
+        scale_equality,
+        scale_inequality,
+    )
 end
 
 """
-    _differentiable_gecko_opt_problem(
-        gm::GeckoModel,
-        rid_enzyme::Dict{String,Enzyme};
-        ϵ = 1e-8,
-        atol = 1e-12,
-        digits = 8,
-    )
+$(TYPEDSIGNATURES)
 
 Return optimization problem for a gecko model, but in differentiable format.
 """
@@ -111,13 +109,7 @@ function _differentiable_gecko_opt_problem(
 end
 
 """
-    _add_gecko_enzyme_variable_as_function(
-        rid_enzyme,
-        original_rid,
-        E_components,
-        col_idx,
-        gene_ids,
-    )
+$(TYPEDSIGNATURES)
 
 Helper function to add an column into the enzyme stoichiometric matrix
 parametrically.
@@ -137,7 +129,7 @@ function _add_gecko_enzyme_variable_as_function(
 end
 
 """
-    _build_gecko_equality_enzyme_constraints(gm::GeckoModel, rid_enzyme)
+$(TYPEDSIGNATURES)
 
 Helper function to build the equality enzyme constraints.
 """

@@ -64,7 +64,8 @@
     ])
 
     #: scale both Inequality and equality
-    diffmodel = with_parameters(gm, rid_enzyme; scale_equality = true, scale_inequality = true)
+    diffmodel =
+        with_parameters(gm, rid_enzyme; scale_equality = true, scale_inequality = true)
 
     x_scaling_eqineq, dx_scaling_eqineq = differentiate(
         diffmodel,

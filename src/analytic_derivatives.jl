@@ -1,5 +1,5 @@
 """
-    make_symbolic_derivatives(diffmodel::DifferentiableModel)
+$(TYPEDSIGNATURES)
 
 Creates analytic derivative functions of the `diffmodel` internals, using
 symbolic variables. Note, this function can take some time to construct the
@@ -17,6 +17,11 @@ function _transpose(mat)
     sparse(J, I, V)
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+Creates the analytic derivatives of the parameters using symbolic programming.
+"""
 function make_symbolic_param_derivative(dm::DifferentiableModel)
     xidxs = 1:length(dm.c(dm.θ))
     νidxs = last(xidxs) .+ (1:length(dm.d(dm.θ)))
@@ -45,7 +50,8 @@ function make_symbolic_param_derivative(dm::DifferentiableModel)
     # (x, ν, λ, θ) -> myf(x, ν, λ, θ)
 
     sparse_F(z) = [
-        dm.Q(z[θidxs]) * z[xidxs] + dm.c(z[θidxs]) - dm.E(z[θidxs])' * z[νidxs] - dm.M(z[θidxs])' * z[λidxs]
+        dm.Q(z[θidxs]) * z[xidxs] + dm.c(z[θidxs]) - dm.E(z[θidxs])' * z[νidxs] -
+        dm.M(z[θidxs])' * z[λidxs]
         dm.E(z[θidxs]) * z[xidxs] - dm.d(z[θidxs])
         z[λidxs] .* (dm.M(z[θidxs]) * z[xidxs] - dm.h(z[θidxs]))
     ]
@@ -62,22 +68,14 @@ function make_symbolic_param_derivative(dm::DifferentiableModel)
     (x, ν, λ, θ) -> reshape(myf([x; ν; λ; θ]), nr, nc)
 end
 
-make_symbolic_var_derivative(dm::DifferentiableModel) = 
+"""
+$(TYPEDSIGNATURES)
+
+Creates the analytic derivatives of the variables.
+"""
+make_symbolic_var_derivative(dm::DifferentiableModel) = #TODO rename, this does not use symbolic programming, fully analytic
     (x, ν, λ, θ) -> [
         dm.Q(θ) -dm.E(θ)' -dm.M(θ)'
         dm.E(θ) spzeros(size(dm.E(θ), 1), length(ν)) spzeros(size(dm.E(θ), 1), length(λ))
         spdiagm(λ)*dm.M(θ) spzeros(size(dm.M(θ), 1), length(ν)) spdiagm(dm.M(θ) * x - dm.h(θ))
     ]
-
-# function _tranpose_mul_vec(A, b)
-#     rows = rowvals(A)
-#     vals = nonzeros(A)
-#     _, n = size(A)
-#     for j = 1:n
-#        for i in nzrange(A, j)
-#           row = rows[i]
-#           val = vals[i]
-#           # perform sparse wizardry...
-#        end
-#     end
-# end
