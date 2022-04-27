@@ -53,7 +53,7 @@ function make_symbolic_param_derivative(dm::DifferentiableModel)
     # sparse_F(sz)
 
     #TODO only get jacobian of theta
-    sj = sparse(Symbolics.jacobian(sparse_F(sz), sz)[:, end-(length(sθ)-1):end])
+    sj = sparse(Symbolics.jacobian(sparse_F(sz), sz)[:, θidxs])
     (nr, nc) = size(sj)
 
     f_expr = build_function(sj, [sx; sν; sλ; sθ])
