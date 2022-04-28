@@ -4,6 +4,7 @@ using COBREXA, JuMP
 using ForwardDiff, Symbolics
 using LinearAlgebra, SparseArrays, RowEchelon
 using DocStringExtensions
+using TimerOutputs
 
 include("DifferentiableModel.jl")
 include("Enzyme.jl")
