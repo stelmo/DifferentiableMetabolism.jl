@@ -1,7 +1,4 @@
 @testset "Inplace differentiable functions using GECKO" begin
-    optimizer = Ipopt.Optimizer
-    modifications = []
-
     #: Set problem up 
     stdmodel,
     reaction_isozymes,
@@ -30,29 +27,30 @@
 
     rf = ReferenceFunctions(diffmodel)
 
-    # rescale_factors = scaling_factor(rf.E(diffmodel.θ), rf.d(diffmodel.θ));
-    rescale_factors = fill(1.0, 10)
-
+    rescale_factors = scaling_factor(rf.E(diffmodel.θ), rf.d(diffmodel.θ))
+    update_E!(diffmodel, θ ->  rescale_factors .* rf.E(θ))
+    update_d!(diffmodel, θ ->  rescale_factors .* rf.d(θ))
+   
     var_derivs, par_derivs = make_inplace_derivatives_with_equality_scaling(rf);
 
     diffmodel.analytic_var_derivs = (x, ν, λ, θ) -> var_derivs(x, ν, λ, θ, rescale_factors)
     diffmodel.analytic_par_derivs = (x, ν, λ, θ) -> par_derivs(x, ν, λ, θ, rescale_factors)
     
-    x = zeros(rf.nx)
-    ν = zeros(rf.neq)
-    λ = zeros(rf.nineq)
-    A = spzeros(rf.nx + rf.neq + rf.nineq, rf.nx + rf.neq + rf.nineq)
-    B = spzeros(rf.nx + rf.neq + rf.nineq, rf.nθ)
-    dx = zeros(rf.nx, rf.nθ)
+    x1 = zeros(rf.nx)
+    ν1 = zeros(rf.neq)
+    λ1 = zeros(rf.nineq)
+    A1 = spzeros(rf.nx + rf.neq + rf.nineq, rf.nx + rf.neq + rf.nineq)
+    B1 = spzeros(rf.nx + rf.neq + rf.nineq, rf.nθ)
+    dx1 = zeros(rf.nx, rf.nθ)
 
-    differentiate!(x, ν, λ, A, B, dx, diffmodel, Ipopt.Optimizer)
+    differentiate!(x1, ν1, λ1, A1, B1, dx1, diffmodel, Ipopt.Optimizer)
 
     # test if reproduceable solutions
     @test all([
-        isapprox(x_ref[i], x[i]; atol = TEST_TOLERANCE) for i in eachindex(x)
+        isapprox(x_ref[i], x1[i]; atol = TEST_TOLERANCE) for i in eachindex(x1)
     ])
 
     @test all([
-        isapprox(dx_ref[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx)
+        isapprox(dx_ref[i], dx1[i]; atol = TEST_TOLERANCE) for i in eachindex(dx1)
     ])
 end
