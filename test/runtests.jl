@@ -27,4 +27,5 @@ run_test_file("static_data.jl")
     run_test_file("thermodynamic_smoment.jl")
     run_test_file("thermodynamic_gecko.jl")
     run_test_file("michaelis_menten_gecko.jl")
+    run_test_file("inplace_derivs.jl")
 end
