@@ -36,21 +36,21 @@
     diffmodel.analytic_var_derivs = (x, ν, λ, θ) -> var_derivs(x, ν, λ, θ, rescale_factors)
     diffmodel.analytic_par_derivs = (x, ν, λ, θ) -> par_derivs(x, ν, λ, θ, rescale_factors)
     
-    x1 = zeros(rf.nx)
-    ν1 = zeros(rf.neq)
-    λ1 = zeros(rf.nineq)
-    A1 = spzeros(rf.nx + rf.neq + rf.nineq, rf.nx + rf.neq + rf.nineq)
-    B1 = spzeros(rf.nx + rf.neq + rf.nineq, rf.nθ)
-    dx1 = zeros(rf.nx, rf.nθ)
+    x = zeros(rf.nx)
+    ν = zeros(rf.neq)
+    λ = zeros(rf.nineq)
+    A = spzeros(rf.nx + rf.neq + rf.nineq, rf.nx + rf.neq + rf.nineq)
+    B = spzeros(rf.nx + rf.neq + rf.nineq, rf.nθ)
+    dx = zeros(rf.nx, rf.nθ)
 
-    differentiate!(x1, ν1, λ1, A1, B1, dx1, diffmodel, Ipopt.Optimizer)
+    differentiate!(x, ν, λ, A, B, dx, diffmodel, Ipopt.Optimizer)
 
     # test if reproduceable solutions
     @test all([
-        isapprox(x_ref[i], x1[i]; atol = TEST_TOLERANCE) for i in eachindex(x1)
+        isapprox(x_ref[i], x[i]; atol = TEST_TOLERANCE) for i in eachindex(x)
     ])
 
     @test all([
-        isapprox(dx_ref[i], dx1[i]; atol = TEST_TOLERANCE) for i in eachindex(dx1)
+        isapprox(dx_ref[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx)
     ])
 end

@@ -87,7 +87,7 @@ function make_inplace_param_deriv_with_scaling(rf::ReferenceFunctions)
     myf = eval(first(f_expr))
     # myf([x; ν; λ; θ; rfs])
 
-    (x, ν, λ, θ, rfs) -> myf([x; ν; λ; θ; rfs])
+    (x, ν, λ, θ, rfs) -> reshape(myf([x; ν; λ; θ; rfs]), size(sj)...) #TODO fix this
 end
 
 function make_inplace_var_deriv_with_scaling(rf::ReferenceFunctions)
