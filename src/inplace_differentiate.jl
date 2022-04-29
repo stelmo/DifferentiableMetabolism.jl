@@ -15,6 +15,13 @@ function differentiate!(
     modifications = [],
 )
     _differentiate_kkt!(x, ν, λ, A, B, diffmodel, optimizer; modifications)
+
+    # lua = lu(-A)
+    # ldiv!(dx, lua, B)
+    # n = length(diffmodel.var_ids)
+    # for (i, b) in enumerate(eachcol(B))   
+    #     dx[:, i] .= (lua\b)[1:n]
+    # end
     dx .= (-sparse(A) \ Array(B))[1:length(diffmodel.var_ids), :]
 
     nothing

@@ -15,12 +15,13 @@ function differentiate(
     use_analytic = false,
     scale_output = true,
     modifications = [],
-)
-    A, B, x = DifferentiableMetabolism._differentiate_kkt(diffmodel, optimizer; modifications, use_analytic)
+)   
 
+    A, B, x = DifferentiableMetabolism._differentiate_kkt(diffmodel, optimizer; modifications, use_analytic)
+    
     dx = -sparse(A) \ Array(B) # no method for sparse \ sparse
     dx = dx[1:length(diffmodel.var_ids), :] # only return derivatives of variables, not the duals    
-    
+
     #: Scale dx/dy => dlog(x)/dlog(y)
     if scale_output
         scaled_dx = similar(dx)
@@ -51,7 +52,8 @@ function _differentiate_kkt(
     optimizer;
     modifications = [],
     use_analytic = false,
-)
+)   
+
     #: forward pass, solve the optimization problem
     Q = diffmodel.Q
     c = diffmodel.c
