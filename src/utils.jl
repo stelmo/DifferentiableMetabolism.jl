@@ -122,7 +122,9 @@ function prune_model(
         for mid in keys(rs)
             push!(mids, mid)
         end
-        for grr in reaction_gene_association(model, rid)
+        grrs = reaction_gene_association(model, rid)
+        isnothing(grrs) && continue
+        for grr in grrs
             append!(gids, grr)
         end
     end
