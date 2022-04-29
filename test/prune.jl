@@ -41,7 +41,7 @@
     @test !haskey(pruned_model.reactions, "r5")
     @test !haskey(pruned_model.reactions, "r6")
     @test haskey(pruned_model.reactions, "r1")
-    @test isempty(genes(pruned_model))
+    @test !isempty(genes(pruned_model))
     @test "m1" in metabolites(pruned_model)
     @test "m5" ∉ metabolites(pruned_model)
 end
