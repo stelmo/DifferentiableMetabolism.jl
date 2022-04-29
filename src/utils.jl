@@ -95,7 +95,7 @@ unidirectional based on `reaction_fluxes`.
 """
 function prune_model(
     model::StandardModel,
-    reaction_fluxes,
+    reaction_fluxes;
     atol = 1e-9,
     verbose = true,
 )

@@ -44,9 +44,4 @@
     @test isempty(genes(pruned_model))
     @test "m1" in metabolites(pruned_model)
     @test "m5" ∉ metabolites(pruned_model)
-
-    gene_concs = Dict("g3" => 0.1, "g1" => 0.01)
-    pruned_model = prune_model(m, reaction_fluxes, gene_concs; atol = 1e-2)
-    @test haskey(pruned_model.genes, "g3")
-    @test !haskey(pruned_model.genes, "g1")
 end

@@ -80,12 +80,8 @@ function make_inplace_param_deriv_with_scaling(rf::ReferenceFunctions)
 
     sj = Symbolics.sparsejacobian(sparse_F(sz), sz)[:, θidxs]
 
-    f_expr = build_function(sj, [sx; sν; sλ; sθ; srowfacts])
-    # myf = eval(last(f_expr))
-    # myf(out, [x; ν; λ; θ; rfs])
-    # out
-    myf = eval(first(f_expr))
-    # myf([x; ν; λ; θ; rfs])
+    f_expr = build_function(sj, [sx; sν; sλ; sθ; srowfacts], expression=Val{false})
+    myf = first(f_expr)
 
     (x, ν, λ, θ, rfs) -> reshape(myf([x; ν; λ; θ; rfs]), size(sj)...) #TODO fix this
 end
