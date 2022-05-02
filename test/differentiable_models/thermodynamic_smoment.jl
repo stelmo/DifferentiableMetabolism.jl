@@ -61,12 +61,12 @@
         0.194554 0.123807 0.681638 -0.0 3.44365e-8 0.341868 -0.341868 -0.341868 -3.44365e-8
         0.194554 0.123807 0.681638 0.0 3.44365e-8 0.341868 -0.341868 -0.341868 -3.44365e-8
     ]
-    @test all([isapprox(dx_ref[i], dx[1:7, :][i]; atol = TEST_TOLERANCE) for i in eachindex(dx_ref)])
+    @test all([
+        isapprox(dx_ref[i], dx[1:7, :][i]; atol = TEST_TOLERANCE) for i in eachindex(dx_ref)
+    ])
 
     # test if automatic and symbolic derivatives are the same
     make_derivatives(diffmodel)
     _, dx_sym = differentiate(diffmodel, Tulip.Optimizer; use_analytic_nonmutating = true)
-    @test all([
-        isapprox(dx_sym[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx)
-    ])
+    @test all([isapprox(dx_sym[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx)])
 end

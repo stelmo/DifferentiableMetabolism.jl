@@ -45,7 +45,8 @@
 
     # test if automatic and symbolic derivatives are the same
     make_derivatives(diffmodel)
-    x_anal, dx_anal = differentiate(diffmodel, Tulip.Optimizer; use_analytic_nonmutating = true)
+    x_anal, dx_anal =
+        differentiate(diffmodel, Tulip.Optimizer; use_analytic_nonmutating = true)
     @test all([
         isapprox(dx_auto[i], dx_anal[i]; atol = TEST_TOLERANCE) for i in eachindex(dx_anal)
     ])
@@ -86,6 +87,7 @@
         -0.999624 0.00153551 0.00192548
     ]
     @test all([
-        isapprox(dx_qp_ref[i], dx_qp[1:11, :][i]; atol = TEST_TOLERANCE) for i in eachindex(dx_qp_ref)
+        isapprox(dx_qp_ref[i], dx_qp[1:11, :][i]; atol = TEST_TOLERANCE) for
+        i in eachindex(dx_qp_ref)
     ])
 end

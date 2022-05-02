@@ -30,18 +30,20 @@ function make_symbolic_param_derivative(dm::DifferentiableModel)
         sθ[1:length(θidxs)]
     end
 
-    sparse_F(z) = Array([
-        dm.Q(z[θidxs]) * z[xidxs] + dm.c(z[θidxs]) - dm.E(z[θidxs])' * z[νidxs] -
-        dm.M(z[θidxs])' * z[λidxs]
-        dm.E(z[θidxs]) * z[xidxs] - dm.d(z[θidxs])
-        z[λidxs] .* (dm.M(z[θidxs]) * z[xidxs] - dm.h(z[θidxs]))
-    ])
+    sparse_F(z) = Array(
+        [
+            dm.Q(z[θidxs]) * z[xidxs] + dm.c(z[θidxs]) - dm.E(z[θidxs])' * z[νidxs] -
+            dm.M(z[θidxs])' * z[λidxs]
+            dm.E(z[θidxs]) * z[xidxs] - dm.d(z[θidxs])
+            z[λidxs] .* (dm.M(z[θidxs]) * z[xidxs] - dm.h(z[θidxs]))
+        ],
+    )
     sz = [sx; sν; sλ; sθ]
 
     #TODO only get jacobian of theta (slower, see #580 in Symbolics.jl)
     sj = Symbolics.sparsejacobian(sparse_F(sz), sz)[:, θidxs]
-    
-    f_expr = build_function(sj, sz, expression=Val{false})
+
+    f_expr = build_function(sj, sz, expression = Val{false})
     myf = first(f_expr)
 
     (x, ν, λ, θ) -> reshape(myf([x; ν; λ; θ]), size(sj)...) #TODO fix this

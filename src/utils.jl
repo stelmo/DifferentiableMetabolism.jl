@@ -93,12 +93,7 @@ associated genes and metabolites) that are active, i.e. carry fluxes (from
 `reaction_fluxes`) absolutely bigger than `atol`. All reactions are set
 unidirectional based on `reaction_fluxes`.
 """
-function prune_model(
-    model::StandardModel,
-    reaction_fluxes;
-    atol = 1e-9,
-    verbose = true,
-)
+function prune_model(model::StandardModel, reaction_fluxes; atol = 1e-9, verbose = true)
     pruned_model = StandardModel("pruned_model")
 
     rxns = Vector{Reaction}()

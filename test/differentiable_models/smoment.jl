@@ -52,5 +52,7 @@
         0.251908 0.160305 0.587786
         0.251908 0.160305 0.587786
     ]
-    @test all([isapprox(dx_ref[i], dx[1:7, :][i]; atol = TEST_TOLERANCE) for i in eachindex(dx_ref)])
+    @test all([
+        isapprox(dx_ref[i], dx[1:7, :][i]; atol = TEST_TOLERANCE) for i in eachindex(dx_ref)
+    ])
 end

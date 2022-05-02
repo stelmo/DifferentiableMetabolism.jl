@@ -53,8 +53,11 @@
 
     #: Note, the duals are scaled, so they will not be the same
     @test all([
-        isapprox(dx_noscaling[1:11, :][i], dx_scaling_eq[1:11, :][i]; atol = TEST_TOLERANCE) for
-        i in eachindex(dx_noscaling[1:11, :])
+        isapprox(
+            dx_noscaling[1:11, :][i],
+            dx_scaling_eq[1:11, :][i];
+            atol = TEST_TOLERANCE,
+        ) for i in eachindex(dx_noscaling[1:11, :])
     ])
 
     @test all([
@@ -73,8 +76,11 @@
     )
 
     @test all([
-        isapprox(dx_noscaling[1:11, :][i], dx_scaling_eqineq[1:11, :][i]; atol = TEST_TOLERANCE) for
-        i in eachindex(dx_noscaling[1:11, :])
+        isapprox(
+            dx_noscaling[1:11, :][i],
+            dx_scaling_eqineq[1:11, :][i];
+            atol = TEST_TOLERANCE,
+        ) for i in eachindex(dx_noscaling[1:11, :])
     ])
 
     @test all([

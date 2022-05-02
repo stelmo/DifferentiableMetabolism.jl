@@ -92,7 +92,10 @@
         0.107679 0.123807 -0.231486 -0.0 1.90594e-8 -0.116099 0.116099 0.116099 -1.90594e-8
         -0.805446 0.123807 0.681638 -0.0 -1.42566e-7 0.341868 -0.341868 -0.341868 1.42566e-7
     ]
-    @test all([isapprox(dx_ref[i], dx[1:11, :][i]; atol = TEST_TOLERANCE) for i in eachindex(dx_ref)])
+    @test all([
+        isapprox(dx_ref[i], dx[1:11, :][i]; atol = TEST_TOLERANCE) for
+        i in eachindex(dx_ref)
+    ])
 
     # test if automatic and symbolic derivatives are the same
     make_derivatives(diffmodel)

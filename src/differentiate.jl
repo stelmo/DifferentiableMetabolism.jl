@@ -17,7 +17,7 @@ function differentiate(
     use_analytic_nonmutating = false,
     scale_output = true,
     modifications = [],
-)   
+)
 
     x = zeros(length(diffmodel.var_ids))
     ν = zeros(length(diffmodel.d(diffmodel.θ)))
@@ -41,7 +41,7 @@ function differentiate(
         modifications,
         use_analytic_mutating,
         use_analytic_nonmutating,
-        scale_output
+        scale_output,
     )
 
     return x, dx
@@ -66,32 +66,25 @@ function differentiate!(
     use_analytic_mutating = false,
     use_analytic_nonmutating = false,
     scale_output = true,
-)   
-    DifferentiableMetabolism._solve_model!(
+)
+    DifferentiableMetabolism._solve_model!(x, ν, λ, diffmodel, optimizer; modifications)
+
+    DifferentiableMetabolism._differentiate_kkt!(
         x,
         ν,
         λ,
-        diffmodel,
-        optimizer;
-        modifications,
-    )
-
-    DifferentiableMetabolism._differentiate_kkt!(
-        x, 
-        ν, 
-        λ, 
-        A, 
+        A,
         fA,
-        B, 
+        B,
         dx,
-        diffmodel; 
+        diffmodel;
         use_analytic_mutating,
         use_analytic_nonmutating,
     )
 
     #: Scale dx/dy => dlog(x)/dlog(y)
     scale_output && _scale_derivatives(x, dx, diffmodel)
-    
+
     nothing
 end
 
@@ -116,7 +109,11 @@ function _solve_model!(
     if all(diffmodel.Q(diffmodel.θ) .== 0) # is LP
         @objective(opt_model, Min, diffmodel.c(diffmodel.θ)' * z)
     else
-        @objective(opt_model, Min, 0.5 * z' * diffmodel.Q(diffmodel.θ) * z + diffmodel.c(diffmodel.θ)' * z)
+        @objective(
+            opt_model,
+            Min,
+            0.5 * z' * diffmodel.Q(diffmodel.θ) * z + diffmodel.c(diffmodel.θ)' * z
+        )
     end
 
     @constraint(opt_model, eq, diffmodel.E(diffmodel.θ) * z .== diffmodel.d(diffmodel.θ))
@@ -137,7 +134,7 @@ function _solve_model!(
     x .= value.(opt_model[:z])
     ν .= dual.(opt_model[:eq])
     λ .= dual.(opt_model[:ineq])
-    
+
     nothing
 end
 
@@ -163,7 +160,7 @@ function _differentiate_kkt!(
     diffmodel::DifferentiableModel;
     use_analytic_mutating = false,
     use_analytic_nonmutating = false,
-    linear_solver = (A, B, dx, fA) -> _linear_solve(A, B, dx, fA)
+    linear_solver = (A, B, dx, fA) -> _linear_solve(A, B, dx, fA),
 )
     #=
     The analytic approaches are much faster than using automatic
@@ -183,7 +180,7 @@ function _differentiate_kkt!(
         diffmodel.analytic_par_derivs(B, x, ν, λ, diffmodel.θ)
     elseif use_analytic_nonmutating
         A .= diffmodel.analytic_var_derivs(x, ν, λ, diffmodel.θ)
-        B .= diffmodel.analytic_par_derivs(x, ν, λ, diffmodel.θ)  
+        B .= diffmodel.analytic_par_derivs(x, ν, λ, diffmodel.θ)
     else
         xidxs = 1:length(x)
         νidxs = last(xidxs) .+ (1:length(ν))
@@ -192,16 +189,18 @@ function _differentiate_kkt!(
 
         kkt(z) = [
             Array(diffmodel.Q(z[θidxs])) * z[xidxs] + Array(diffmodel.c(z[θidxs])) -
-            Array(diffmodel.E(z[θidxs]))' * z[νidxs] - Array(diffmodel.M(z[θidxs]))' * z[λidxs]
+            Array(diffmodel.E(z[θidxs]))' * z[νidxs] -
+            Array(diffmodel.M(z[θidxs]))' * z[λidxs]
             Array(diffmodel.E(z[θidxs])) * z[xidxs] - Array(diffmodel.d(z[θidxs]))
-            diagm(z[λidxs]) * (Array(diffmodel.M(z[θidxs])) * z[xidxs] - Array(diffmodel.h(z[θidxs])))
+            diagm(z[λidxs]) *
+            (Array(diffmodel.M(z[θidxs])) * z[xidxs] - Array(diffmodel.h(z[θidxs])))
         ]
 
         J = ForwardDiff.jacobian(kkt, [x; ν; λ; diffmodel.θ])
         A .= J[:, 1:last(λidxs)] #TODO this can be analytic by default
         B .= J[:, (1+last(λidxs)):end]
     end
-    
+
     # solve the system (most time intensive)
     if isnothing(fA)
         fA = lu(-A)
@@ -209,7 +208,7 @@ function _differentiate_kkt!(
     else
         linear_solver(A, B, dx, fA)
     end
-    
+
     nothing
 end
 

@@ -49,9 +49,9 @@
         nothing,
         _B,
         dx,
-        diffmodel, 
-        Ipopt.Optimizer; 
-        scale_output=false,
+        diffmodel,
+        Ipopt.Optimizer;
+        scale_output = false,
         use_analytic_nonmutating = true,
     )
 
@@ -60,57 +60,58 @@
 
     #: Now use inplace variants for all functions
     rescale_factors = scaling_factor(rf.E(diffmodel.θ), rf.d(diffmodel.θ))
-    update_E!(diffmodel, θ ->  rescale_factors .* rf.E(θ))
-    update_d!(diffmodel, θ ->  rescale_factors .* rf.d(θ))
-   
-    var_derivs, par_derivs = make_inplace_derivatives_with_equality_scaling(rf);
+    update_E!(diffmodel, θ -> rescale_factors .* rf.E(θ))
+    update_d!(diffmodel, θ -> rescale_factors .* rf.d(θ))
 
-    diffmodel.analytic_var_derivs = (A, x, ν, λ, θ) -> var_derivs(A, x, ν, λ, θ, rescale_factors)
-    diffmodel.analytic_par_derivs = (B, x, ν, λ, θ) -> par_derivs(B, x, ν, λ, θ, rescale_factors)
-    
+    var_derivs, par_derivs = make_inplace_derivatives_with_equality_scaling(rf)
+
+    diffmodel.analytic_var_derivs =
+        (A, x, ν, λ, θ) -> var_derivs(A, x, ν, λ, θ, rescale_factors)
+    diffmodel.analytic_par_derivs =
+        (B, x, ν, λ, θ) -> par_derivs(B, x, ν, λ, θ, rescale_factors)
+
     A = sparse(_A)
     B = sparse(_B)
     fA = lu(_A)
 
     differentiate!(
-        x, 
-        ν, 
-        λ, 
-        A, 
+        x,
+        ν,
+        λ,
+        A,
         fA,
-        B, 
-        dx, 
-        diffmodel, 
+        B,
+        dx,
+        diffmodel,
         Ipopt.Optimizer;
-        scale_output=false,
+        scale_output = false,
         use_analytic_mutating = true,
     )
 
     # test if reproduceable solutions
-    @test all([
-        isapprox(x_ref[i], x[i]; atol = TEST_TOLERANCE) for i in eachindex(x)
-    ])
+    @test all([isapprox(x_ref[i], x[i]; atol = TEST_TOLERANCE) for i in eachindex(x)])
 
     @test all([
-        isapprox(dx_ref[1:11,:][i], dx[1:11,:][i]; atol = TEST_TOLERANCE) for i in eachindex(dx[1:11,:])
+        isapprox(dx_ref[1:11, :][i], dx[1:11, :][i]; atol = TEST_TOLERANCE) for
+        i in eachindex(dx[1:11, :])
     ])
 
     #: now test if truly in place
     fA_prev_L = deepcopy(fA.L)
     fA_prev_U = deepcopy(fA.U)
-    
+
     diffmodel.θ .*= 1.1
     differentiate!(
-        x, 
-        ν, 
-        λ, 
-        A, 
+        x,
+        ν,
+        λ,
+        A,
         fA,
-        B, 
-        dx, 
-        diffmodel, 
+        B,
+        dx,
+        diffmodel,
         Ipopt.Optimizer;
-        scale_output=false,
+        scale_output = false,
         use_analytic_mutating = true,
     )
     @test !all(fA.L .== fA_prev_L)
