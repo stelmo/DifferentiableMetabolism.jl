@@ -23,7 +23,7 @@ function with_parameters(
     param_ids = "k#" .* collect(keys(rid_enzyme))
     θ = [x.kcat for x in values(rid_enzyme)]
 
-    c, _E, d, M, h, var_ids = DifferentiableMetabolism._differentiable_gecko_opt_problem(
+    c, E, d, M, h, var_ids = DifferentiableMetabolism._differentiable_gecko_opt_problem(
         gm,
         rid_enzyme;
         ϵ,
@@ -33,7 +33,7 @@ function with_parameters(
 
     _make_differentiable_model(
         c,
-        _E,
+        E,
         d,
         M,
         h,

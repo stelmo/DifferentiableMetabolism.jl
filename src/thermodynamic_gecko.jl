@@ -38,7 +38,7 @@ function with_parameters(
         [mid_concentration[mid] for mid in metabolites(gm.inner)]
     ]
 
-    c, _E, d, M, h, var_ids = _differentiable_thermodynamic_gecko_opt_problem(
+    c, E, d, M, h, var_ids = _differentiable_thermodynamic_gecko_opt_problem(
         gm,
         rid_enzyme,
         rid_dg0;
@@ -51,7 +51,7 @@ function with_parameters(
 
     _make_differentiable_model(
         c,
-        _E,
+        E,
         d,
         M,
         h,

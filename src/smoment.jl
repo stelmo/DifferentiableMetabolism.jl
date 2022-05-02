@@ -30,12 +30,12 @@ function with_parameters(
     param_ids = "k#" .* collect(keys(rid_enzyme))
     θ = [x.kcat for x in values(rid_enzyme)]
 
-    c, _E, d, M, h, var_ids =
+    c, E, d, M, h, var_ids =
         _differentiable_smoment_opt_problem(smm, rid_enzyme; ϵ, atol, digits)
 
     _make_differentiable_model(
         c,
-        _E,
+        E,
         d,
         M,
         h,
