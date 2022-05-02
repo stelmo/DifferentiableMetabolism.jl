@@ -100,7 +100,7 @@
     _, dx_sym = differentiate(
         diffmodel,
         Tulip.Optimizer;
-        use_analytic_nonmutating = true,
+        use_analytic = true,
         modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
     )
 

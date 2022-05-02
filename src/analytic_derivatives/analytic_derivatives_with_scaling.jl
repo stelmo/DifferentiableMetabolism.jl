@@ -45,17 +45,24 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Creates in place derivatives.
-"""
-function make_inplace_derivatives_with_equality_scaling(rf::ReferenceFunctions)
+Returns analytic derivatives that allow the equality constraint to be scaled.
 
-    param_derivs = make_inplace_param_deriv_with_scaling(rf)
-    var_derivs = make_inplace_var_deriv_with_scaling(rf)
+See also [`make_derivatives`](@ref).
+"""
+function make_derivatives_with_equality_scaling(rf::ReferenceFunctions)
+
+    param_derivs = make_param_deriv_with_scaling(rf)
+    var_derivs = make_var_deriv_with_scaling(rf)
 
     return var_derivs, param_derivs
 end
 
-function make_inplace_param_deriv_with_scaling(rf::ReferenceFunctions)
+"""
+$(TYPEDSIGNATURES)
+
+Return the parameter derivative that allows scaling of the equality constraint.
+"""
+function make_param_deriv_with_scaling(rf::ReferenceFunctions)
     xidxs = 1:rf.nx
     νidxs = last(xidxs) .+ (1:rf.neq)
     λidxs = last(νidxs) .+ (1:rf.nineq)
@@ -84,14 +91,18 @@ function make_inplace_param_deriv_with_scaling(rf::ReferenceFunctions)
     sj = Symbolics.sparsejacobian(sparse_F(sz), sz)[:, θidxs]
 
     f_expr = build_function(sj, [sx; sν; sλ; sθ; srowfacts], expression = Val{false})
-    myf = last(f_expr)
+    myf = first(f_expr)
 
-    (B, x, ν, λ, θ, rfs) -> myf(B, [x; ν; λ; θ; rfs])
+    (x, ν, λ, θ, rfs) -> reshape(myf([x; ν; λ; θ; rfs]), size(sj)...)
 end
 
-function make_inplace_var_deriv_with_scaling(rf::ReferenceFunctions)
-    (A, x, ν, λ, θ, rfs) ->
-        A .= [ #TODO, this can probably get optimized
+"""
+$(TYPEDSIGNATURES)
+
+Return the variable derivative that allows scaling of the equality constraint.
+"""
+function make_var_deriv_with_scaling(rf::ReferenceFunctions)
+    (x, ν, λ, θ, rfs) -> [
             rf.Q(θ) -(rfs .* rf.E(θ))' -rf.M(θ)'
             (rfs.*rf.E(θ)) spzeros(size(rf.E(θ), 1), length(ν)) spzeros(size(rf.E(θ), 1), length(λ))
             spdiagm(λ)*rf.M(θ) spzeros(size(rf.M(θ), 1), length(ν)) spdiagm(rf.M(θ) * x - rf.h(θ))

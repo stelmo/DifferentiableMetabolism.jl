@@ -5,6 +5,9 @@ Creates analytic derivative functions of the `diffmodel` internals, using
 symbolic variables. Note, this function can take some time to construct the
 derivatives, but substantially speeds up repeated calls to
 [`differentiate`](@ref).
+
+See also [`make_derivatives_with_equality_scaling`](@ref) for a variant 
+that allows the equality constraints to be rescaled.
 """
 function make_derivatives(diffmodel::DifferentiableModel)
     diffmodel.analytic_par_derivs = make_symbolic_param_derivative(diffmodel)

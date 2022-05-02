@@ -99,7 +99,7 @@
 
     # test if automatic and symbolic derivatives are the same
     make_derivatives(diffmodel)
-    _, dx_sym = differentiate(diffmodel, Tulip.Optimizer; use_analytic_nonmutating = true)
+    _, dx_sym = differentiate(diffmodel, Tulip.Optimizer; use_analytic = true)
     @test all([
         isapprox(dx_sym[i], dx[i]; atol = TEST_TOLERANCE) for i in eachindex(dx_sym)
     ])

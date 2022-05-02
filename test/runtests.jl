@@ -27,5 +27,5 @@ run_test_file("static_data.jl")
     run_test_file("differentiable_models/thermodynamic_smoment.jl")
     run_test_file("differentiable_models/thermodynamic_gecko.jl")
     run_test_file("differentiable_models/michaelis_menten_gecko.jl")
-    run_test_file("analytic_derivatives_inplace.jl")
+    run_test_file("analytic_derivatives_with_scaling.jl")
 end

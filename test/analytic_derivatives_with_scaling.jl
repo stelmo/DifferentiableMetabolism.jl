@@ -1,7 +1,7 @@
-@testset "Inplace differentiable functions using GECKO" begin
+@testset "Analytic derivatives with scaling" begin
     #=
-    Note, the non-in-place analytic derivatives are tested 
-    in the models. The inplace derivatives get special treatment,
+    Note, the analytic derivatives that don't use scaling are tested 
+    in the model tests. The scaling derivatives get special treatment,
     because they are more of a pain to setup. 
     =#
 
@@ -31,12 +31,12 @@
 
     rf = ReferenceFunctions(diffmodel)
 
-    #: Run once to get the shape of the in place variables A, B
+    #: Get reference solution (the unscaled derivatives)
     x = zeros(rf.nx)
     ν = zeros(rf.neq)
     λ = zeros(rf.nineq)
-    _A = spzeros(rf.nx + rf.neq + rf.nineq, rf.nx + rf.neq + rf.nineq)
-    _B = zeros(rf.nx + rf.neq + rf.nineq, rf.nθ)
+    A = spzeros(rf.nx + rf.neq + rf.nineq, rf.nx + rf.neq + rf.nineq)
+    B = zeros(rf.nx + rf.neq + rf.nineq, rf.nθ)
     dx = zeros(rf.nx + rf.neq + rf.nineq, rf.nθ)
 
     make_derivatives(diffmodel)
@@ -45,47 +45,39 @@
         x,
         ν,
         λ,
-        _A,
-        nothing,
-        _B,
+        A,
+        B,
         dx,
         diffmodel,
         Ipopt.Optimizer;
         scale_output = false,
-        use_analytic_nonmutating = true,
+        use_analytic = true,
     )
 
     x_ref = deepcopy(x)
     dx_ref = deepcopy(dx)
 
-    #: Now use inplace variants for all functions
+    #: Now use the scaling variants
     rescale_factors = scaling_factor(rf.E(diffmodel.θ), rf.d(diffmodel.θ))
     update_E!(diffmodel, θ -> rescale_factors .* rf.E(θ))
     update_d!(diffmodel, θ -> rescale_factors .* rf.d(θ))
 
-    var_derivs, par_derivs = make_inplace_derivatives_with_equality_scaling(rf)
+    var_derivs, par_derivs = make_derivatives_with_equality_scaling(rf)
 
-    diffmodel.analytic_var_derivs =
-        (A, x, ν, λ, θ) -> var_derivs(A, x, ν, λ, θ, rescale_factors)
-    diffmodel.analytic_par_derivs =
-        (B, x, ν, λ, θ) -> par_derivs(B, x, ν, λ, θ, rescale_factors)
-
-    A = sparse(_A)
-    B = sparse(_B)
-    fA = lu(_A)
+    diffmodel.analytic_var_derivs = (x, ν, λ, θ) -> var_derivs(x, ν, λ, θ, rescale_factors)
+    diffmodel.analytic_par_derivs = (x, ν, λ, θ) -> par_derivs(x, ν, λ, θ, rescale_factors)
 
     differentiate!(
         x,
         ν,
         λ,
         A,
-        fA,
         B,
         dx,
         diffmodel,
         Ipopt.Optimizer;
         scale_output = false,
-        use_analytic_mutating = true,
+        use_analytic = true,
     )
 
     # test if reproduceable solutions
@@ -95,25 +87,4 @@
         isapprox(dx_ref[1:11, :][i], dx[1:11, :][i]; atol = TEST_TOLERANCE) for
         i in eachindex(dx[1:11, :])
     ])
-
-    #: now test if truly in place
-    fA_prev_L = deepcopy(fA.L)
-    fA_prev_U = deepcopy(fA.U)
-
-    diffmodel.θ .*= 1.1
-    differentiate!(
-        x,
-        ν,
-        λ,
-        A,
-        fA,
-        B,
-        dx,
-        diffmodel,
-        Ipopt.Optimizer;
-        scale_output = false,
-        use_analytic_mutating = true,
-    )
-    @test !all(fA.L .== fA_prev_L)
-    @test !all(fA.U .== fA_prev_U)
 end

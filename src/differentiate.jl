@@ -5,7 +5,7 @@ Solve and differentiate an optimization problem using the optimality conditions.
 The output can be scaled relative to the parameters and the solved variables
 with `scale_output`. *Optimizer* modifications (from COBREXA.jl) can be supplied
 through `modifications`. Analytic derivatives of the optimality conditions can
-be used by setting `use_analytic_mutating` or `use_analytic_nonmutating` to true. 
+be used by setting `use_analytic` to true. 
 
 Internally calls [`differentiate!`](@ref), the in-place variant of this function, 
 constructs the arguments internally.
@@ -13,8 +13,7 @@ constructs the arguments internally.
 function differentiate(
     diffmodel::DifferentiableModel,
     optimizer;
-    use_analytic_mutating = false,
-    use_analytic_nonmutating = false,
+    use_analytic = false,
     scale_output = true,
     modifications = [],
 )
@@ -26,21 +25,18 @@ function differentiate(
     A = spzeros(nA, nA)
     B = zeros(nA, length(diffmodel.param_ids))
     dx = zeros(size(A, 1), size(B, 2))
-    fA = nothing
 
     differentiate!(
         x,
         ν,
         λ,
         A,
-        fA,
         B,
         dx,
         diffmodel,
         optimizer;
         modifications,
-        use_analytic_mutating,
-        use_analytic_nonmutating,
+        use_analytic,
         scale_output,
     )
 
@@ -56,29 +52,25 @@ the variables are:
 - `ν`: equality dual variables
 - `λ`: inequality dual variables
 - `A`: variable derivatives
-- `fA`: factorized `A`
 - `B`: parameter derivitives
 - `dx`: the sensitivities of the variables
 - `diffmodel`: the model to differantiate
 - `optimizer`: the solver used in the forward pass
 - `modifications`: COBREXA functions forwarded to the *solver*
-- `use_analytic_mutating`: use the in-place, mutating variants of the analytic derivatives
-- `use_analytic_nonmutating`: use the non-mutating variants of the analytic derivatives 
--`scale_output`: flag if the primal variable sensitivities should be scaled by `dx/dy => dlog(x)/dlog(y)`
+- `use_analytic`: use the analytic derivatives (need to be supplied)
+- `scale_output`: flag if the primal variable sensitivities should be scaled by `dx/dy => dlog(x)/dlog(y)`
 """
 function differentiate!(
     x,
     ν,
     λ,
     A,
-    fA,
     B,
     dx,
     diffmodel::DifferentiableModel,
     optimizer;
     modifications = [],
-    use_analytic_mutating = false,
-    use_analytic_nonmutating = false,
+    use_analytic = false,
     scale_output = true,
 )
     DifferentiableMetabolism._solve_model!(x, ν, λ, diffmodel, optimizer; modifications)
@@ -88,12 +80,10 @@ function differentiate!(
         ν,
         λ,
         A,
-        fA,
         B,
         dx,
         diffmodel;
-        use_analytic_mutating,
-        use_analytic_nonmutating,
+        use_analytic,
     )
 
     #: Scale dx/dy => dlog(x)/dlog(y)
@@ -170,13 +160,10 @@ function _differentiate_kkt!(
     ν,
     λ,
     A,
-    fA,
     B,
     dx,
     diffmodel::DifferentiableModel;
-    use_analytic_mutating = false,
-    use_analytic_nonmutating = false,
-    linear_solver = (A, B, dx, fA) -> _linear_solve(A, B, dx, fA),
+    use_analytic = false,
 )
     #=
     The analytic approaches are much faster than using automatic
@@ -191,10 +178,7 @@ function _differentiate_kkt!(
     https://github.com/JuliaDiff/ForwardDiff.jl/pull/481 gets merged into 
     ForwardDiff.
     =#
-    if use_analytic_mutating
-        diffmodel.analytic_var_derivs(A, x, ν, λ, diffmodel.θ)
-        diffmodel.analytic_par_derivs(B, x, ν, λ, diffmodel.θ)
-    elseif use_analytic_nonmutating
+    if use_analytic
         A .= diffmodel.analytic_var_derivs(x, ν, λ, diffmodel.θ)
         B .= diffmodel.analytic_par_derivs(x, ν, λ, diffmodel.θ)
     else
@@ -217,13 +201,16 @@ function _differentiate_kkt!(
         B .= J[:, (1+last(λidxs)):end]
     end
 
-    # solve the system (most time intensive)
-    if isnothing(fA)
-        fA = lu(-A)
-        ldiv!(dx, fA, B)
-    else
-        linear_solver(A, B, dx, fA)
-    end
+    #= 
+    Solve the linear system of equations.
+    This is the most time intensive operation, accounting for 75% 
+    of the run time on iML1515. Iterative solvers, and other indirect 
+    approaches did not speed up the solving process. Separating out 
+    the factorization also does not help that much, because the pattern 
+    changes, requiring frequent refactorizations. Sadly, Pardiso is no 
+    longer free for academics. Hence, the standard solve is used. 
+    =# 
+    _linear_solver(A, B, dx)
 
     nothing
 end
@@ -233,9 +220,8 @@ $(TYPEDSIGNATURES)
 
 Separate linear solve to have the ability to swap it our for something faster.
 """
-function _linear_solve(A, B, dx, fA)
-    lu!(fA, -A)
-    ldiv!(dx, fA, B)
+function _linear_solver(A, B, dx)
+    ldiv!(dx, lu(-A), B)
     nothing
 end
 
