@@ -81,13 +81,13 @@ function make_inplace_param_deriv_with_scaling(rf::ReferenceFunctions)
     sj = Symbolics.sparsejacobian(sparse_F(sz), sz)[:, θidxs]
 
     f_expr = build_function(sj, [sx; sν; sλ; sθ; srowfacts], expression=Val{false})
-    myf = first(f_expr)
+    myf = last(f_expr)
 
-    (x, ν, λ, θ, rfs) -> reshape(myf([x; ν; λ; θ; rfs]), size(sj)...) #TODO fix this
+    (B, x, ν, λ, θ, rfs) -> myf(B, [x; ν; λ; θ; rfs])
 end
 
 function make_inplace_var_deriv_with_scaling(rf::ReferenceFunctions)
-    (x, ν, λ, θ, rfs) -> [
+    (A, x, ν, λ, θ, rfs) -> A .= [ #TODO, this can probably get optimized
         rf.Q(θ) -(rfs .* rf.E(θ))' -rf.M(θ)'
         (rfs .* rf.E(θ)) spzeros(size(rf.E(θ), 1), length(ν)) spzeros(size(rf.E(θ), 1), length(λ))
         spdiagm(λ)*rf.M(θ) spzeros(size(rf.M(θ), 1), length(ν)) spdiagm(rf.M(θ) * x - rf.h(θ))

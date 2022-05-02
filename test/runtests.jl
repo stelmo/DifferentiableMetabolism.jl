@@ -2,7 +2,7 @@ using DifferentiableMetabolism
 using Test
 using Tulip, Ipopt
 using COBREXA
-using SparseArrays
+using SparseArrays, LinearAlgebra
 
 # Testing infrastructure taken from COBREXA
 TEST_TOLERANCE = 1e-6
@@ -22,10 +22,10 @@ run_test_file("static_data.jl")
     run_test_file("enzyme.jl")
     run_test_file("prune.jl")
     run_test_file("update.jl")
-    run_test_file("gecko.jl")
-    run_test_file("smoment.jl")
-    run_test_file("thermodynamic_smoment.jl")
-    run_test_file("thermodynamic_gecko.jl")
-    run_test_file("michaelis_menten_gecko.jl")
-    run_test_file("inplace_derivs.jl")
+    run_test_file("differentiable_models/gecko.jl")
+    run_test_file("differentiable_models/smoment.jl")
+    run_test_file("differentiable_models/thermodynamic_smoment.jl")
+    run_test_file("differentiable_models/thermodynamic_gecko.jl")
+    run_test_file("differentiable_models/michaelis_menten_gecko.jl")
+    run_test_file("analytic_derivatives_inplace.jl")
 end

@@ -53,14 +53,15 @@
         modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
     )
 
+    #: Note, the duals are scaled, so they will not be the same
     @test all([
-        isapprox(dx_noscaling[i], dx_scaling_eq[i]; atol = TEST_TOLERANCE) for
-        i in eachindex(dx_scaling)
+        isapprox(dx_noscaling[1:11, :][i], dx_scaling_eq[1:11, :][i]; atol = TEST_TOLERANCE) for
+        i in eachindex(dx_noscaling[1:11, :])
     ])
 
     @test all([
         isapprox(x_noscaling[i], x_scaling_eq[i]; atol = TEST_TOLERANCE) for
-        i in eachindex(x_scaling)
+        i in eachindex(x_noscaling)
     ])
 
     #: scale both Inequality and equality
@@ -75,12 +76,12 @@
     )
 
     @test all([
-        isapprox(dx_noscaling[i], dx_scaling_eqineq[i]; atol = TEST_TOLERANCE) for
-        i in eachindex(dx_scaling)
+        isapprox(dx_noscaling[1:11, :][i], dx_scaling_eqineq[1:11, :][i]; atol = TEST_TOLERANCE) for
+        i in eachindex(dx_noscaling[1:11, :])
     ])
 
     @test all([
         isapprox(x_noscaling[i], x_scaling_eqineq[i]; atol = TEST_TOLERANCE) for
-        i in eachindex(x_scaling)
+        i in eachindex(x_noscaling)
     ])
 end
