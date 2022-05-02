@@ -52,8 +52,7 @@
         diffmodel, 
         Ipopt.Optimizer; 
         scale_output=false,
-        use_analytic = true,
-        inplace_analytic = false,
+        use_analytic_nonmutating = true,
     )
 
     x_ref = deepcopy(x)
@@ -84,8 +83,7 @@
         diffmodel, 
         Ipopt.Optimizer;
         scale_output=false,
-        use_analytic = true,
-        inplace_analytic = true,
+        use_analytic_mutating = true,
     )
 
     # test if reproduceable solutions
@@ -113,8 +111,7 @@
         diffmodel, 
         Ipopt.Optimizer;
         scale_output=false,
-        use_analytic = true,
-        inplace_analytic = true,
+        use_analytic_mutating = true,
     )
     @test !all(fA.L .== fA_prev_L)
     @test !all(fA.U .== fA_prev_U)

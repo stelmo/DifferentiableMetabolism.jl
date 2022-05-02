@@ -34,7 +34,6 @@
     x_noscaling, dx_noscaling = differentiate(
         diffmodel,
         Tulip.Optimizer;
-        use_analytic = false,
         modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
     )
 
@@ -49,7 +48,6 @@
     x_scaling_eq, dx_scaling_eq = differentiate(
         diffmodel,
         Tulip.Optimizer;
-        use_analytic = false,
         modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
     )
 
@@ -71,7 +69,6 @@
     x_scaling_eqineq, dx_scaling_eqineq = differentiate(
         diffmodel,
         Tulip.Optimizer;
-        use_analytic = false,
         modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
     )
 

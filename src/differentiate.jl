@@ -13,8 +13,8 @@ Internally calls [`_differentiate_kkt`](@ref).
 function differentiate(
     diffmodel::DifferentiableModel,
     optimizer;
-    use_analytic = false,
-    inplace_analytic = false,
+    use_analytic_mutating = false,
+    use_analytic_nonmutating = false,
     scale_output = true,
     modifications = [],
 )   
@@ -39,8 +39,8 @@ function differentiate(
         diffmodel,
         optimizer;
         modifications,
-        use_analytic,
-        inplace_analytic,
+        use_analytic_mutating,
+        use_analytic_nonmutating,
         scale_output
     )
 
@@ -63,8 +63,8 @@ function differentiate!(
     diffmodel::DifferentiableModel,
     optimizer;
     modifications = [],
-    use_analytic = false,
-    inplace_analytic = false,
+    use_analytic_mutating = false,
+    use_analytic_nonmutating = false,
     scale_output = true,
 )   
     DifferentiableMetabolism._solve_model!(
@@ -85,8 +85,8 @@ function differentiate!(
         B, 
         dx,
         diffmodel; 
-        use_analytic,
-        inplace_analytic,
+        use_analytic_mutating,
+        use_analytic_nonmutating,
     )
 
     #: Scale dx/dy => dlog(x)/dlog(y)
@@ -161,34 +161,30 @@ function _differentiate_kkt!(
     B,
     dx,
     diffmodel::DifferentiableModel;
-    use_analytic = false,
-    inplace_analytic = false,
+    use_analytic_mutating = false,
+    use_analytic_nonmutating = false,
     linear_solver = (A, B, dx, fA) -> _linear_solve(A, B, dx, fA)
 )
-    
-    if use_analytic
-        #=
-        This is much faster than using automatic differentiation, but more labor
-        intensive because the derivative of the parameters with respect to the
-        KKT function needs to be manually supplied. Ideally, use symbolic code 
-        to generate the derivatives for you.
-        =#
-        if inplace_analytic
-            diffmodel.analytic_var_derivs(A, x, ν, λ, diffmodel.θ)
-            diffmodel.analytic_par_derivs(B, x, ν, λ, diffmodel.θ)
-        else
-            A .= diffmodel.analytic_var_derivs(x, ν, λ, diffmodel.θ)
-            B .= diffmodel.analytic_par_derivs(x, ν, λ, diffmodel.θ)    
-        end
+    #=
+    The analytic approaches are much faster than using automatic
+    differentiation, but more labor intensive because the derivative of the
+    parameters with respect to the KKT function needs to be manually supplied.
+    Ideally, use symbolic code to generate the derivatives for you.
+
+    However, the autodiff works for any model and the user does not have to
+    supply any analytic derivatives. However, any sparse arrays encoded
+    in the model structure must be cast to dense arrays for ForwardDiff to
+    work. The densification restriction can be dropped once #481 here 
+    https://github.com/JuliaDiff/ForwardDiff.jl/pull/481 gets merged into 
+    ForwardDiff.
+    =#
+    if use_analytic_mutating
+        diffmodel.analytic_var_derivs(A, x, ν, λ, diffmodel.θ)
+        diffmodel.analytic_par_derivs(B, x, ν, λ, diffmodel.θ)
+    elseif use_analytic_nonmutating
+        A .= diffmodel.analytic_var_derivs(x, ν, λ, diffmodel.θ)
+        B .= diffmodel.analytic_par_derivs(x, ν, λ, diffmodel.θ)  
     else
-        #=
-        This is slower but works for any model and the user does not have to
-        supply any analytic derivatives. However, any sparse arrays encoded
-        in the model structure must be cast to dense arrays for ForwardDiff to
-        work. The densification restriction can be dropped once #481 here 
-        https://github.com/JuliaDiff/ForwardDiff.jl/pull/481 gets merged into 
-        ForwardDiff.
-        =#
         xidxs = 1:length(x)
         νidxs = last(xidxs) .+ (1:length(ν))
         λidxs = last(νidxs) .+ (1:length(λ))

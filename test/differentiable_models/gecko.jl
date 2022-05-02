@@ -35,7 +35,6 @@
     x_auto, dx_auto = differentiate(
         diffmodel,
         Tulip.Optimizer;
-        use_analytic = false,
         modifications = [change_optimizer_attribute("IPM_IterationsLimit", 1000)],
     )
 
@@ -46,14 +45,14 @@
 
     # test if automatic and symbolic derivatives are the same
     make_derivatives(diffmodel)
-    x_anal, dx_anal = differentiate(diffmodel, Tulip.Optimizer; use_analytic = true)
+    x_anal, dx_anal = differentiate(diffmodel, Tulip.Optimizer; use_analytic_nonmutating = true)
     @test all([
         isapprox(dx_auto[i], dx_anal[i]; atol = TEST_TOLERANCE) for i in eachindex(dx_anal)
     ])
 
     #: Add a regularizer and test QP 
     update_Q!(diffmodel, _ -> spdiagm(fill(0.1, length(diffmodel.var_ids))))
-    x_qp, dx_qp = differentiate(diffmodel, Ipopt.Optimizer; use_analytic = false)
+    x_qp, dx_qp = differentiate(diffmodel, Ipopt.Optimizer)
 
     # test if reproduceable solutions
     x_qp_ref = [
