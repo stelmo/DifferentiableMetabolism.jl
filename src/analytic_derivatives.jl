@@ -46,7 +46,7 @@ function make_symbolic_param_derivative(dm::DifferentiableModel)
     f_expr = build_function(sj, sz, expression = Val{false})
     myf = first(f_expr)
 
-    (x, ν, λ, θ) -> reshape(myf([x; ν; λ; θ]), size(sj)...) #TODO fix this
+    (x, ν, λ, θ) -> reshape(myf([x; ν; λ; θ]), size(sj)...) #TODO fix this, wait for #587 in Symbolics.jl to get fixed 
 end
 
 """

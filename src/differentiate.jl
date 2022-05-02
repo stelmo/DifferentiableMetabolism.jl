@@ -5,10 +5,10 @@ Solve and differentiate an optimization problem using the optimality conditions.
 The output can be scaled relative to the parameters and the solved variables
 with `scale_output`. *Optimizer* modifications (from COBREXA.jl) can be supplied
 through `modifications`. Analytic derivatives of the optimality conditions can
-be used by setting `use_analytic` to true. If in-place analytic derivatives 
-are supplied, set `inplace_analytic` to true. 
+be used by setting `use_analytic_mutating` or `use_analytic_nonmutating` to true. 
 
-Internally calls [`_differentiate_kkt`](@ref).
+Internally calls [`differentiate!`](@ref), the in-place variant of this function, 
+constructs the arguments internally.
 """
 function differentiate(
     diffmodel::DifferentiableModel,
@@ -50,7 +50,21 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Differentiates `diffmodel` using in-place functions as much as possible.
+Differentiates `diffmodel` using in-place functions as much as possible. The meaning of 
+the variables are:
+- `x`: primal variables
+- `ν`: equality dual variables
+- `λ`: inequality dual variables
+- `A`: variable derivatives
+- `fA`: factorized `A`
+- `B`: parameter derivitives
+- `dx`: the sensitivities of the variables
+- `diffmodel`: the model to differantiate
+- `optimizer`: the solver used in the forward pass
+- `modifications`: COBREXA functions forwarded to the *solver*
+- `use_analytic_mutating`: use the in-place, mutating variants of the analytic derivatives
+- `use_analytic_nonmutating`: use the non-mutating variants of the analytic derivatives 
+-`scale_output`: flag if the primal variable sensitivities should be scaled by `dx/dy => dlog(x)/dlog(y)`
 """
 function differentiate!(
     x,
@@ -92,6 +106,8 @@ end
 $(TYPEDSIGNATURES)
 
 Solve the optimization problem, aka the forward pass.
+
+This function is called by [`differentiate!`](@ref). 
 """
 function _solve_model!(
     x,
@@ -144,10 +160,10 @@ $(TYPEDSIGNATURES)
 Implicitly differentiate a convex quadratic or linear program using the KKT
 conditions. Suppose `F(z(θ), θ) = 0` represents the optimality (KKT) conditions
 of some optimization problem specified by `diffmodel`, where `z` is a vector of
-the primal, `x`, and dual, `ν` and `λ`, solutions. Then, return `A = ∂₁F(z(θ),
+the primal, `x`, and dual, `ν` and `λ`, solutions. Then, mutate `A = ∂₁F(z(θ),
 θ)`, `B = ∂₂F(z(θ), θ)`, and the optimal solution.
 
-This function is called by [`differentiate`](@ref). 
+This function is called by [`differentiate!`](@ref). 
 """
 function _differentiate_kkt!(
     x,
