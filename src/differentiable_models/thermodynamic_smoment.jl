@@ -28,6 +28,7 @@ function with_parameters(
     digits = 8,
     RT = 298.15 * 8.314e-3,
     ignore_reaction_ids = [],
+    ignore_metabolite_ids = [],
 )
     param_ids = [
         "k#" .* collect(keys(rid_enzyme))
@@ -47,6 +48,7 @@ function with_parameters(
         digits,
         RT,
         ignore_reaction_ids,
+        ignore_metabolite_ids,
     )
 
     _make_differentiable_model(
@@ -79,6 +81,7 @@ function _differentiable_thermodynamic_smoment_opt_problem(
     digits = 8,
     RT = 298.15 * 8.314e-3,
     ignore_reaction_ids = [],
+    ignore_metabolite_ids = [],
 )
 
     #: get irreverible stoichiometric matrix from model
@@ -116,6 +119,7 @@ function _differentiable_thermodynamic_smoment_opt_problem(
                     θ;
                     RT,
                     ignore_reaction_ids,
+                    ignore_metabolite_ids,
                 )
             ) for (rid, rid_idx, mw) in kcat_idxs
         ],

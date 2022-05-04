@@ -35,8 +35,10 @@ function _dg(
     θ;
     RT = 298.15 * 8.314e-3,
     ignore_reaction_ids = [],
+    ignore_metabolite_ids = [],
 )
-    rs = reaction_stoichiometry(model, rid)
+    _rs = reaction_stoichiometry(model, rid)
+    rs = Dict(k => v for (k, v) in _rs if k ∉ ignore_metabolite_ids)
     stoich = values(rs)
     mids = collect(keys(rs))
     midxs = Int.(indexin(mids, metabolites(model))) .+ length(rid_enzyme)
@@ -63,8 +65,10 @@ function _saturation(
     mangled_rid,
     θ;
     ignore_reaction_ids = [],
+    ignore_metabolite_ids = [],
 )
-    rs = reaction_stoichiometry(model, rid)
+    _rs = reaction_stoichiometry(model, rid)
+    rs = Dict(k => v for (k, v) in _rs if k ∉ ignore_metabolite_ids)
     stoich = values(rs)
     mids = collect(keys(rs))
     midxs = Int.(indexin(mids, metabolites(model))) .+ length(rid_enzyme)
