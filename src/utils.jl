@@ -48,7 +48,7 @@ function _dg(
     else
         dg_val =
             rid_dg0[rid] + RT * sum(nu * log(θ[midx]) for (nu, midx) in zip(stoich, midxs))
-        1.0 - exp(abs(dg_val) / RT)
+        1.0 - exp(dg_val / RT)
     end
 end
 
