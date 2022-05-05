@@ -32,6 +32,7 @@ function _dg(
     rid_enzyme,
     rid_dg0,
     rid,
+    mangled_rid,
     θ;
     RT = 298.15 * 8.314e-3,
     ignore_reaction_ids = [],
@@ -42,13 +43,14 @@ function _dg(
     stoich = values(rs)
     mids = collect(keys(rs))
     midxs = Int.(indexin(mids, metabolites(model))) .+ length(rid_enzyme)
+    dir = contains(mangled_rid, "#forward") ? 1 : -1
     if !haskey(rid_dg0, rid) || rid in ignore_reaction_ids
         # no kinetic info or should be ignore thermodynamically
         1.0
     else
         dg_val =
             rid_dg0[rid] + RT * sum(nu * log(θ[midx]) for (nu, midx) in zip(stoich, midxs))
-        1.0 - exp(dg_val / RT)
+        1.0 - exp(dir * dg_val / RT)
     end
 end
 

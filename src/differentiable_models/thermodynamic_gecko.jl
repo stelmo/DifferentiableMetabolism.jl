@@ -108,12 +108,14 @@ function _differentiable_thermodynamic_gecko_opt_problem(
                     rid_enzyme,
                     rid_dg0,
                     rid,
+                    mangled_rid,
                     θ;
                     RT,
                     ignore_reaction_ids,
                     ignore_metabolite_ids,
                 )
-            ) for (rid, ridx, stoich) in kcat_rid_ridx_stoich
+            ) for (mangled_rid, (rid, ridx, stoich)) in
+            zip(reactions(gm)[E_components.col_idxs], kcat_rid_ridx_stoich)
         ],
         num_genes,
         num_reactions,

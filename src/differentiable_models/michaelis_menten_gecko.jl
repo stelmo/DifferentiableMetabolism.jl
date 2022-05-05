@@ -105,6 +105,7 @@ function _differentiable_michaelis_menten_gecko_opt_problem(
                     rid_enzyme,
                     rid_dg0,
                     rid,
+                    mangled_rid,
                     θ;
                     RT,
                     ignore_reaction_ids,

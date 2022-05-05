@@ -116,12 +116,13 @@ function _differentiable_thermodynamic_smoment_opt_problem(
                     rid_enzyme,
                     rid_dg0,
                     rid,
+                    mangled_rid,
                     θ;
                     RT,
                     ignore_reaction_ids,
                     ignore_metabolite_ids,
                 )
-            ) for (rid, rid_idx, mw) in kcat_idxs
+            ) for (mangled_rid, (rid, rid_idx, mw)) in zip(reactions(smm)[col_idxs], kcat_idxs)
         ],
         n_reactions(smm),
     )
