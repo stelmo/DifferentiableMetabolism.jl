@@ -80,12 +80,12 @@ function _saturation(
         1.0
     else
         s_term = prod(
-            (θ[midx] / rid_km[rid][mid])^nu for
-            (nu, midx, mid) in zip(stoich, midxs, mids) if nu > 0
+            (θ[midx] / rid_km[rid][mid])^(-1*nu) for
+            (nu, midx, mid) in zip(stoich, midxs, mids) if nu < 0
         )
         p_term = prod(
             (θ[midx] / rid_km[rid][mid])^nu for
-            (nu, midx, mid) in zip(stoich, midxs, mids) if nu < 0
+            (nu, midx, mid) in zip(stoich, midxs, mids) if nu > 0
         )
         is_forward ? s_term / (1.0 + s_term + p_term) : p_term / (1.0 + s_term + p_term)
     end
