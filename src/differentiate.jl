@@ -182,23 +182,32 @@ function _differentiate_kkt!(
         A .= diffmodel.analytic_var_derivs(x, ν, λ, diffmodel.θ)
         B .= diffmodel.analytic_par_derivs(x, ν, λ, diffmodel.θ)
     else
-        xidxs = 1:length(x)
-        νidxs = last(xidxs) .+ (1:length(ν))
-        λidxs = last(νidxs) .+ (1:length(λ))
-        θidxs = last(λidxs) .+ (1:length(diffmodel.θ))
+        # xidxs = 1:length(x)
+        # νidxs = last(xidxs) .+ (1:length(ν))
+        # λidxs = last(νidxs) .+ (1:length(λ))
+        # θidxs = last(λidxs) .+ (1:length(diffmodel.θ))
 
-        kkt(z) = [
-            Array(diffmodel.Q(z[θidxs])) * z[xidxs] + Array(diffmodel.c(z[θidxs])) -
-            Array(diffmodel.E(z[θidxs]))' * z[νidxs] -
-            Array(diffmodel.M(z[θidxs]))' * z[λidxs]
-            Array(diffmodel.E(z[θidxs])) * z[xidxs] - Array(diffmodel.d(z[θidxs]))
-            diagm(z[λidxs]) *
-            (Array(diffmodel.M(z[θidxs])) * z[xidxs] - Array(diffmodel.h(z[θidxs])))
+        # kkt(z) = [
+        #     Array(diffmodel.Q(z[θidxs])) * z[xidxs] + Array(diffmodel.c(z[θidxs])) - Array(diffmodel.E(z[θidxs]))' * z[νidxs] - Array(diffmodel.M(z[θidxs]))' * z[λidxs]
+        #     Array(diffmodel.E(z[θidxs])) * z[xidxs] - Array(diffmodel.d(z[θidxs]))
+        #     diagm(z[λidxs]) * (Array(diffmodel.M(z[θidxs])) * z[xidxs] - Array(diffmodel.h(z[θidxs])))
+        # ]
+        # z = [x; ν; λ; diffmodel.θ]
+        # kkt(z)
+
+        kkt(x, ν, λ, θ) = [
+            Array(diffmodel.Q(θ)) * x + Array(diffmodel.c(θ)) - Array(diffmodel.E(θ))' * ν - Array(diffmodel.M(θ))' * λ
+            Array(diffmodel.E(θ)) * x - Array(diffmodel.d(θ))
+            diagm(λ) * (Array(diffmodel.M(θ)) * x - Array(diffmodel.h(θ)))
         ]
+        # kkt(x, ν, λ, diffmodel.θ)
+        # fff = θ -> kkt(x, ν, λ, θ)
+        # fff(diffmodel.θ)
 
-        J = ForwardDiff.jacobian(kkt, [x; ν; λ; diffmodel.θ])
-        A .= J[:, 1:last(λidxs)] #TODO this can be analytic by default
-        B .= J[:, (1+last(λidxs)):end]
+        A = make_analytic_var_derivative(diffmodel)(x, ν, λ, diffmodel.θ)
+        B = ForwardDiff.jacobian(θ -> kkt(x, ν, λ, θ), diffmodel.θ)
+        # A .= J[:, 1:last(λidxs)] #TODO this can be analytic by default
+        # B .= J[:, (1+last(λidxs)):end]
     end
 
     #= 

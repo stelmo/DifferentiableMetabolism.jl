@@ -1,7 +1,9 @@
 module DifferentiableMetabolism
 
 using COBREXA, JuMP
-using ForwardDiff, Symbolics
+# using Enzyme: jacobian, Forward, Val, Reverse
+using ForwardDiff
+using Symbolics
 using LinearAlgebra, SparseArrays, RowEchelon
 using DocStringExtensions
 
