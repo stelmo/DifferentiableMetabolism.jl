@@ -6,6 +6,7 @@ using SparseArrays, LinearAlgebra
 
 # Testing infrastructure taken from COBREXA
 TEST_TOLERANCE = 1e-6
+TEST_TOLERANCE_RELAXED = 1e-3
 
 print_timing(fn, t) = @info "$(fn) done in $(round(t; digits = 2))s"
 
