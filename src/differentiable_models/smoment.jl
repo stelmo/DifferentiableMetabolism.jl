@@ -1,13 +1,14 @@
 """
 $(TYPEDSIGNATURES)
 
-Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.SMomentModel`](@ref),
-which includes kinetic as well as thermodynamic parameters. Add the standard
+Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.SMomentModel`](@ref).
+Each variable in `smm` is differentiated with respect to the kcats in the
+dictionary `rid_enzyme`, which is a dictionary mapping reaction ids to
+[`Enzyme`](@ref)s. Enzyme constraints are only taken with respect to the entries
+of `rid_enzyme`. Optionally, include thermodynamic parameters. Add the standard
 Gibbs free energy of reactions with `rid_dg0`, and the metabolite concentrations
 that are to be used as parameters with `mid_concentration` (both arguments are
-dictionaries mapping reaction or metabolite ids to values). See
-`with_parameters(::SMomentModel,...)` for more information about restrictions to
-the model types and arguments. 
+dictionaries mapping reaction or metabolite ids to values). 
 
 Note, thermodynamic parameters require special attention. To ignore some
 reactions when calculating the thermodynamic factor, include them in
@@ -16,18 +17,12 @@ concentrations should be in molar. Importantly, the standard Gibbs free energy
 of reaction is assumed to be given *in the forward direction of the reaction* in
 the model.
 
-Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.SMomentModel`](@ref).
-Each variable in `smm` is differentiated with respect to the kcats in the
-dictionary `rid_enzyme`, which is a dictionary mapping reaction ids to
-[`Enzyme`](@ref)s.Enzyme constraints are only taken with respect to the entries
-of `rid_enzyme`.
-
 The analytic derivative of the optimality conditions with respect to the
 parameters can be supplied through `analytic_parameter_derivatives`. Internally,
 `ϵ`, `atol`, and `digits`, are forwarded to [`_remove_lin_dep_rows`](@ref). 
 
-Note, to ensure differentiability, preprocessing of the model is required. In short,
-only an active solution may be differentiated, this required that:
+Note, to ensure differentiability, preprocessing of the model is required. In
+short, only an active solution may be differentiated, this required that:
 - the model does not possess any isozymes
 - all the reactions should be unidirectinal
 - the kcats in `rid_enzyme` are for the appropriate direction used in the model

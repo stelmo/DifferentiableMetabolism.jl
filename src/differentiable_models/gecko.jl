@@ -6,7 +6,9 @@ Each variable in `gm` is differentiated with respect to the kcats in the
 dictionary `rid_enzyme`, which is a dictionary mapping reaction ids to
 [`Enzyme`](@ref)s. Enzyme constraints are only taken with respect to the entries
 of `rid_enzyme`. Optionally, incorporate thermodynamic and saturation constraints through
-`rid_dg0` and `rid_km`.
+`rid_dg0` and `rid_km`. If either thermodynamic or saturation (or both) constraints 
+are added, then metabolite concentrations, `mid_concentration`, need to be 
+supplied as well.
 
 Note, thermodynamic parameters require special attention. To ignore some
 reactions when calculating the thermodynamic factor, include them in
