@@ -28,9 +28,9 @@
     #: Differentiate model 
     diffmodel = with_parameters(
         smm,
-        rid_enzyme,
+        rid_enzyme;
         rid_dg0,
-        mid_concentration;
+        mid_concentration,
         ignore_reaction_ids = ["r6"],
     )
 

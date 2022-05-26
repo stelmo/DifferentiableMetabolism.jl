@@ -38,20 +38,18 @@ function _dg(
     ignore_reaction_ids = [],
     ignore_metabolite_ids = [],
 )
+    if !haskey(rid_dg0, rid) || rid in ignore_reaction_ids
+        # no thermo info or should be ignored
+        return 1.0
+    end
     _rs = reaction_stoichiometry(model, rid)
     rs = Dict(k => v for (k, v) in _rs if k ∉ ignore_metabolite_ids)
     stoich = values(rs)
     mids = collect(keys(rs))
     midxs = Int.(indexin(mids, metabolites(model))) .+ length(rid_enzyme)
     dir = contains(mangled_rid, "#forward") ? 1 : -1
-    if !haskey(rid_dg0, rid) || rid in ignore_reaction_ids
-        # no kinetic info or should be ignore thermodynamically
-        1.0
-    else
-        dg_val =
-            rid_dg0[rid] + RT * sum(nu * log(θ[midx]) for (nu, midx) in zip(stoich, midxs))
-        1.0 - exp(dir * dg_val / RT)
-    end
+    dg_val = rid_dg0[rid] + RT * sum(nu * log(θ[midx]) for (nu, midx) in zip(stoich, midxs))
+    1.0 - exp(dir * dg_val / RT)
 end
 
 """
@@ -69,6 +67,10 @@ function _saturation(
     ignore_reaction_ids = [],
     ignore_metabolite_ids = [],
 )
+    if !haskey(rid_km, rid) || rid in ignore_reaction_ids
+        # no kinetic info or should be ignored
+        return 1.0
+    end
     _rs = reaction_stoichiometry(model, rid)
     rs = Dict(k => v for (k, v) in _rs if k ∉ ignore_metabolite_ids)
     stoich = values(rs)
@@ -76,19 +78,15 @@ function _saturation(
     midxs = Int.(indexin(mids, metabolites(model))) .+ length(rid_enzyme)
     is_forward = contains(mangled_rid, "#forward") ? true : false
     @assert(contains(mangled_rid, rid)) #TODO sanity check, remove
-    if !haskey(rid_km, rid) || rid in ignore_reaction_ids
-        1.0
-    else
-        s_term = prod(
-            (θ[midx] / rid_km[rid][mid])^(-1*nu) for
-            (nu, midx, mid) in zip(stoich, midxs, mids) if nu < 0
-        )
-        p_term = prod(
-            (θ[midx] / rid_km[rid][mid])^nu for
-            (nu, midx, mid) in zip(stoich, midxs, mids) if nu > 0
-        )
-        is_forward ? s_term / (1.0 + s_term + p_term) : p_term / (1.0 + s_term + p_term)
-    end
+    s_term = prod(
+        (θ[midx] / rid_km[rid][mid])^(-1*nu) for
+        (nu, midx, mid) in zip(stoich, midxs, mids) if nu < 0
+    )
+    p_term = prod(
+        (θ[midx] / rid_km[rid][mid])^nu for
+        (nu, midx, mid) in zip(stoich, midxs, mids) if nu > 0
+    )
+    is_forward ? s_term / (1.0 + s_term + p_term) : p_term / (1.0 + s_term + p_term)
 end
 
 """

@@ -47,10 +47,10 @@
     #: Differentiate model normal gecko
     diffmodel = with_parameters(
         gm,
-        rid_enzyme,
+        rid_enzyme;
         rid_dg0,
         rid_km,
-        mid_concentration;
+        mid_concentration,
         ignore_reaction_ids = ["r6"],
     )
 

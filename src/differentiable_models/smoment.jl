@@ -1,6 +1,21 @@
 """
 $(TYPEDSIGNATURES)
 
+Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.SMomentModel`](@ref),
+which includes kinetic as well as thermodynamic parameters. Add the standard
+Gibbs free energy of reactions with `rid_dg0`, and the metabolite concentrations
+that are to be used as parameters with `mid_concentration` (both arguments are
+dictionaries mapping reaction or metabolite ids to values). See
+`with_parameters(::SMomentModel,...)` for more information about restrictions to
+the model types and arguments. 
+
+Note, thermodynamic parameters require special attention. To ignore some
+reactions when calculating the thermodynamic factor, include them in
+`ignore_reaction_ids`. The units used for the Gibbs free energy are kJ/mol, and
+concentrations should be in molar. Importantly, the standard Gibbs free energy
+of reaction is assumed to be given *in the forward direction of the reaction* in
+the model.
+
 Construct a [`DifferentiableModel`](@ref) from a [`COBREXA.SMomentModel`](@ref).
 Each variable in `smm` is differentiated with respect to the kcats in the
 dictionary `rid_enzyme`, which is a dictionary mapping reaction ids to
@@ -21,17 +36,45 @@ only an active solution may be differentiated, this required that:
 function with_parameters(
     smm::SMomentModel,
     rid_enzyme::Dict{String,Enzyme};
+    rid_dg0 = Dict{String,Float64}(),
+    mid_concentration = Dict{String,Float64}(),
     scale_equality = false,
     scale_inequality = false,
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
+    RT = 298.15 * 8.314e-3,
+    ignore_reaction_ids = [],
+    ignore_metabolite_ids = [],
 )
-    param_ids = "k#" .* collect(keys(rid_enzyme))
-    θ = [x.kcat for x in values(rid_enzyme)]
+    if isempty(rid_dg0)
+        # no concentration parameters
+        param_ids = "k#" .* collect(keys(rid_enzyme))
+        θ = [x.kcat for x in values(rid_enzyme)]
+    else
+        # has concentration parameters
+        isempty(mid_concentration) && throw(error("Missing metabolite concentrations."))
+        param_ids = [
+            "k#" .* collect(keys(rid_enzyme))
+            "c#" .* metabolites(smm)
+        ]
+        θ = [
+            [x.kcat for x in values(rid_enzyme)]
+            [mid_concentration[mid] for mid in metabolites(smm)]
+        ]
+    end
 
-    c, E, d, M, h, var_ids =
-        _differentiable_smoment_opt_problem(smm, rid_enzyme; ϵ, atol, digits)
+    c, E, d, M, h, var_ids = _differentiable_thermodynamic_smoment_opt_problem(
+        smm,
+        rid_enzyme,
+        rid_dg0;
+        ϵ,
+        atol,
+        digits,
+        RT,
+        ignore_reaction_ids,
+        ignore_metabolite_ids,
+    )
 
     _make_differentiable_model(
         c,
@@ -51,15 +94,19 @@ end
 $(TYPEDSIGNATURES)
 
 Return structures that will allow the most basic form of smoment to be solved.
-No enzyme constraints allowed. Assume preprocessing changes model such that most
-effective enzyme is the only GRR.
+No enzyme constraints allowed. Most effective enzyme is the only GRR. Assume
+unidirectional reactions.
 """
-function _differentiable_smoment_opt_problem(
+function _differentiable_thermodynamic_smoment_opt_problem(
     smm::SMomentModel,
-    rid_enzyme::Dict{String,Enzyme};
+    rid_enzyme::Dict{String,Enzyme},
+    rid_dg0::Dict{String,Float64};
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
+    RT = 298.15 * 8.314e-3,
+    ignore_reaction_ids = [],
+    ignore_metabolite_ids = [],
 )
 
     #: get irreverible stoichiometric matrix from model
@@ -70,22 +117,40 @@ function _differentiable_smoment_opt_problem(
 
     #: size of resultant model
     num_reactions = size(S, 2)
-    num_metabolites = size(S, 1)
+    num_eq_cons = size(S, 1)
 
     #: equality lhs
     E = _ -> S
 
     #: equality rhs
-    d = _ -> spzeros(num_metabolites) #TODO handle fixed variables
+    d = _ -> spzeros(num_eq_cons) #TODO handle fixed variables
 
     #: objective inferred from model
     c = _ -> -objective(smm)
 
-    #: coupling to kcats
-    col_idxs, kcat_idxs = _build_smoment_kcat_coupling(smm, rid_enzyme)
+    #: coupling kcats and thermodynamics
+    col_idxs, kcat_idxs =
+        DifferentiableMetabolism._build_smoment_kcat_coupling(smm, rid_enzyme)
 
-    kcat_coupling(θ) =
-        sparsevec(col_idxs, [mw / θ[idx] for (_, idx, mw) in kcat_idxs], num_reactions)
+    kcat_thermo_coupling(θ) = sparsevec(
+        col_idxs,
+        [
+            mw / (
+                (θ[rid_idx]) * DifferentiableMetabolism._dg(
+                    smm,
+                    rid_enzyme,
+                    rid_dg0,
+                    rid,
+                    mangled_rid,
+                    θ;
+                    RT,
+                    ignore_reaction_ids,
+                    ignore_metabolite_ids,
+                )
+            ) for (mangled_rid, (rid, rid_idx, mw)) in zip(reactions(smm)[col_idxs], kcat_idxs)
+        ],
+        n_reactions(smm),
+    )
 
     #: inequality rhs
     Cp = coupling(smm.inner)
@@ -93,8 +158,8 @@ function _differentiable_smoment_opt_problem(
         -1.0 * spdiagm(fill(1.0, num_reactions))
         1.0 * spdiagm(fill(1.0, num_reactions))
         Cp
-        -kcat_coupling(θ)'
-        kcat_coupling(θ)'
+        -kcat_thermo_coupling(θ)'
+        kcat_thermo_coupling(θ)'
     ]
 
     #: inequality lhs
