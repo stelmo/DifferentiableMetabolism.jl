@@ -16,14 +16,14 @@ model, and then differentiate the resulting model. Work is planned to drop this
 restriction.
 
 To use this package, [download and install Julia](https://julialang.org/downloads/), and add 
-the following packages using the builtin package manager:
+the following packages using the built in package manager:
 ```julia
 ] add COBREXA, DifferentiableMetabolism, Tulip
 ```
 Note, any optimization solver that is compatible with [JuMP](https://jump.dev/)
 can be used. Here we have opted to use
 [Tulip.jl](https://github.com/ds4dm/Tulip.jl). To run the tests,
-[Ipopt](https://github.com/jump-dev/Ipopt.jl) is required.
+[Ipopt](https://github.com/jump-dev/Ipopt.jl) is also required.
 ```julia
 ] test DifferentiableMetabolism
 ```
@@ -101,9 +101,7 @@ gecko_fluxes = flux_dict(gecko_model, optimized_model) # notice that r5 is inact
 # Prune away inactive reactions
 pruned_model = prune_model(model, gecko_fluxes)
 
-
 # Differentiate an optimal solution
-
 pruned_gecko_model = make_gecko_model(
     pruned_model;
     reaction_isozymes,
@@ -111,7 +109,6 @@ pruned_gecko_model = make_gecko_model(
     gene_product_molar_mass,
     gene_product_mass_group_bound,
 )
-
 
 rid_enzyme = Dict(
     k => isozyme_to_enzyme(first(v), gene_product_molar_mass; direction = :forward)
@@ -125,6 +122,10 @@ x, dx = differentiate(
     Tulip.Optimizer
 )
 ```
-Here, `x` are the variables, corresponding to `diffmodel.var_ids` and `dx` are
-the derivatives, where rows correspond to `diffmodel.param_ids` and columns
+Here, `x` are the variables, corresponding to `diffmodel.var_ids`, and `dx` are
+the derivatives, where rows correspond to `diffmodel.param_ids`, and columns
 correspond to `diffmodel.var_ids`.
+
+While this package is under development, you can already use more advanced
+functionality. Look at the tests to see how to incorporate thermodynamic and/or 
+saturation effects these differentiable models.
