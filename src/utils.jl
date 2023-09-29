@@ -116,9 +116,10 @@ $(TYPEDSIGNATURES)
 Return a simplified version of `model` that contains only reactions (and the
 associated genes and metabolites) that are active, i.e. carry fluxes (from
 `reaction_fluxes`) absolutely bigger than `atol`. All reactions are set
-unidirectional based on `reaction_fluxes`.
+unidirectional based on `reaction_fluxes`, and set as only forward direction 
+if 'make_forward' is true.
 """
-function prune_model(model::StandardModel, reaction_fluxes; atol = 1e-9, verbose = true)
+function prune_model(model::StandardModel, reaction_fluxes; atol = 1e-9, make_forward = false, verbose = true)
     pruned_model = StandardModel("pruned_model")
 
     rxns = Vector{Reaction}()
@@ -133,8 +134,12 @@ function prune_model(model::StandardModel, reaction_fluxes; atol = 1e-9, verbose
         rxn = deepcopy(model.reactions[rid])
         if reaction_fluxes[rid] > 0
             rxn.lb = max(0, rxn.lb)
-        else
+        elseif !make_forward
             rxn.ub = min(0, rxn.ub)
+        else
+            rxn.metabolites = Dict(x => -y for (x,y) in rxn.metabolites) # reverse the reaction stoichiometry
+            rxn.ub = -model.reactions[rid].lb
+            rxn.lb = max(0, -model.reactions[rid].ub)
         end
         push!(rxns, rxn)
 
