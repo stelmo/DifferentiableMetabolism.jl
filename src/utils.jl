@@ -7,10 +7,10 @@ reduction, all elements are rounded to `digits` after the decimal. Rows of all z
 (absolute value of the each element in row ≤ `atol`) are removed. Beware, this
 operation is expensive for very large matrices.
 """
-function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8, digits = 16)
+function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8)
     #TODO this method is suboptimal and can be improved for numerical stability
     #TODO improve RowEchelon, SVD does not work due to column reordering
-    rA = round.(rref!(copy(Array(A)), ϵ); digits)
+    rA = rref!(copy(Array(A)), ϵ)
 
     idxs = Int[]
     for i = 1:size(rA, 1)
@@ -20,6 +20,27 @@ function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8, digits = 16)
     end
 
     return rA[idxs, :]
+end
+
+"""
+$(TYPEDSIGNATURES)
+
+Remove linearly dependent rows in `A` deduced by QR decomposition. After QR decomposition, 
+all elements are rounded to `digits` after the decimal. Rows of all zeros
+(absolute value of the each element in row ≤ `atol`) are removed.
+"""
+function _remove_lin_dep_rows_QR(A; atol = 1e-8)
+    R = qr(Array(A)).R
+
+    idxs = Int[]
+    for i = 1:size(R,1)
+        if !all(abs.(R[i,:]) .<=atol) #remove rows of all zero
+            push!(idxs,i)
+        end
+    end
+
+    return R[idxs, :]
+
 end
 
 """
