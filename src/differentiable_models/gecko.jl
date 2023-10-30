@@ -89,11 +89,16 @@ incorporated into the gecko problem, but in differentiable format.
 """
 function _differentiable_michaelis_menten_gecko_opt_problem(
     gm::GeckoModel,
-    rid_enzyme::Dict{String,Enzyme};
+    rid_enzyme::Dict{String,Enzyme},
+    rid_dg0::Dict{String,Float64},
+    rid_km::Dict{String,Dict{String,Float64}};
     ϵ = 1e-8,
     atol = 1e-12,
     digits = 8,
-   )
+    RT = 298.15 * 8.314e-3,
+    ignore_reaction_ids = [],
+    ignore_metabolite_ids = [],
+)
     #: get irreverible stoichiometric matrix from model
     irrev_S = stoichiometry(gm.inner) * COBREXA._gecko_reaction_column_reactions(gm)
 
@@ -115,7 +120,28 @@ function _differentiable_michaelis_menten_gecko_opt_problem(
         E_components.col_idxs,
         [
             stoich / (
-                θ[ridx]
+                θ[ridx] * 
+                DifferentiableMetabolism._dg(
+                    gm,
+                    rid_enzyme,
+                    rid_dg0,
+                    rid,
+                    mangled_rid,
+                    θ;
+                    RT,
+                    ignore_reaction_ids,
+                    ignore_metabolite_ids,
+                ) * 
+                DifferentiableMetabolism._saturation(
+                    gm,
+                    rid_enzyme,
+                    rid_km,
+                    rid,
+                    mangled_rid,
+                    θ;
+                    ignore_reaction_ids,
+                    ignore_metabolite_ids,
+                )
             ) for (mangled_rid, (rid, ridx, stoich)) in
             zip(reactions(gm)[E_components.col_idxs], kcat_rid_ridx_stoich)
         ],
