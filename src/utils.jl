@@ -10,7 +10,7 @@ operation is expensive for very large matrices.
 function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8)
     #TODO this method is suboptimal and can be improved for numerical stability
     #TODO improve RowEchelon, SVD does not work due to column reordering
-    rA = rref!(copy(Array(A)), ϵ)
+    rA = rref!(Array(A), ϵ)
 
     idxs = Int[]
     for i = 1:size(rA, 1)
@@ -34,7 +34,7 @@ function _remove_lin_dep_rows_QR(A; atol = 1e-8)
 
     idxs = Int[]
     for i = 1:size(R,1)
-        if !all(abs.(R[i,:]) .<=atol) #remove rows of all zero
+        if exists(v -> abs(v) > atol,  R[i,:]) #remove rows of all zero
             push!(idxs,i)
         end
     end
