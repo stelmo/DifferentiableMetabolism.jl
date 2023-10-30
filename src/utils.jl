@@ -7,10 +7,10 @@ reduction, all elements are rounded to `digits` after the decimal. Rows of all z
 (absolute value of the each element in row ≤ `atol`) are removed. Beware, this
 operation is expensive for very large matrices.
 """
-function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8)
+function _remove_lin_dep_rows(A; ϵ = 1e-8, atol = 1e-8, digits = 16)
     #TODO this method is suboptimal and can be improved for numerical stability
     #TODO improve RowEchelon, SVD does not work due to column reordering
-    rA = rref!(Array(A), ϵ)
+    rA = round.(rref!(Array(A), ϵ); digits)
 
     idxs = Int[]
     for i = 1:size(rA, 1)
