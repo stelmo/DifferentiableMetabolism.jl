@@ -32,14 +32,7 @@ all elements are rounded to `digits` after the decimal. Rows of all zeros
 function _remove_lin_dep_rows_QR(A; atol = 1e-8)
     R = qr(Array(A)).R
 
-    idxs = Int[]
-    for i = 1:size(R,1)
-        if exists(v -> abs(v) > atol,  R[i,:]) #remove rows of all zero
-            push!(idxs,i)
-        end
-    end
-
-    return R[idxs, :]
+    return R[any(x -> abs(x)>atol, R, dims=2)[:], :] # remove rows of all zero
 
 end
 
