@@ -1,48 +1,50 @@
-using DifferentiableMetabolism
+using DifferentiableMetabolism, Test
 
 import Symbolics as S
-import AbstractFBCModels as A
+import AbstractFBCModels as AM
 import ConstraintTrees as C
 import COBREXA as X
 import Tulip as T
+import JuMP as J
+
 
 S.@variables kcats_forward[1:4] kcats_backward[1:4] capacitylimitation
 
 # build simple model 
 mets = Dict(
-    "m1" => A.CanonicalModel.Metabolite(),
-    "m2" => A.CanonicalModel.Metabolite(),
-    "m3" => A.CanonicalModel.Metabolite(),
-    "m4" => A.CanonicalModel.Metabolite(),
+    "m1" => AM.CanonicalModel.Metabolite(),
+    "m2" => AM.CanonicalModel.Metabolite(),
+    "m3" => AM.CanonicalModel.Metabolite(),
+    "m4" => AM.CanonicalModel.Metabolite(),
 )
 
 rxns = Dict(
-    "r1" => A.CanonicalModel.Reaction(
+    "r1" => AM.CanonicalModel.Reaction(
         lower_bound = 0.0,
         upper_bound = 100.0,
         stoichiometry = Dict("m1" => 1.0),
     ),
-    "r2" => A.CanonicalModel.Reaction(
+    "r2" => AM.CanonicalModel.Reaction(
         lower_bound = 0.0,
         upper_bound = 100.0,
         stoichiometry = Dict("m2" => 1.0),
     ),
-    "r3" => A.CanonicalModel.Reaction(
+    "r3" => AM.CanonicalModel.Reaction(
         lower_bound = 0.0,
         upper_bound = 100.0,
         stoichiometry = Dict("m1" => -1.0, "m2" => -1.0, "m3" => 1.0),
     ),
-    "r4" => A.CanonicalModel.Reaction(
+    "r4" => AM.CanonicalModel.Reaction(
         lower_bound = 0.0,
         upper_bound = 100.0,
         stoichiometry = Dict("m3" => -1.0, "m4" => 1.0),
     ),
-    "r5" => A.CanonicalModel.Reaction(
+    "r5" => AM.CanonicalModel.Reaction(
         lower_bound = -100.0,
         upper_bound = 100.0,
         stoichiometry = Dict("m2" => -1.0, "m4" => 1.0),
     ),
-    "r6" => A.CanonicalModel.Reaction(
+    "r6" => AM.CanonicalModel.Reaction(
         lower_bound = 0.0,
         upper_bound = 100.0,
         stoichiometry = Dict("m4" => -1.0),
@@ -50,9 +52,9 @@ rxns = Dict(
     ),
 )
 
-gs = Dict("g$i" => A.CanonicalModel.Gene() for i = 1:5)
+gs = Dict("g$i" => AM.CanonicalModel.Gene() for i = 1:5)
 
-model = A.CanonicalModel.Model(rxns, mets, gs)
+model = AM.CanonicalModel.Model(rxns, mets, gs)
 
 reaction_isozymes = Dict(
     "r3" => Dict(
@@ -81,18 +83,16 @@ gene_molar_masses = Dict("g1" => 1.0, "g2" => 2.0, "g3" => 3.0, "g4" => 4.0, "g5
 m = X.fbc_model_constraints(model)
 m += :enzymes^X.enzyme_variables(model)
 m = X.add_enzyme_constraints!(m, reaction_isozymes)
-m *= :total_proteome_bound^C.Constraint(
-    value = sum(
-        m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in A.genes(model)
-    ),
-    bound = ParameterBetween(0.0, capacitylimitation),
-)
+m *=
+    :total_proteome_bound^C.Constraint(
+        value = sum(
+            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in AM.genes(model)
+        ),
+        bound = ParameterBetween(0.0, capacitylimitation),
+    )
 
-# full symbolic model
-S.@variables x[1:C.var_count(m)]
-sm = C.constraint_values(m, collect(x))
-
-params = Dict(
+# substitute params into model
+parameters = Dict(
     kcats_forward[1] => 1.0,
     kcats_forward[2] => 2.0,
     kcats_forward[3] => 3.0,
@@ -100,40 +100,26 @@ params = Dict(
     kcats_backward[1] => 1.0,
     kcats_backward[2] => 2.0,
     kcats_backward[3] => 3.0,
-    kcats_backward[4]  => 70.0,
+    kcats_backward[4] => 70.0,
     capacitylimitation => 0.5,
 )
-pm = S.substitute(m, params) #  type of tree is Any which does not work downstream
 
-# solve the model
-ec_solution = X.optimized_constraints(
-    pm;
-    objective = pm.objective.value,
+ec_solution, ν, λ = optimized_constraints_with_parameters(
+    m,
+    parameters;
+    objective = m.objective.value,
     optimizer = T.Optimizer,
     modifications = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    duals=true,
 )
 
+@test isapprox(ec_solution.objective, 3.181818181753438, atol = 1e-3)
+@test isapprox(ec_solution.enzymes.g4, 0.09090909090607537, atol = 1e-3)
 
 
+# Create full symbolic model
+S.@variables x[1:C.var_count(m)]
 
-S.@variables p[1:4]
-m = :variables^C.variables(keys = [:x, :y])
-m *= :param_constraints^C.ConstraintTree(
-    :c1 => C.Constraint(
-        value = p[1] * m.variables.x.value + m.variables.y.value, 
-        bound = ParameterBetween(0.0, p[2]),
-    ),
-    :c2 => C.Constraint(
-        value = m.variables.x.value + p[3] * m.variables.y.value, 
-        bound = ParameterEqualTo(p[4]),
-    ),
-)
+eqs = equality_constraints(m)
+ineqs = inequality_constraints(m)
 
-params = Dict(
-    p[1] => 1.0,
-    p[2] => 2.0,
-    p[3] => 3.0,
-    p[4] => 4.0,
-)
-pm = C.substitute(m, params) #  type of tree is Any which does not work downstream
-S.substitute(m.param_constraints.c1, params) # this works

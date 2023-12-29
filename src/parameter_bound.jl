@@ -4,8 +4,8 @@
     upper::S.Num
 end
 
-ParameterBetween(x::Union{Float64, Int}, y::S.Num) = ParameterBetween(S.Num(x), y)
-ParameterBetween(x::S.Num, y::Union{Float64, Int}) = ParameterBetween(x, S.Num(y))
+ParameterBetween(x::Union{Float64,Int}, y::S.Num) = ParameterBetween(S.Num(x), y)
+ParameterBetween(x::S.Num, y::Union{Float64,Int}) = ParameterBetween(x, S.Num(y))
 
 export ParameterBetween
 
@@ -19,7 +19,7 @@ Base.:/(a::ParameterBetween, b::Real) = ParameterBetween(a.lower / b, a.upper / 
     equal_to::S.Num
 end
 
-ParameterEqualTo(y::Union{Float64, Int}) = ParameterBetween(S.Num(y))
+ParameterEqualTo(y::Union{Float64,Int}) = ParameterBetween(S.Num(y))
 
 export ParameterEqualTo
 
