@@ -104,7 +104,7 @@ parameters = Dict(
     capacitylimitation => 0.5,
 )
 
-ec_solution, ν, λ = optimized_constraints_with_parameters(
+_x, _ν, _λ = optimized_constraints_with_parameters(
     m,
     parameters;
     objective = m.objective.value,
@@ -117,9 +117,8 @@ ec_solution, ν, λ = optimized_constraints_with_parameters(
 @test isapprox(ec_solution.enzymes.g4, 0.09090909090607537, atol = 1e-3)
 
 
-# Create full symbolic model
-S.@variables x[1:C.var_count(m)]
+kktfunc = kkt(m, m.objective.value)
 
-eqs = equality_constraints(m)
-ineqs = inequality_constraints(m)
+
+
 

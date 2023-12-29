@@ -16,5 +16,6 @@ include("parameter_isozyme.jl")
 include("parameter_misc.jl")
 
 include("solver.jl")
+include("kkt.jl")
 
 end

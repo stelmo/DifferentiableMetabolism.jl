@@ -100,7 +100,7 @@ function optimized_constraints_with_parameters(
     (
         duals ?
         (
-            C.constraint_values(S.substitute(m, parameters), J.value.(om[:x])),
+            J.value.(om[:x]),
             J.dual.(om[:eqcons]),
             J.dual.(om[:ineqcons]),
         ) : C.constraint_values(S.substitute(m, parameters), J.value.(om[:x]))
