@@ -14,3 +14,5 @@ temp*
 /deps/deps.jl
 /docs/build
 Manifest.toml
+
+old*

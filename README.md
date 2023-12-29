@@ -1,19 +1,16 @@
 # DifferentiableMetabolism.jl
 This package extends [COBREXA.jl](https://github.com/LCSB-BioCore/COBREXA.jl)
-with the ability to differentiate an optimal solution of an enzyme constrained
-metabolic model. 
+with the ability to differentiate an optimal solution of a constraint-based
+metabolic model with respect to parameters. 
 
-Currently, there is support for differentiating both `SMomentModel` and
-`GeckoModel`, where both turnover numbers and/or intracellular metabolite
-concentrations can be taken as parameters. If the latter are parameters, then
-generalized Michaelis-Menten kinetics (saturation and thermodynamic) are
-assumed. 
+However, please note that only non-degenerate solutions (unique) can be
+differentiated for the derivatives to have a concrete interpretation. For enzyme
+constrained models, this means that you will only be able to differentiate the
+model if you prune the inactive reactions from the solution (see the
+documentation for examples). For other types of models, you need to ensure that
+your solution is non-degenerate, otherwise you will only compute sub-gradients.
 
-Note, this package is under active development. Only non-degenerate models can
-be differentiated. This means that you will only be able to differentiate the
-model if you find an active solution, prune the inactive reactions from the
-model, and then differentiate the resulting model. Work is planned to drop this
-restriction.
+To use this package you
 
 To use this package, [download and install Julia](https://julialang.org/downloads/), and add 
 the following packages using the built in package manager:

@@ -1,29 +1,17 @@
 module DifferentiableMetabolism
 
-using COBREXA, JuMP
-# using Enzyme: jacobian, Forward, Val, Reverse
-using ForwardDiff
-using Symbolics
-using LinearAlgebra, SparseArrays, RowEchelon
 using DocStringExtensions
 
-include("DifferentiableModel.jl")
-include("Enzyme.jl")
-include("differentiate.jl")
-include("scale.jl")
-include("utils.jl")
-include("update.jl")
-include("differentiable_models/gecko.jl")
-include("differentiable_models/smoment.jl")
-include("analytic_derivatives/analytic_derivatives.jl")
-include("analytic_derivatives/analytic_derivatives_with_scaling.jl")
+import COBREXA as X
+import JuMP as J
+import ConstraintTrees as C
+import Symbolics as S
+import LinearAlgebra as L
 
-# export everything that isn't prefixed with _ (inspired by JuMP.jl, thanks!)
-for sym in names(@__MODULE__, all = true)
-    if sym in [Symbol(@__MODULE__), :eval, :include] || startswith(string(sym), ['_', '#'])
-        continue
-    end
-    @eval export $sym
-end
+# extend constraint trees to make things differentiable
+include("parameter_bound.jl")
+include("parameter_linearvalue.jl")
+include("parameter_isozyme.jl")
+include("parameter_misc.jl")
 
 end
