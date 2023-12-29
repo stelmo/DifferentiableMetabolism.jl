@@ -103,7 +103,7 @@ params = Dict(
     kcats_backward[4]  => 70.0,
     capacitylimitation => 0.5,
 )
-pm = C.substitute(m, params) #  type of tree is Any which does not work downstream
+pm = S.substitute(m, params) #  type of tree is Any which does not work downstream
 
 # solve the model
 ec_solution = X.optimized_constraints(
@@ -114,3 +114,26 @@ ec_solution = X.optimized_constraints(
 )
 
 
+
+
+S.@variables p[1:4]
+m = :variables^C.variables(keys = [:x, :y])
+m *= :param_constraints^C.ConstraintTree(
+    :c1 => C.Constraint(
+        value = p[1] * m.variables.x.value + m.variables.y.value, 
+        bound = ParameterBetween(0.0, p[2]),
+    ),
+    :c2 => C.Constraint(
+        value = m.variables.x.value + p[3] * m.variables.y.value, 
+        bound = ParameterEqualTo(p[4]),
+    ),
+)
+
+params = Dict(
+    p[1] => 1.0,
+    p[2] => 2.0,
+    p[3] => 3.0,
+    p[4] => 4.0,
+)
+pm = C.substitute(m, params) #  type of tree is Any which does not work downstream
+S.substitute(m.param_constraints.c1, params) # this works
