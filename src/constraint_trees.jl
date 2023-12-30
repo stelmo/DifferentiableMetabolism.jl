@@ -15,3 +15,12 @@ ConstraintTrees.substitute(x::ParameterLinearValue, y::Vector{Symbolics.Num}) = 
     (idx == 0 ? x.weights[i] : x.weights[i] * y[idx] for (i, idx) in enumerate(x.idxs)),
     init = Symbolics.Num(0.0),
 )
+
+ConstraintTrees.substitute(x::ParameterQuadraticValue, y::Vector{Symbolics.Num}) = sum(
+    (
+        let (idx1, idx2) = x.idxs[i]
+            (idx1 == 0 ? 1.0 : y[idx1]) * (idx2 == 0 ? 1.0 : y[idx2]) * w
+        end for (i, w) in enumerate(x.weights)
+    ),
+    init = Symbolics.Num(0.0),
+)

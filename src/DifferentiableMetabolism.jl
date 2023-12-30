@@ -11,9 +11,10 @@ import SparseArrays: sparse, sparsevec
 
 # Define new parameter-based types
 include("parameter_bound.jl")
-include("parameter_linearvalue.jl")
 include("parameter_isozyme.jl")
+include("parameter_linearvalue.jl")
 include("parameter_quadraticvalue.jl")
+include("parameter_promotion.jl")
 
 # ConstraintTrees and Symbolics
 include("constraint_trees.jl")
