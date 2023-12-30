@@ -53,6 +53,7 @@ Base.:/(a::ParameterLinearValue, b::Real) = ParameterLinearValue(a.idxs, a.weigh
 
 # add two ParameterLinearValues
 function Base.:+(a::ParameterLinearValue, b::ParameterLinearValue)
+    # copied code from ConstraintTrees.jl (Apache v2) and marginally changed some types
     r_idxs = Int[]
     r_weights = Symbolics.Num[]
     ai = 1

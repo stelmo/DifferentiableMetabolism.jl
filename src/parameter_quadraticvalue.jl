@@ -76,6 +76,7 @@ Base.:/(a::ParameterQuadraticValue, b::Real) =
     ParameterQuadraticValue(idxs = a.idxs, weights = a.weights ./ b)
 
 function Base.:+(a::ParameterQuadraticValue, b::ParameterQuadraticValue)
+    # copied code from ConstraintTrees.jl (Apache v2) and marginally changed some types
     r_idxs = Tuple{Int,Int}[]
     r_weights = Symbolics.Num[]
     ai = 1
@@ -113,6 +114,7 @@ function Base.:+(a::ParameterQuadraticValue, b::ParameterQuadraticValue)
 end
 
 Base.:*(a::ParameterLinearValue, b::ParameterLinearValue) =
+    # copied code from ConstraintTrees.jl (Apache v2) and marginally changed some types
     let vals = a.weights .* b.weights'
         ParameterQuadraticValue(
             idxs = [(aidx, bidx) for bidx in b.idxs for aidx in a.idxs if aidx <= bidx],

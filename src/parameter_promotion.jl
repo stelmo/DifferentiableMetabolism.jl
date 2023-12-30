@@ -19,7 +19,6 @@ Base.:/(a::ConstraintTrees.LinearValue, b::Symbolics.Num) =
     ParameterLinearValue(a.idxs, a.weights ./ b)
 
 # LinearValue and ParameterLinearValues
-
 Base.:+(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) =
     ParameterLinearValue(a) + b
 
@@ -56,7 +55,6 @@ Base.:/(a::ConstraintTrees.QuadraticValue, b::Symbolics.Num) =
     ParameterQuadraticValue(a.idxs, a.weights ./ b)
 
 # QuadraticValues and ParameterQuadraticValues
-
 Base.:+(a::ConstraintTrees.QuadraticValue, b::ParameterQuadraticValue) =
     ParameterQuadraticValue(a) + b
 
