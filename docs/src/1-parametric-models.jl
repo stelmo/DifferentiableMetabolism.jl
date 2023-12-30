@@ -110,3 +110,5 @@ m_noparams = optimized_constraints_with_parameters(
     optimizer = Clarabel.Optimizer,
 )
 m_noparams.fluxes
+
+@test isapprox(m_noparams.objective, 48.0; atol = TEST_TOLERANCE)
