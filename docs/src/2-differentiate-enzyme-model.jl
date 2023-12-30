@@ -21,7 +21,7 @@ using ConstraintTrees
 using COBREXA
 using Tulip
 
-include(joinpath("..", "test", "simple_model.jl")) #hide
+include("../../test/simple_model.jl") #hide
 
 # ![simple_model](./assets/simple_model.svg)
 
@@ -93,8 +93,8 @@ ec_solution = optimized_constraints_with_parameters(
     modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
 
-@test isapprox(ec_solution.objective, 3.181818181753438, atol = TEST_TOLERANCE)
-@test isapprox(ec_solution.enzymes.g4, 0.09090909090607537, atol = TEST_TOLERANCE)
+@test isapprox(ec_solution.objective, 0.9599999986359624, atol = TEST_TOLERANCE)
+@test isapprox(ec_solution.enzymes.g4, 0.02000000004275052, atol = TEST_TOLERANCE)
 @test isapprox(ec_solution.:total_proteome_bound, 0.5, atol = TEST_TOLERANCE)
 
 ec_solution.fluxes

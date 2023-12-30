@@ -22,6 +22,7 @@ import DifferentiableMetabolism
 using Test
 
 const TEST_TOLERANCE = 1e-3
+const DOCUMENTING = false
 
 @testset "DifferentiableMetabolism tests" begin
     @testset "Parametric models" begin

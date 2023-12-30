@@ -20,6 +20,8 @@ Changes from copied code are indicated.
 
 using Documenter, Literate, DifferentiableMetabolism
 
+const DOCUMENTING = true # for loading the small model
+
 examples =
     sort(filter(x -> endswith(x, ".jl"), readdir(joinpath(@__DIR__, "src"), join = true)))
 
