@@ -1,18 +1,27 @@
 
-@kwdef struct ParameterLinearValue <: C.Value
+"""
+$(TYPEDEF)
+
+An extension of [`ConstraintTrees.LinearValue`](@ref) where the weights are parameters.
+
+`ParameterLinearValue`s can be combined additively and multiplied by real-number constants.
+
+Multiplying two `ParameterLinearValue`s yields a quadratic form (in a [`ParameterQuadraticValue`](@ref)).
+
+# Fields
+$(TYPEDFIELDS)
+"""
+@kwdef struct ParameterLinearValue <: ConstraintTrees.Value
     idxs::Vector{Int}
-    weights::Vector{S.Num}
+    weights::Vector{Symbolics.Num}
 end
 
-# convert all numbers to Nums
-ParameterLinearValue(idxs::Vector{Int}, weights::Vector{Union{Int,Float64}}) =
-    ParameterLinearValue(idxs, convert.(S.Num, weights))
+# convert all weights to Nums
+ParameterLinearValue(idxs::Vector{Int}, weights::Vector{Union{Int,Float64}}) = ParameterLinearValue(idxs, convert.(Symbolics.Num, weights))
 
 export ParameterLinearValue
 
-ParameterLinearValue(x::Real) =
-    iszero(x) ? ParameterLinearValue(idxs = [], weights = []) :
-    ParameterLinearValue(idxs = [0], weights = [x])
+ParameterLinearValue(x::Real) = iszero(x) ? ParameterLinearValue(idxs = [], weights = []) : ParameterLinearValue(idxs = [0], weights = [x])
 
 Base.convert(::Type{ParameterLinearValue}, x::Real) = ParameterLinearValue(x)
 Base.zero(::Type{ParameterLinearValue}) = ParameterLinearValue(idxs = [], weights = [])
@@ -27,27 +36,23 @@ Base.:*(a::ParameterLinearValue, b::Real) = ParameterLinearValue(a.idxs, b .* a.
 Base.:/(a::ParameterLinearValue, b::Real) = ParameterLinearValue(a.idxs, a.weights ./ b)
 
 # Promote LinearValue to ParameterLinearValue
-Base.:+(a::S.Num, b::C.LinearValue) = ParameterLinearValue(a) + b
-Base.:+(a::C.LinearValue, b::S.Num) = a + ParameterLinearValue(b)
-Base.:-(a::S.Num, b::C.LinearValue) = ParameterLinearValue(a) - b
-Base.:-(a::C.LinearValue, b::S.Num) = a - ParameterLinearValue(b)
-Base.:*(a::S.Num, b::C.LinearValue) = b * a
-Base.:*(a::C.LinearValue, b::S.Num) = ParameterLinearValue(a.idxs, b .* a.weights)
-Base.:/(a::C.LinearValue, b::S.Num) = ParameterLinearValue(a.idxs, a.weights ./ b)
+Base.:+(a::Symbolics.Num, b::ConstraintTrees.LinearValue) = ParameterLinearValue(a) + b
+Base.:+(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = a + ParameterLinearValue(b)
+Base.:-(a::Symbolics.Num, b::ConstraintTrees.LinearValue) = ParameterLinearValue(a) - b
+Base.:-(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = a - ParameterLinearValue(b)
+Base.:*(a::Symbolics.Num, b::ConstraintTrees.LinearValue) = b * a
+Base.:*(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = ParameterLinearValue(a.idxs, b .* a.weights)
+Base.:/(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = ParameterLinearValue(a.idxs, a.weights ./ b)
 
-Base.:+(a::C.LinearValue, b::ParameterLinearValue) =
-    ParameterLinearValue(a.idxs, a.weights) + b
-Base.:+(a::ParameterLinearValue, b::C.LinearValue) =
-    a + ParameterLinearValue(b.idxs, b.weights)
-Base.:-(a::C.LinearValue, b::ParameterLinearValue) =
-    ParameterLinearValue(a.idxs, a.weights) - b
-Base.:-(a::ParameterLinearValue, b::C.LinearValue) =
-    a - ParameterLinearValue(b.idxs, b.weights)
+Base.:+(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) = ParameterLinearValue(a.idxs, a.weights) + b
+Base.:+(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) = a + ParameterLinearValue(b.idxs, b.weights)
+Base.:-(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) = ParameterLinearValue(a.idxs, a.weights) - b
+Base.:-(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) = a - ParameterLinearValue(b.idxs, b.weights)
 
 # add two ParameterLinearValues
 function Base.:+(a::ParameterLinearValue, b::ParameterLinearValue)
     r_idxs = Int[]
-    r_weights = S.Num[] # supertype including Num and Float64
+    r_weights = Symbolics.Num[] # supertype including Num and Float64
     ai = 1
     ae = length(a.idxs)
     bi = 1
@@ -78,6 +83,5 @@ function Base.:+(a::ParameterLinearValue, b::ParameterLinearValue)
         push!(r_weights, b.weights[bi])
         bi += 1
     end
-    ParameterLinearValue(idxs = r_idxs, weights = [x for x in r_weights])
+    ParameterLinearValue(idxs = r_idxs, weights = r_weights)
 end
-

@@ -1,11 +1,21 @@
 
-@kwdef mutable struct ParameterBetween <: C.Bound
-    lower::S.Num
-    upper::S.Num
+"""
+$(TYPEDEF)
+
+Representation of an "interval" bound where the lower and upper bound values are
+parameters. Since [`Symbolics.Num`](@ref) is a subtype of `Real`, the bounds
+could also be any real number, but they are converted by the constructors to
+[`Symbolics.Num`](@ref)s. 
+
+# Fields
+$(TYPEDFIELDS)
+"""
+@kwdef mutable struct ParameterBetween <: ConstraintTrees.Bound
+    lower::Symbolics.Num
+    upper::Symbolics.Num
 end
 
-ParameterBetween(x::Union{Float64,Int}, y::S.Num) = ParameterBetween(S.Num(x), y)
-ParameterBetween(x::S.Num, y::Union{Float64,Int}) = ParameterBetween(x, S.Num(y))
+ParameterBetween(x::Union{Float64,Int,Symbolics.Num}, y::Union{Float64,Int,Symbolics.Num}) = ParameterBetween(Symbolics.Num(x), Symbolics.Num(y))
 
 export ParameterBetween
 
@@ -14,12 +24,22 @@ Base.:*(a::ParameterBetween, b::Real) = b * a
 Base.:*(a::Real, b::ParameterBetween) = ParameterBetween(a * b.lower, a * b.upper)
 Base.:/(a::ParameterBetween, b::Real) = ParameterBetween(a.lower / b, a.upper / b)
 
+"""
+$(TYPEDEF)
 
-@kwdef mutable struct ParameterEqualTo <: C.Bound
-    equal_to::S.Num
+Representation of an "equality" bound, where the bound value is a parameter.
+Since [`Symbolics.Num`](@ref) is a subtype of `Real`, the bound could also be
+any real number, but it is converted by the constructor to a
+[`Symbolics.Num`](@ref).
+
+# Fields
+$(TYPEDFIELDS)
+"""
+@kwdef mutable struct ParameterEqualTo <: ConstraintTrees.Bound
+    equal_to::Symbolics.Num
 end
 
-ParameterEqualTo(y::Union{Float64,Int}) = ParameterBetween(S.Num(y))
+ParameterEqualTo(y::Union{Float64,Int}) = ParameterBetween(Symbolics.Num(y))
 
 export ParameterEqualTo
 

@@ -1,15 +1,15 @@
 
 function optimization_model_with_parameters(
-    m::C.ConstraintTree,
-    parameters::Dict{S.Num,Float64};
-    objective::C.Value,
+    m::ConstraintTrees.ConstraintTree,
+    parameters::Dict{Symbolics.Num,Float64};
+    objective::ConstraintTrees.Value,
     optimizer,
     sense,
 )
-    model = J.Model(optimizer)
+    model = JuMP.Model(optimizer)
 
-    J.@variable(model, x[1:C.var_count(m)])
-    J.@objective(model, sense, C.substitute(S.substitute(objective, parameters), x))
+    JuMP.@variable(model, x[1:ConstraintTrees.var_count(m)])
+    JuMP.@objective(model, sense, ConstraintTrees.substitute(Symbolics.substitute(objective, parameters), x))
 
     eqs = equality_constraints(m)
     ineqs = inequality_constraints(m)
@@ -21,20 +21,20 @@ function optimization_model_with_parameters(
     Js = Int64[]
     Vs = Float64[]
     for (i, (val, rhs)) in enumerate(eqs)
-        rhs = S.substitute(rhs, parameters)
-        a = S.substitute(val, parameters)
+        rhs = Symbolics.substitute(rhs, parameters)
+        a = Symbolics.substitute(val, parameters)
 
-        if S.value(rhs) != 0
+        if Symbolics.value(rhs) != 0
             push!(Ib, i)
-            push!(Vb, S.value(rhs))
+            push!(Vb, Symbolics.value(rhs))
         end
         append!(Is, fill(i, length(a.idxs)))
         append!(Js, a.idxs)
         append!(Vs, a.weights)
     end
-    A = sparse(Is, Js, Vs, length(eqs), C.var_count(m))
+    A = sparse(Is, Js, Vs, length(eqs), ConstraintTrees.var_count(m))
     b = sparsevec(Ib, Vb, length(eqs))
-    J.@constraint(model, eqcons, A * x .== b)
+    JuMP.@constraint(model, eqcons, A * x .== b)
 
     # M * x ≤ h
     Ih = Int64[]
@@ -44,16 +44,16 @@ function optimization_model_with_parameters(
     Vs = Float64[]
     k = 0
     for (val, lower, upper) in ineqs
-        lower = S.substitute(lower, parameters)
-        upper = S.substitute(upper, parameters)
-        a = S.substitute(val, parameters)
+        lower = Symbolics.substitute(lower, parameters)
+        upper = Symbolics.substitute(upper, parameters)
+        a = Symbolics.substitute(val, parameters)
 
         # lower: l ≤ x => -x ≤ -l
-        if !isinf(S.value(lower))
+        if !isinf(Symbolics.value(lower))
             k += 1
-            if S.value(lower) != 0
+            if Symbolics.value(lower) != 0
                 push!(Ih, k)
-                push!(Vh, -S.value(lower))
+                push!(Vh, -Symbolics.value(lower))
             end
             append!(Is, fill(k, length(a.idxs)))
             append!(Js, a.idxs)
@@ -61,20 +61,20 @@ function optimization_model_with_parameters(
         end
 
         # upper: x ≤ u
-        if !isinf(S.value(upper))
+        if !isinf(Symbolics.value(upper))
             k += 1
-            if S.value(upper) != 0
+            if Symbolics.value(upper) != 0
                 push!(Ih, k)
-                push!(Vh, S.value(upper))
+                push!(Vh, Symbolics.value(upper))
             end
             append!(Is, fill(k, length(a.idxs)))
             append!(Js, a.idxs)
             append!(Vs, a.weights)
         end
     end
-    M = sparse(Is, Js, Vs, k, C.var_count(m))
+    M = sparse(Is, Js, Vs, k, ConstraintTrees.var_count(m))
     h = sparsevec(Ih, Vh, k)
-    J.@constraint(model, ineqcons, M * x .<= h)
+    JuMP.@constraint(model, ineqcons, M * x .<= h)
 
     return model
 end
@@ -82,28 +82,28 @@ end
 export optimization_model_with_parameters
 
 function optimized_constraints_with_parameters(
-    m::C.ConstraintTree,
-    parameters::Dict{S.Num,Float64};
+    m::ConstraintTrees.ConstraintTree,
+    parameters::Dict{Symbolics.Num,Float64};
     modifications = [],
-    objective::C.Value,
+    objective::ConstraintTrees.Value,
     optimizer,
-    sense = X.Maximal,
+    sense = COBREXA.Maximal,
     duals = false,
 )
     om = optimization_model_with_parameters(m, parameters; objective, optimizer, sense)
     for m in modifications
         m(om)
     end
-    J.optimize!(om)
+    JuMP.optimize!(om)
 
-    X.is_solved(om) ?
+    COBREXA.is_solved(om) ?
     (
         duals ?
         (
-            J.value.(om[:x]),
-            J.dual.(om[:eqcons]),
-            J.dual.(om[:ineqcons]),
-        ) : C.constraint_values(S.substitute(m, parameters), J.value.(om[:x]))
+            JuMP.value.(om[:x]),
+            JuMP.dual.(om[:eqcons]),
+            JuMP.dual.(om[:ineqcons]),
+        ) : ConstraintTrees.constraint_values(Symbolics.substitute(m, parameters), JuMP.value.(om[:x]))
     ) : nothing
 end
 

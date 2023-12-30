@@ -8,7 +8,7 @@ import Tulip as T
 import JuMP as J
 
 
-S.@variables kcats_forward[1:4] kcats_backward[1:4] capacitylimitation
+Symbolics.@variables kcats_forward[1:4] kcats_backward[1:4] capacitylimitation
 
 # build simple model 
 mets = Dict(
@@ -80,11 +80,11 @@ gene_molar_masses = Dict("g1" => 1.0, "g2" => 2.0, "g3" => 3.0, "g4" => 4.0, "g5
 
 
 # build differentiable model
-m = X.fbc_model_constraints(model)
-m += :enzymes^X.enzyme_variables(model)
-m = X.add_enzyme_constraints!(m, reaction_isozymes)
+m = COBREXA.fbc_model_constraints(model)
+m += :enzymes^COBREXA.enzyme_variables(model)
+m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
 m *=
-    :total_proteome_bound^C.Constraint(
+    :total_proteome_bound^ConstraintTrees.Constraint(
         value = sum(
             m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in AM.genes(model)
         ),
@@ -109,7 +109,7 @@ _x, _ν, _λ = optimized_constraints_with_parameters(
     parameters;
     objective = m.objective.value,
     optimizer = T.Optimizer,
-    modifications = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
     duals=true,
 )
 

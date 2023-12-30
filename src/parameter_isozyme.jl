@@ -1,8 +1,19 @@
 
-@kwdef mutable struct ParameterIsozyme{T} <: X.Isozyme
-    gene_product_stoichiometry::Dict{String,T} # stoichiometry could also be parameters, but not required
-    kcat_forward::X.Maybe{S.Num} = nothing
-    kcat_backward::X.Maybe{S.Num} = nothing
+"""
+$(TYPEDEF)
+
+Subtype of [`COBREXA.Isozyme`](@ref) which includes parameters in
+`gene_product_stoichiometry` (optionally), the `kcat_forward`, and the
+`kcat_backward`. If the reaction does not have a turnover number, `nothing` can
+be used. 
+
+# Fields
+$(TYPEDFIELDS)
+"""
+@kwdef mutable struct ParameterIsozyme{T} <: COBREXA.Isozyme
+    gene_product_stoichiometry::Dict{String,T}
+    kcat_forward::COBREXA.Maybe{Symbolics.Num} = nothing
+    kcat_backward::COBREXA.Maybe{Symbolics.Num} = nothing
 end
 
 export ParameterIsozyme
