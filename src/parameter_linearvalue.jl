@@ -20,6 +20,9 @@ end
 ParameterLinearValue(idxs::Vector{Int}, weights::Vector{Union{Int,Float64}}) =
     ParameterLinearValue(idxs, convert.(Symbolics.Num, weights))
 
+ParameterLinearValue(x::ConstraintTrees.LinearValue) =
+    ParameterLinearValue(x.idxs, convert.(Symbolics.Num, x.weights))
+
 export ParameterLinearValue
 
 ParameterLinearValue(x::Real) =

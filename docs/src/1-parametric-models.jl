@@ -7,6 +7,7 @@ using Symbolics
 using ConstraintTrees
 using COBREXA
 using Tulip
+using Clarabel
 
 # ## Load and solve a simple model
 
@@ -58,7 +59,6 @@ parameter_substitutions = Dict(
     p[1] => 1.0,
     p[2] => 1.0,
     p[3] => 4.0,
-    p[4] => 1.0,
 )
 
 m_noparams = optimized_constraints_with_parameters(
@@ -76,7 +76,6 @@ m_noparams.fluxes
 # substitute params into model
 parameter_substitutions[m3bound] = 0.0
 
-
 m_noparams = optimized_constraints_with_parameters(
     m,
     parameter_substitutions;
@@ -86,3 +85,28 @@ m_noparams = optimized_constraints_with_parameters(
 m_noparams.fluxes
 
 @test isapprox(m_noparams.objective, 4.0; atol = TEST_TOLERANCE)
+
+# ## Quadratic parameters also work
+
+Symbolics.@variables q[1:6]
+
+m.objective = ConstraintTrees.Constraint(
+    value = sum(
+        rxn.value * rxn.value * qi
+        for (qi, rxn) in zip(collect(q), values(m.fluxes))
+    ),
+    bound = nothing,
+)
+
+parameter_substitutions = merge(
+    parameter_substitutions,
+    Dict(zip(q, fill(1.0, 6)))
+)
+
+m_noparams = optimized_constraints_with_parameters(
+    m,
+    parameter_substitutions;
+    objective = m.objective.value,
+    optimizer = Clarabel.Optimizer,
+)
+m_noparams.fluxes

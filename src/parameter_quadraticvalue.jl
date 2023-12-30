@@ -17,7 +17,14 @@ Base.@kwdef struct ParameterQuadraticValue <: ConstraintTrees.Value
     weights::Vector{Symbolics.Num}
 end
 
-ParameterQuadraticValue(idxs::Vector{Tuple{Int,Int}}, weights::Vector{Union{Int, Float64}}) = ParameterQuadraticValue(idxs, convert.(Symbolics.Num, weights))
+ParameterQuadraticValue(idxs::Vector{Tuple{Int,Int}}, weights::Vector{Union{Int,Float64}}) =
+    ParameterQuadraticValue(idxs, convert.(Symbolics.Num, weights))
+
+ParameterQuadraticValue(x::ConstraintTrees.QuadraticValue) =
+    ParameterQuadraticValue(x.idxs, convert.(Symbolics.Num, x.weights))
+
+ParameterQuadraticValue(x::ParameterLinearValue) =
+    ParameterQuadraticValue(idxs = [(0, idx) for idx in x.idxs], weights = x.weights)
 
 """
 $(TYPEDSIGNATURES)
@@ -28,27 +35,23 @@ ParameterQuadraticValue(x::Real) =
     iszero(x) ? ParameterQuadraticValue(idxs = [], weights = []) :
     ParameterQuadraticValue(idxs = [(0, 0)], weights = [Symbolics.Num(x)])
 
-"""
-$(TYPEDSIGNATURES)
-
-Construct a [`ParameterQuadraticValue`](@ref) that is equivalent to a given [`ParameterLinearValue`](@ref).
-"""
-ParameterQuadraticValue(x::ParameterLinearValue) =
-    ParameterQuadraticValue(idxs = [(0, idx) for idx in x.idxs], weights = x.weights)
-
 Base.convert(::Type{ParameterQuadraticValue}, x::Real) = ParameterQuadraticValue(x)
 
-Base.convert(::Type{ParameterQuadraticValue}, x::ParameterLinearValue) = ParameterQuadraticValue(x)
+Base.convert(::Type{ParameterQuadraticValue}, x::ParameterLinearValue) =
+    ParameterQuadraticValue(x)
 
-Base.zero(::Type{ParameterQuadraticValue}) = ParameterQuadraticValue(idxs = [], weights = [])
+Base.zero(::Type{ParameterQuadraticValue}) =
+    ParameterQuadraticValue(idxs = [], weights = [])
 
 Base.:+(a::Real, b::ParameterQuadraticValue) = ParameterQuadraticValue(a) + b
 
 Base.:+(a::ParameterQuadraticValue, b::Real) = a + ParameterQuadraticValue(b)
 
-Base.:+(a::ParameterLinearValue, b::ParameterQuadraticValue) = ParameterQuadraticValue(a) + b
+Base.:+(a::ParameterLinearValue, b::ParameterQuadraticValue) =
+    ParameterQuadraticValue(a) + b
 
-Base.:+(a::ParameterQuadraticValue, b::ParameterLinearValue) = a + ParameterQuadraticValue(b)
+Base.:+(a::ParameterQuadraticValue, b::ParameterLinearValue) =
+    a + ParameterQuadraticValue(b)
 
 Base.:-(a::ParameterQuadraticValue) = -1 * a
 
@@ -56,17 +59,21 @@ Base.:-(a::Real, b::ParameterQuadraticValue) = ParameterQuadraticValue(a) - b
 
 Base.:-(a::ParameterQuadraticValue, b::Real) = a - ParameterQuadraticValue(b)
 
-Base.:-(a::ParameterLinearValue, b::ParameterQuadraticValue) = ParameterQuadraticValue(a) - b
+Base.:-(a::ParameterLinearValue, b::ParameterQuadraticValue) =
+    ParameterQuadraticValue(a) - b
 
-Base.:-(a::ParameterQuadraticValue, b::ParameterLinearValue) = a - ParameterQuadraticValue(b)
+Base.:-(a::ParameterQuadraticValue, b::ParameterLinearValue) =
+    a - ParameterQuadraticValue(b)
 
 Base.:*(a::Real, b::ParameterQuadraticValue) = b * a
 
-Base.:*(a::ParameterQuadraticValue, b::Real) = ParameterQuadraticValue(idxs = a.idxs, weights = b .* a.weights)
+Base.:*(a::ParameterQuadraticValue, b::Real) =
+    ParameterQuadraticValue(idxs = a.idxs, weights = b .* a.weights)
 
 Base.:-(a::ParameterQuadraticValue, b::ParameterQuadraticValue) = a + (-1 * b)
 
-Base.:/(a::ParameterQuadraticValue, b::Real) = ParameterQuadraticValue(idxs = a.idxs, weights = a.weights ./ b)
+Base.:/(a::ParameterQuadraticValue, b::Real) =
+    ParameterQuadraticValue(idxs = a.idxs, weights = a.weights ./ b)
 
 function Base.:+(a::ParameterQuadraticValue, b::ParameterQuadraticValue)
     r_idxs = Tuple{Int,Int}[]

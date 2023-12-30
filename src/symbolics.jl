@@ -11,6 +11,12 @@ Symbolics.substitute(x::ParameterLinearValue, rule::Dict{Symbolics.Num,Float64})
         Symbolics.value.(Symbolics.substitute(x.weights, rule)),
     )
 
+Symbolics.substitute(x::ParameterQuadraticValue, rule::Dict{Symbolics.Num,Float64}) =
+    ConstraintTrees.QuadraticValue(
+        x.idxs,
+        Symbolics.value.(Symbolics.substitute(x.weights, rule)),
+    )
+
 Symbolics.substitute(x::ParameterBetween, rule::Dict{Symbolics.Num,Float64}) =
     ConstraintTrees.Between(
         Symbolics.value.(Symbolics.substitute(x.lower, rule)),
