@@ -1,24 +1,36 @@
-using DifferentiableMetabolism
-using Documenter
+using Documenter, Literate, DifferentiableMetabolism
 
-DocMeta.setdocmeta!(
-    DifferentiableMetabolism,
-    :DocTestSetup,
-    :(using DifferentiableMetabolism);
-    recursive = true,
+examples = sort(filter(x -> endswith(x, ".jl"), readdir(joinpath(@__DIR__, "src"), join = true)))
+
+for example in examples
+    Literate.markdown(
+        example,
+        joinpath(@__DIR__, "src"),
+        repo_root_url = "https://github.com/stelmo/DifferentiableMetabolism.jl/blob/master",
+    )
+end
+
+example_mds = first.(splitext.(basename.(examples))) .* ".md"
+
+withenv("COLUMNS" => 150) do
+    makedocs(
+        modules = [DifferentiableMetabolism],
+        clean = false,
+        format = Documenter.HTML(
+            ansicolor = true,
+            canonical = "https://stelmo.github.io/DifferentiableMetabolism.jl",
+            assets=String[],
+        ),
+        sitename = "DifferentiableMetabolism.jl",
+        linkcheck = false,
+        pages = ["README" => "index.md"; example_mds; "Reference" => "reference.md"],
+    )
+end
+
+deploydocs(
+    repo = "github.com/stelmo/DifferentiableMetabolism.jl",
+    target = "build",
+    branch = "gh-pages",
+    push_preview = false,
 )
 
-makedocs(;
-    modules = [DifferentiableMetabolism],
-    authors = "St. Elmo Wilken <stelmozors@gmail.com> and contributors",
-    repo = "https://github.com/stelmo/DifferentiableMetabolism.jl/blob/{commit}{path}#{line}",
-    sitename = "DifferentiableMetabolism.jl",
-    format = Documenter.HTML(;
-        prettyurls = get(ENV, "CI", "false") == "true",
-        canonical = "https://stelmo.github.io/DifferentiableMetabolism.jl",
-        assets = String[],
-    ),
-    pages = ["Home" => "index.md"],
-)
-
-deploydocs(; repo = "github.com/stelmo/DifferentiableMetabolism.jl", devbranch = "master")
