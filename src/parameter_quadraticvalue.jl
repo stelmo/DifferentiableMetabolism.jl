@@ -1,4 +1,23 @@
 
+#=
+Copyright (c) 2023, Heinrich-Heine University Duesseldorf
+Copyright (c) 2023, University of Luxembourg
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+Changes from copied code are indicated.
+=#
+
 """
 $(TYPEDEF)
 
@@ -71,7 +90,8 @@ Base.:/(a::ParameterQuadraticValue, b::Real) =
     ParameterQuadraticValue(idxs = a.idxs, weights = a.weights ./ b)
 
 function Base.:+(a::ParameterQuadraticValue, b::ParameterQuadraticValue)
-    # copied code from ConstraintTrees.jl (Apache v2) and marginally changed some types
+    # Code mostly copied from ConstraintTrees.jl, but marginally changed some
+    # types
     r_idxs = Tuple{Int,Int}[]
     r_weights = Symbolics.Num[]
     ai = 1
@@ -109,7 +129,8 @@ function Base.:+(a::ParameterQuadraticValue, b::ParameterQuadraticValue)
 end
 
 Base.:*(a::ParameterLinearValue, b::ParameterLinearValue) =
-    # copied code from ConstraintTrees.jl (Apache v2) and marginally changed some types
+    # Code mostly copied from ConstraintTrees.jl, but marginally changed some
+    # types
     let vals = a.weights .* b.weights'
         ParameterQuadraticValue(
             idxs = [(aidx, bidx) for bidx in b.idxs for aidx in a.idxs if aidx <= bidx],
@@ -125,4 +146,3 @@ Base.:*(a::ParameterLinearValue, b::ParameterLinearValue) =
             ],
         )
     end
-
