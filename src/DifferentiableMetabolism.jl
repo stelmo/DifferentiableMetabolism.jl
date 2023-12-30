@@ -7,7 +7,7 @@ import JuMP
 import ConstraintTrees
 import Symbolics
 import LinearAlgebra
-import SparseArrays
+import SparseArrays: sparse, sparsevec
 
 # Define new parameter-based types
 include("parameter_bound.jl")

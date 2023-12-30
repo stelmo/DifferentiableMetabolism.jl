@@ -4,119 +4,89 @@
 using DifferentiableMetabolism
 
 using Symbolics
-import AbstractFBCModels as AM
 using ConstraintTrees
 using COBREXA
 using Tulip
-using JuMP
 
-# build simple model with parameters 
-mets = Dict(
-    "m1" => AM.CanonicalModel.Metabolite(),
-    "m2" => AM.CanonicalModel.Metabolite(),
-    "m3" => AM.CanonicalModel.Metabolite(),
-    "m4" => AM.CanonicalModel.Metabolite(),
-)
+# ## Load and solve a simple model
 
-rxns = Dict(
-    "r1" => AM.CanonicalModel.Reaction(
-        lower_bound = 0.0,
-        upper_bound = 100.0,
-        stoichiometry = Dict("m1" => 1.0),
-    ),
-    "r2" => AM.CanonicalModel.Reaction(
-        lower_bound = 0.0,
-        upper_bound = 100.0,
-        stoichiometry = Dict("m2" => 1.0),
-    ),
-    "r3" => AM.CanonicalModel.Reaction(
-        lower_bound = 0.0,
-        upper_bound = 100.0,
-        stoichiometry = Dict("m1" => -1.0, "m2" => -1.0, "m3" => 1.0),
-    ),
-    "r4" => AM.CanonicalModel.Reaction(
-        lower_bound = 0.0,
-        upper_bound = 100.0,
-        stoichiometry = Dict("m3" => -1.0, "m4" => 1.0),
-    ),
-    "r5" => AM.CanonicalModel.Reaction(
-        lower_bound = -100.0,
-        upper_bound = 100.0,
-        stoichiometry = Dict("m2" => -1.0, "m4" => 1.0),
-    ),
-    "r6" => AM.CanonicalModel.Reaction(
-        lower_bound = 0.0,
-        upper_bound = 100.0,
-        stoichiometry = Dict("m4" => -1.0),
-        objective_coefficient = 1.0,
-    ),
-)
+# The code used to construct the model is located in `test/simple_model.jl`, but
+# it is not shown here for brevity. Below is a visualization of the model.
 
-gs = Dict("g$i" => AM.CanonicalModel.Gene() for i = 1:5)
+include(joinpath("..", "test", "simple_model.jl")) #hide
 
-model = AM.CanonicalModel.Model(rxns, mets, gs)
+# ![simple_model](./assets/simple_model.svg)
 
-reaction_isozymes = Dict(
-    "r3" => Dict(
-        "iso1" =>
-            ParameterIsozyme(Dict("g1" => 1), kcats_forward[1], kcats_backward[1]),
-    ),
-    "r4" => Dict(
-        "iso1" =>
-            ParameterIsozyme(Dict("g1" => 1), kcats_forward[2], kcats_backward[2]),
-        "iso2" =>
-            ParameterIsozyme(Dict("g2" => 1), kcats_forward[3], kcats_backward[3]),
-    ),
-    "r5" => Dict(
-        "iso1" => ParameterIsozyme(
-            Dict("g3" => 1, "g4" => 2),
-            kcats_forward[4],
-            kcats_backward[4],
-        ),
-    ),
-)
+model
 
-gene_molar_masses = Dict("g1" => 1.0, "g2" => 2.0, "g3" => 3.0, "g4" => 4.0, "g5" => 1.0)
-
-
-# build differentiable model
+# Build a basic ConstraintTree model without parameters
 m = COBREXA.fbc_model_constraints(model)
-m += :enzymes^COBREXA.enzyme_variables(model)
-m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
-m *=
-    :total_proteome_bound^ConstraintTrees.Constraint(
-        value = sum(
-            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in AM.genes(model)
-        ),
-        bound = ParameterBetween(0.0, capacitylimitation),
-    )
+
+# Solve normally
+base_model = COBREXA.optimized_constraints(
+    m;
+    optimizer=Tulip.Optimizer,
+    objective = m.objective.value,
+)
+base_model.fluxes
+
+@test isapprox(base_model.objective, 1.0; atol=TEST_TOLERANCE)
+
+# ## Add parameters to the model
+
+# Make bound of r2 and mass balance of m3 parameters
+Symbolics.@variables r2bound m3bound
+
+m.fluxes.r2 = ConstraintTrees.Constraint(
+    m.fluxes.r2.value,
+    ParameterBetween(0, r2bound)
+)
+
+m.flux_stoichiometry.m3 = ConstraintTrees.Constraint(
+    m.flux_stoichiometry.m3.value,
+    ParameterEqualTo(m3bound)
+)
+
+# # add parametric constraints
+Symbolics.@variables p[1:4]
+
+m *= :linparam^ConstraintTrees.Constraint(
+    value = p[1] * m.fluxes.r1.value + p[2] * m.fluxes.r2.value,
+    bound = ParameterBetween(0, p[3]),
+)
 
 # substitute params into model
-parameters = Dict(
-    kcats_forward[1] => 1.0,
-    kcats_forward[2] => 2.0,
-    kcats_forward[3] => 3.0,
-    kcats_forward[4] => 70.0,
-    kcats_backward[1] => 1.0,
-    kcats_backward[2] => 2.0,
-    kcats_backward[3] => 3.0,
-    kcats_backward[4] => 70.0,
-    capacitylimitation => 0.5,
+parameter_substitutions = Dict(
+    r2bound => 4.0,
+    m3bound => 0.1, # lose some mass here
+    p[1] => 1.0,
+    p[2] => 1.0,
+    p[3] => 4.0,
+    p[4] => 1.0,
 )
 
-_x, _ν, _λ = optimized_constraints_with_parameters(
+m_noparams = optimized_constraints_with_parameters(
     m,
-    parameters;
+    parameter_substitutions;
     objective = m.objective.value,
-    optimizer = T.Optimizer,
-    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
-    duals=true,
+    optimizer = Tulip.Optimizer,
 )
+m_noparams.fluxes
 
-@test isapprox(ec_solution.objective, 3.181818181753438, atol = 1e-3)
-@test isapprox(ec_solution.enzymes.g4, 0.09090909090607537, atol = 1e-3)
+@test isapprox(m_noparams.objective, 3.9; atol=TEST_TOLERANCE)
+
+# ## Change the parameters and re-solve
+
+# substitute params into model
+parameter_substitutions[m3bound] = 0.0
 
 
-kktfunc = kkt(m, m.objective.value)
+m_noparams = optimized_constraints_with_parameters(
+    m,
+    parameter_substitutions;
+    objective = m.objective.value,
+    optimizer = Tulip.Optimizer,
+)
+m_noparams.fluxes
 
-
+@test isapprox(m_noparams.objective, 4.0; atol=TEST_TOLERANCE)

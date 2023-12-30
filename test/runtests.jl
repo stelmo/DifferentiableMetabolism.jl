@@ -2,6 +2,8 @@
 import DifferentiableMetabolism
 using Test
 
+const TEST_TOLERANCE = 1e-3
+
 @testset "DifferentiableMetabolism tests" begin
     @testset "Parametric models" begin
         include("../docs/src/1-parametric-models.jl")
