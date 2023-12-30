@@ -53,7 +53,7 @@ reaction_isozymes = Dict(
 
 gene_molar_masses = Dict("g1" => 1.0, "g2" => 2.0, "g3" => 3.0, "g4" => 4.0, "g5" => 1.0)
 
- # ## Add a parameterized capacity limitation
+# ## Add a parameterized capacity limitation
 
 Symbolics.@variables capacitylimitation
 
@@ -64,7 +64,8 @@ m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
 m *=
     :total_proteome_bound^ConstraintTrees.Constraint(
         value = sum(
-            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in AbstractFBCModels.genes(model)
+            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for
+            gid in AbstractFBCModels.genes(model)
         ),
         bound = ParameterBetween(0.0, capacitylimitation),
     )
@@ -129,7 +130,8 @@ m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
 m *=
     :total_proteome_bound^ConstraintTrees.Constraint(
         value = sum(
-            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in AbstractFBCModels.genes(model)
+            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for
+            gid in AbstractFBCModels.genes(model)
         ),
         bound = ParameterBetween(0.0, capacitylimitation),
     )

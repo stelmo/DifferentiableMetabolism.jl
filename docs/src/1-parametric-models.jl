@@ -105,16 +105,12 @@ Symbolics.@variables q[1:6]
 
 m.objective = ConstraintTrees.Constraint(
     value = sum(
-        rxn.value * rxn.value * qi
-        for (qi, rxn) in zip(collect(q), values(m.fluxes))
+        rxn.value * rxn.value * qi for (qi, rxn) in zip(collect(q), values(m.fluxes))
     ),
     bound = nothing,
 )
 
-parameter_substitutions = merge(
-    parameter_substitutions,
-    Dict(zip(q, fill(1.0, 6)))
-)
+parameter_substitutions = merge(parameter_substitutions, Dict(zip(q, fill(1.0, 6))))
 
 m_noparams = optimized_constraints_with_parameters(
     m,

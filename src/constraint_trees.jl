@@ -27,16 +27,18 @@ ConstraintTrees.incr_var_idxs(x::ParameterLinearValue, incr::Int) = ParameterLin
     weights = x.weights,
 )
 
-ConstraintTrees.incr_var_idxs(x::ParameterQuadraticValue, incr::Int) = ParameterQuadraticValue(
-    idxs = broadcast(ii -> ConstraintTrees.incr_var_idx.(ii, incr), x.idxs),
-    weights = x.weights,
-)
+ConstraintTrees.incr_var_idxs(x::ParameterQuadraticValue, incr::Int) =
+    ParameterQuadraticValue(
+        idxs = broadcast(ii -> ConstraintTrees.incr_var_idx.(ii, incr), x.idxs),
+        weights = x.weights,
+    )
 
 ConstraintTrees.var_count(x::ParameterLinearValue) = isempty(x.idxs) ? 0 : last(x.idxs)
 
-ConstraintTrees.var_count(x::ParameterQuadraticValue) = isempty(x.idxs) ? 0 : let (_, max) = last(x.idxs)
-    max
-end
+ConstraintTrees.var_count(x::ParameterQuadraticValue) =
+    isempty(x.idxs) ? 0 : let (_, max) = last(x.idxs)
+        max
+    end
 
 # substitute in the variables as symbolic numbers - useful to construct the KKT function
 ConstraintTrees.substitute(x::ParameterLinearValue, y::Vector{Symbolics.Num}) = sum(

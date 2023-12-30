@@ -18,7 +18,7 @@ limitations under the License.
 Changes from copied code are indicated.
 =#
 
-function kkt(m::ConstraintTrees.ConstraintTree, objective::ConstraintTrees.Value)
+function differentiate(m::ConstraintTrees.ConstraintTree, objective::ConstraintTrees.Value)
 
     Symbolics.@variables x[1:ConstraintTrees.var_count(m)] # primal
     xs = collect(x)
@@ -59,17 +59,22 @@ function kkt(m::ConstraintTrees.ConstraintTree, objective::ConstraintTrees.Value
     Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
 
     kkt_eqns = [
-        Symbolics.sparsejacobian([f], x)' +
-        Symbolics.sparsejacobian(H, x)' * eq_duals +
+        Symbolics.sparsejacobian([f], x)' - Symbolics.sparsejacobian(H, x)' * eq_duals -
         Symbolics.sparsejacobian(G, x)' * ineq_duals
         H
         G .* ineq_duals
     ]
 
     A = Symbolics.sparsejacobian(kkt_eqns[:], [x; eq_duals; ineq_duals])
-    B = Symbolics.sparsejacobian(kkt_eqns[:], [capacitylimitation; kcats_forward; kcats_backward])
+    B = Symbolics.sparsejacobian(
+        kkt_eqns[:],
+        [capacitylimitation; kcats_forward; kcats_backward],
+    )
 
-    everything = merge(Dict(zip([x; eq_duals; ineq_duals], [_x; _eq_duals; _ineq_duals])), parameters)
+    everything = merge(
+        Dict(zip([x; eq_duals; ineq_duals], [_x; _eq_duals; _ineq_duals])),
+        parameters,
+    )
 
     # substitute in
     Is, Js, Vs = findnz(A)
@@ -77,14 +82,14 @@ function kkt(m::ConstraintTrees.ConstraintTree, objective::ConstraintTrees.Value
     Is, Js, Vs = findnz(Asub)
     vs = float.(Symbolics.value.(Vs))
     a = sparse(Is, Js, vs, size(_Asub)...)
-    
+
     Is, Js, Vs = findnz(B)
     _Bsub = sparse(Is, Js, Symbolics.substitute(Vs, everything), size(B)...)
     Is, Js, Vs = findnz(_Bsub)
     vs = float.(Symbolics.value.(Vs))
     b = Array(sparse(Is, Js, vs, size(_Bsub)...))
-    
-    a\b
+
+    a \ b
 end
 
 export kkt

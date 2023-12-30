@@ -145,7 +145,8 @@ function optimized_constraints_with_parameters(
 
     COBREXA.is_solved(om) ?
     (
-        primal_duals_only ? (JuMP.value.(om[:x]), JuMP.dual.(om[:eqcons]), JuMP.dual.(om[:ineqcons])) :
+        primal_duals_only ?
+        (JuMP.value.(om[:x]), JuMP.dual.(om[:eqcons]), JuMP.dual.(om[:ineqcons])) :
         ConstraintTrees.constraint_values(
             Symbolics.substitute(m, parameters),
             JuMP.value.(om[:x]),

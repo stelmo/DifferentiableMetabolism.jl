@@ -129,8 +129,8 @@ function Base.:+(a::ParameterQuadraticValue, b::ParameterQuadraticValue)
 end
 
 Base.:*(a::ParameterLinearValue, b::ParameterLinearValue) =
-    # Code mostly copied from ConstraintTrees.jl, but marginally changed some
-    # types
+# Code mostly copied from ConstraintTrees.jl, but marginally changed some
+# types
     let vals = a.weights .* b.weights'
         ParameterQuadraticValue(
             idxs = [(aidx, bidx) for bidx in b.idxs for aidx in a.idxs if aidx <= bidx],
