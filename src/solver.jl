@@ -9,7 +9,11 @@ function optimization_model_with_parameters(
     model = JuMP.Model(optimizer)
 
     JuMP.@variable(model, x[1:ConstraintTrees.var_count(m)])
-    JuMP.@objective(model, sense, ConstraintTrees.substitute(Symbolics.substitute(objective, parameters), x))
+    JuMP.@objective(
+        model,
+        sense,
+        ConstraintTrees.substitute(Symbolics.substitute(objective, parameters), x)
+    )
 
     eqs = equality_constraints(m)
     ineqs = inequality_constraints(m)
@@ -98,12 +102,11 @@ function optimized_constraints_with_parameters(
 
     COBREXA.is_solved(om) ?
     (
-        duals ?
-        (
+        duals ? (JuMP.value.(om[:x]), JuMP.dual.(om[:eqcons]), JuMP.dual.(om[:ineqcons])) :
+        ConstraintTrees.constraint_values(
+            Symbolics.substitute(m, parameters),
             JuMP.value.(om[:x]),
-            JuMP.dual.(om[:eqcons]),
-            JuMP.dual.(om[:ineqcons]),
-        ) : ConstraintTrees.constraint_values(Symbolics.substitute(m, parameters), JuMP.value.(om[:x]))
+        )
     ) : nothing
 end
 

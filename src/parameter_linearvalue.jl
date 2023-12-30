@@ -17,11 +17,14 @@ $(TYPEDFIELDS)
 end
 
 # convert all weights to Nums
-ParameterLinearValue(idxs::Vector{Int}, weights::Vector{Union{Int,Float64}}) = ParameterLinearValue(idxs, convert.(Symbolics.Num, weights))
+ParameterLinearValue(idxs::Vector{Int}, weights::Vector{Union{Int,Float64}}) =
+    ParameterLinearValue(idxs, convert.(Symbolics.Num, weights))
 
 export ParameterLinearValue
 
-ParameterLinearValue(x::Real) = iszero(x) ? ParameterLinearValue(idxs = [], weights = []) : ParameterLinearValue(idxs = [0], weights = [x])
+ParameterLinearValue(x::Real) =
+    iszero(x) ? ParameterLinearValue(idxs = [], weights = []) :
+    ParameterLinearValue(idxs = [0], weights = [Symbolics.Num(x)])
 
 Base.convert(::Type{ParameterLinearValue}, x::Real) = ParameterLinearValue(x)
 Base.zero(::Type{ParameterLinearValue}) = ParameterLinearValue(idxs = [], weights = [])
@@ -41,13 +44,19 @@ Base.:+(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = a + ParameterLinearV
 Base.:-(a::Symbolics.Num, b::ConstraintTrees.LinearValue) = ParameterLinearValue(a) - b
 Base.:-(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = a - ParameterLinearValue(b)
 Base.:*(a::Symbolics.Num, b::ConstraintTrees.LinearValue) = b * a
-Base.:*(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = ParameterLinearValue(a.idxs, b .* a.weights)
-Base.:/(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = ParameterLinearValue(a.idxs, a.weights ./ b)
+Base.:*(a::ConstraintTrees.LinearValue, b::Symbolics.Num) =
+    ParameterLinearValue(a.idxs, b .* a.weights)
+Base.:/(a::ConstraintTrees.LinearValue, b::Symbolics.Num) =
+    ParameterLinearValue(a.idxs, a.weights ./ b)
 
-Base.:+(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) = ParameterLinearValue(a.idxs, a.weights) + b
-Base.:+(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) = a + ParameterLinearValue(b.idxs, b.weights)
-Base.:-(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) = ParameterLinearValue(a.idxs, a.weights) - b
-Base.:-(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) = a - ParameterLinearValue(b.idxs, b.weights)
+Base.:+(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) =
+    ParameterLinearValue(a.idxs, a.weights) + b
+Base.:+(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) =
+    a + ParameterLinearValue(b.idxs, b.weights)
+Base.:-(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) =
+    ParameterLinearValue(a.idxs, a.weights) - b
+Base.:-(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) =
+    a - ParameterLinearValue(b.idxs, b.weights)
 
 # add two ParameterLinearValues
 function Base.:+(a::ParameterLinearValue, b::ParameterLinearValue)

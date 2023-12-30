@@ -15,7 +15,8 @@ $(TYPEDFIELDS)
     upper::Symbolics.Num
 end
 
-ParameterBetween(x::Union{Float64,Int,Symbolics.Num}, y::Union{Float64,Int,Symbolics.Num}) = ParameterBetween(Symbolics.Num(x), Symbolics.Num(y))
+ParameterBetween(x::Union{Float64,Int,Symbolics.Num}, y::Union{Float64,Int,Symbolics.Num}) =
+    ParameterBetween(Symbolics.Num(x), Symbolics.Num(y))
 
 export ParameterBetween
 

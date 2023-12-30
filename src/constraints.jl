@@ -1,6 +1,8 @@
 
 function equality_constraints(c::ConstraintTrees.ConstraintTree)
-    sink = Vector{Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Symbolics.Num}}()
+    sink = Vector{
+        Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Symbolics.Num},
+    }()
     get_equality_constraints(c, sink)
     sink
 end
@@ -18,7 +20,13 @@ function get_equality_constraints(c::ConstraintTrees.Constraint, sink)
 end
 
 function inequality_constraints(c::ConstraintTrees.ConstraintTree)
-    sink = Vector{Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Symbolics.Num,Symbolics.Num}}()
+    sink = Vector{
+        Tuple{
+            Union{ParameterLinearValue,ConstraintTrees.LinearValue},
+            Symbolics.Num,
+            Symbolics.Num,
+        },
+    }()
     get_inequality_constraints(c, sink)
     sink
 end
@@ -31,6 +39,13 @@ end
 
 function get_inequality_constraints(c::ConstraintTrees.Constraint, sink)
     if c.bound isa ConstraintTrees.Between || c.bound isa ParameterBetween
-        push!(sink, (ConstraintTrees.value(c), Symbolics.Num(c.bound.lower), Symbolics.Num(c.bound.upper)))
+        push!(
+            sink,
+            (
+                ConstraintTrees.value(c),
+                Symbolics.Num(c.bound.lower),
+                Symbolics.Num(c.bound.upper),
+            ),
+        )
     end
 end

@@ -1,6 +1,7 @@
 using Documenter, Literate, DifferentiableMetabolism
 
-examples = sort(filter(x -> endswith(x, ".jl"), readdir(joinpath(@__DIR__, "src"), join = true)))
+examples =
+    sort(filter(x -> endswith(x, ".jl"), readdir(joinpath(@__DIR__, "src"), join = true)))
 
 for example in examples
     Literate.markdown(
@@ -19,7 +20,7 @@ withenv("COLUMNS" => 150) do
         format = Documenter.HTML(
             ansicolor = true,
             canonical = "https://stelmo.github.io/DifferentiableMetabolism.jl",
-            assets=String[],
+            assets = String[],
         ),
         sitename = "DifferentiableMetabolism.jl",
         linkcheck = false,
@@ -33,4 +34,3 @@ deploydocs(
     branch = "gh-pages",
     push_preview = false,
 )
-

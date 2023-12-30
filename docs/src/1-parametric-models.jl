@@ -25,35 +25,31 @@ m = COBREXA.fbc_model_constraints(model)
 # Solve normally
 base_model = COBREXA.optimized_constraints(
     m;
-    optimizer=Tulip.Optimizer,
+    optimizer = Tulip.Optimizer,
     objective = m.objective.value,
 )
 base_model.fluxes
 
-@test isapprox(base_model.objective, 1.0; atol=TEST_TOLERANCE)
+@test isapprox(base_model.objective, 1.0; atol = TEST_TOLERANCE)
 
 # ## Add parameters to the model
 
 # Make bound of r2 and mass balance of m3 parameters
 Symbolics.@variables r2bound m3bound
 
-m.fluxes.r2 = ConstraintTrees.Constraint(
-    m.fluxes.r2.value,
-    ParameterBetween(0, r2bound)
-)
+m.fluxes.r2 = ConstraintTrees.Constraint(m.fluxes.r2.value, ParameterBetween(0, r2bound))
 
-m.flux_stoichiometry.m3 = ConstraintTrees.Constraint(
-    m.flux_stoichiometry.m3.value,
-    ParameterEqualTo(m3bound)
-)
+m.flux_stoichiometry.m3 =
+    ConstraintTrees.Constraint(m.flux_stoichiometry.m3.value, ParameterEqualTo(m3bound))
 
 # # add parametric constraints
 Symbolics.@variables p[1:4]
 
-m *= :linparam^ConstraintTrees.Constraint(
-    value = p[1] * m.fluxes.r1.value + p[2] * m.fluxes.r2.value,
-    bound = ParameterBetween(0, p[3]),
-)
+m *=
+    :linparam^ConstraintTrees.Constraint(
+        value = p[1] * m.fluxes.r1.value + p[2] * m.fluxes.r2.value,
+        bound = ParameterBetween(0, p[3]),
+    )
 
 # substitute params into model
 parameter_substitutions = Dict(
@@ -73,7 +69,7 @@ m_noparams = optimized_constraints_with_parameters(
 )
 m_noparams.fluxes
 
-@test isapprox(m_noparams.objective, 3.9; atol=TEST_TOLERANCE)
+@test isapprox(m_noparams.objective, 3.9; atol = TEST_TOLERANCE)
 
 # ## Change the parameters and re-solve
 
@@ -89,4 +85,4 @@ m_noparams = optimized_constraints_with_parameters(
 )
 m_noparams.fluxes
 
-@test isapprox(m_noparams.objective, 4.0; atol=TEST_TOLERANCE)
+@test isapprox(m_noparams.objective, 4.0; atol = TEST_TOLERANCE)

@@ -110,7 +110,7 @@ _x, _ν, _λ = optimized_constraints_with_parameters(
     objective = m.objective.value,
     optimizer = T.Optimizer,
     modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
-    duals=true,
+    duals = true,
 )
 
 @test isapprox(ec_solution.objective, 3.181818181753438, atol = 1e-3)
