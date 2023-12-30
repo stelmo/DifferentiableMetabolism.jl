@@ -5,8 +5,8 @@
 | ![CI status](https://github.com/stelmo/DifferentiableMetabolism.jl/workflows/CI/badge.svg?branch=master) [![codecov](https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl/branch/master/graph/badge.svg?token=A2ui7exGIH)](https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl) | [![stable documentation](https://img.shields.io/badge/docs-stable-blue)](https://stelmo.github.io/DifferentiableMetabolism.jl/stable) |
 
 This package extends [COBREXA.jl](https://github.com/LCSB-BioCore/COBREXA.jl)
-with the ability to differentiate an optimal solution of a constraint-based
-metabolic model with respect to parameters. 
+*version 2* with the ability to differentiate an optimal solution of a
+constraint-based metabolic model with respect to parameters. 
 
 Note, only non-degenerate (unique) solutions can be differentiated for the
 derivatives to have a concrete interpretation. For enzyme kinetics constrained
