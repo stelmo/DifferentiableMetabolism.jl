@@ -8,15 +8,15 @@ function kkt(m::ConstraintTrees.ConstraintTree, objective::ConstraintTrees.Value
     f = ConstraintTrees.substitute(objective, xs)
 
     # equality constraints
-    # A * x - b = 0
+    # E * x - b = H = 0 
     H = [
         ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in equality_constraints(m)
     ]
 
     # inequality constraints (must be built the same as in solver.jl)
-    # M * x - h ≤ 0
+    # M * x - h = G ≤ 0
     ineqs = inequality_constraints(m)
-    M = Vector{Symbolics.Num}()
+    G = Vector{Symbolics.Num}()
 
     for (lhs, lower, upper) in ineqs
 
@@ -24,42 +24,48 @@ function kkt(m::ConstraintTrees.ConstraintTree, objective::ConstraintTrees.Value
         l = Symbolics.value(lower)
         if l isa Float64 && isinf(l)
             nothing
-        elseif l isa Int && isinf(l)
-            nothing
         else
-            push!(M, -ConstraintTrees.substitute(lhs, xs) + lower)
+            push!(G, -ConstraintTrees.substitute(lhs, xs) + lower)
         end
 
         # upper: x ≤ u
         u = Symbolics.value(upper)
         if u isa Float64 && isinf(u)
             nothing
-        elseif u isa Int && isinf(u)
-            nothing
         else
-            push!(M, ConstraintTrees.substitute(lhs, xs) - upper)
+            push!(G, ConstraintTrees.substitute(lhs, xs) - upper)
         end
     end
 
-    Symbolics.@variables ν[1:length(H)] λ[1:length(M)] # duals
+    Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
 
-    kktf = [
+    kkt_eqns = [
         Symbolics.sparsejacobian([f], x)' +
-        Symbolics.sparsejacobian(H, x)' * ν +
-        Symbolics.sparsejacobian(M, x)' * λ
+        Symbolics.sparsejacobian(H, x)' * eq_duals +
+        Symbolics.sparsejacobian(G, x)' * ineq_duals
         H
-        M .* λ
+        G .* ineq_duals
     ]
 
-    A = Symbolics.jacobian(kktf[:], [x; ν; λ])
-    B = Symbolics.jacobian(kktf, [capacitylimitation; kcats_forward; kcats_backward])
+    A = Symbolics.sparsejacobian(kkt_eqns[:], [x; eq_duals; ineq_duals])
+    B = Symbolics.sparsejacobian(kkt_eqns[:], [capacitylimitation; kcats_forward; kcats_backward])
 
-    everything = merge(Dict(zip([x; ν; λ], [_x; _ν; _λ])), parameters)
-    Bsub = Symbolics.substitute(B, everything)
-    Asub = Symbolics.substitute(A, everything)
+    everything = merge(Dict(zip([x; eq_duals; ineq_duals], [_x; _eq_duals; _ineq_duals])), parameters)
 
-
-    L.rank(Symbolics.value.(Asub))
+    # substitute in
+    Is, Js, Vs = findnz(A)
+    _Asub = sparse(Is, Js, Symbolics.substitute(Vs, everything), size(A)...)
+    Is, Js, Vs = findnz(Asub)
+    vs = float.(Symbolics.value.(Vs))
+    a = sparse(Is, Js, vs, size(_Asub)...)
+    
+    Is, Js, Vs = findnz(B)
+    _Bsub = sparse(Is, Js, Symbolics.substitute(Vs, everything), size(B)...)
+    Is, Js, Vs = findnz(_Bsub)
+    vs = float.(Symbolics.value.(Vs))
+    b = Array(sparse(Is, Js, vs, size(_Bsub)...))
+    
+    a\b
 end
 
 export kkt

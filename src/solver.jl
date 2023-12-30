@@ -26,7 +26,7 @@ function optimization_model_with_parameters(
     eqs = equality_constraints(m)
     ineqs = inequality_constraints(m)
 
-    # A * x = b
+    # E * x = d
     Ib = Int64[]
     Vb = Float64[]
     Is = Int64[]

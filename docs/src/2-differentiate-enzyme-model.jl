@@ -2,7 +2,7 @@
 # # Differentiating enzyme constrained metabolic models 
 
 using DifferentiableMetabolism
-
+import AbstractFBCModels
 using Symbolics
 using ConstraintTrees
 using COBREXA
@@ -51,12 +51,12 @@ m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
 m *=
     :total_proteome_bound^ConstraintTrees.Constraint(
         value = sum(
-            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in AM.genes(model)
+            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in AbstractFBCModels.genes(model)
         ),
         bound = ParameterBetween(0.0, capacitylimitation),
     )
-
-m.fluxes.r2.bound = ConstraintTrees.Between(0,100)
+m.enzymes.g3.bound = ConstraintTrees.Between(0, 0.01)
+m.fluxes.r2.bound = ConstraintTrees.Between(0, 100)
 
 # substitute params into model
 parameters = Dict(
@@ -83,6 +83,77 @@ ec_solution = optimized_constraints_with_parameters(
 @test isapprox(ec_solution.enzymes.g4, 0.09090909090607537, atol = TEST_TOLERANCE)
 @test isapprox(ec_solution.:total_proteome_bound, 0.5, atol = TEST_TOLERANCE)
 
+ec_solution.fluxes
+ec_solution.enzymes
+
 # ## Prune model
 
+reaction_isozymes = Dict(
+    "r3" => Dict(
+        "iso1" =>
+            ParameterIsozyme(Dict("g1" => 1), kcats_forward[1], kcats_backward[1]),
+    ),
+    "r4" => Dict(
+        "iso1" =>
+            ParameterIsozyme(Dict("g1" => 1), kcats_forward[2], kcats_backward[2]),
+    ),
+    "r5" => Dict(
+        "iso1" => ParameterIsozyme(
+            Dict("g3" => 1, "g4" => 2),
+            kcats_forward[4],
+            kcats_backward[4],
+        ),
+    ),
+)
+
+delete!(model.genes, "g2")
+delete!(model.genes, "g5")
+
+# Build differentiable enzyme constrained model
+m = COBREXA.fbc_model_constraints(model)
+m += :enzymes^COBREXA.enzyme_variables(model)
+m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
+m *=
+    :total_proteome_bound^ConstraintTrees.Constraint(
+        value = sum(
+            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in AbstractFBCModels.genes(model)
+        ),
+        bound = ParameterBetween(0.0, capacitylimitation),
+    )
+m.enzymes.g3.bound = ConstraintTrees.Between(0, 0.01)
+m.fluxes.r2.bound = ConstraintTrees.Between(0, 100)
+
+# substitute params into model
+parameters = Dict(
+    kcats_forward[1] => 1.0,
+    kcats_forward[2] => 2.0,
+    kcats_forward[3] => 3.0,
+    kcats_forward[4] => 70.0,
+    kcats_backward[1] => 1.0,
+    kcats_backward[2] => 2.0,
+    kcats_backward[3] => 3.0,
+    kcats_backward[4] => 70.0,
+    capacitylimitation => 0.5,
+)
+
+ec_solution = optimized_constraints_with_parameters(
+    m,
+    parameters;
+    objective = m.objective.value,
+    optimizer = Tulip.Optimizer,
+    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+)
+
 ec_solution.fluxes
+ec_solution.enzymes
+
+objective = m.objective
+
+_x, _eq_duals, _ineq_duals = optimized_constraints_with_parameters(
+    m,
+    parameters;
+    objective = m.objective.value,
+    optimizer = Tulip.Optimizer,
+    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    primal_duals_only = true,
+)

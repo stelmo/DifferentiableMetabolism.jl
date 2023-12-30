@@ -6,8 +6,8 @@ import COBREXA
 import JuMP
 import ConstraintTrees
 import Symbolics
-import LinearAlgebra
-import SparseArrays: sparse, sparsevec
+import LinearAlgebra: rank, qr, :\ #  TODO remove rank
+import SparseArrays: sparse, sparsevec, findnz
 
 # Define new parameter-based types
 include("parameter_bound.jl")
