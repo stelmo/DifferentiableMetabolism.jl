@@ -21,7 +21,7 @@ include("constraint_trees.jl")
 include("symbolics.jl")
 
 # the juice
-include("constraints.jl")
+include("get_constraints.jl")
 include("solver.jl")
 include("kkt.jl")
 

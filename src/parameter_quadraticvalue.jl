@@ -26,11 +26,6 @@ ParameterQuadraticValue(x::ConstraintTrees.QuadraticValue) =
 ParameterQuadraticValue(x::ParameterLinearValue) =
     ParameterQuadraticValue(idxs = [(0, idx) for idx in x.idxs], weights = x.weights)
 
-"""
-$(TYPEDSIGNATURES)
-
-Construct a constant [`ParameterQuadraticValue`](@ref) with a single affine element.
-"""
 ParameterQuadraticValue(x::Real) =
     iszero(x) ? ParameterQuadraticValue(idxs = [], weights = []) :
     ParameterQuadraticValue(idxs = [(0, 0)], weights = [Symbolics.Num(x)])

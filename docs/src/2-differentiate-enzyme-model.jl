@@ -41,6 +41,48 @@ reaction_isozymes = Dict(
 gene_molar_masses = Dict("g1" => 1.0, "g2" => 2.0, "g3" => 3.0, "g4" => 4.0, "g5" => 1.0)
 
  # ## Add a parameterized capacity limitation
- 
+
 Symbolics.@variables capacitylimitation
 
+# Build differentiable enzyme constrained model
+m = COBREXA.fbc_model_constraints(model)
+m += :enzymes^COBREXA.enzyme_variables(model)
+m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
+m *=
+    :total_proteome_bound^ConstraintTrees.Constraint(
+        value = sum(
+            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for gid in AM.genes(model)
+        ),
+        bound = ParameterBetween(0.0, capacitylimitation),
+    )
+
+m.fluxes.r2.bound = ConstraintTrees.Between(0,100)
+
+# substitute params into model
+parameters = Dict(
+    kcats_forward[1] => 1.0,
+    kcats_forward[2] => 2.0,
+    kcats_forward[3] => 3.0,
+    kcats_forward[4] => 70.0,
+    kcats_backward[1] => 1.0,
+    kcats_backward[2] => 2.0,
+    kcats_backward[3] => 3.0,
+    kcats_backward[4] => 70.0,
+    capacitylimitation => 0.5,
+)
+
+ec_solution = optimized_constraints_with_parameters(
+    m,
+    parameters;
+    objective = m.objective.value,
+    optimizer = Tulip.Optimizer,
+    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+)
+
+@test isapprox(ec_solution.objective, 3.181818181753438, atol = TEST_TOLERANCE)
+@test isapprox(ec_solution.enzymes.g4, 0.09090909090607537, atol = TEST_TOLERANCE)
+@test isapprox(ec_solution.:total_proteome_bound, 0.5, atol = TEST_TOLERANCE)
+
+# ## Prune model
+
+ec_solution.fluxes

@@ -1,16 +1,21 @@
+"""
+$(TYPEDSIGNATURES)
 
-function equality_constraints(c::ConstraintTrees.ConstraintTree)
+Return all the equality constraints of `m` as a tuple `({Parameter}LinearValue,
+value)` representing `{P}LV == value` for each entry.
+"""
+function equality_constraints(m::ConstraintTrees.ConstraintTree)
     sink = Vector{
         Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Symbolics.Num},
     }()
-    get_equality_constraints(c, sink)
+    get_equality_constraints(m, sink)
     sink
 end
 
 export equality_constraints
 
-function get_equality_constraints(c::ConstraintTrees.ConstraintTree, sink)
-    get_equality_constraints.(values(c), Ref(sink))
+function get_equality_constraints(m::ConstraintTrees.ConstraintTree, sink)
+    get_equality_constraints.(values(m), Ref(sink))
 end
 
 function get_equality_constraints(c::ConstraintTrees.Constraint, sink)
@@ -19,7 +24,13 @@ function get_equality_constraints(c::ConstraintTrees.Constraint, sink)
     end
 end
 
-function inequality_constraints(c::ConstraintTrees.ConstraintTree)
+"""
+$(TYPEDSIGNATURES)
+
+Return all the inequality constraints of `m` as a tuple `({Parameter}LinearValue,
+lower, upper)` representing `lower ≤ {P}LV ≤ upper` for each entry.
+"""
+function inequality_constraints(m::ConstraintTrees.ConstraintTree)
     sink = Vector{
         Tuple{
             Union{ParameterLinearValue,ConstraintTrees.LinearValue},
@@ -27,14 +38,14 @@ function inequality_constraints(c::ConstraintTrees.ConstraintTree)
             Symbolics.Num,
         },
     }()
-    get_inequality_constraints(c, sink)
+    get_inequality_constraints(m, sink)
     sink
 end
 
 export inequality_constraints
 
-function get_inequality_constraints(c::ConstraintTrees.ConstraintTree, sink)
-    get_inequality_constraints.(values(c), Ref(sink))
+function get_inequality_constraints(m::ConstraintTrees.ConstraintTree, sink)
+    get_inequality_constraints.(values(m), Ref(sink))
 end
 
 function get_inequality_constraints(c::ConstraintTrees.Constraint, sink)

@@ -1,4 +1,12 @@
+"""
+$(TYPEDSIGNATURES)
 
+Construct a JuMP model by substituting `parameters` into the model, `m`. Set the
+`objective` and the `optimizer`, as well as the `sense` similar to
+[`COBREXA.optimization_model`](@ref).
+
+Converts all inequality constraints to the form `A * x ≤ b`.
+"""
 function optimization_model_with_parameters(
     m::ConstraintTrees.ConstraintTree,
     parameters::Dict{Symbolics.Num,Float64};
@@ -85,6 +93,21 @@ end
 
 export optimization_model_with_parameters
 
+"""
+$(TYPEDSIGNATURES)
+
+Solve a model, `m`, by forwarding arguments to
+[`optimization_model_with_parameters`]. 
+
+Optionally, set optimizer attributes with `modifications`. If the model does not
+solve successfully return `nothing`. Otherwise, if `primal_duals_only` is true,
+return a tuple of vectors containing the values of the primal variables, the
+equality constraint dual variables, and finally the inequality constraint dual
+variables. These duals are ordered according to the constraint output of calling
+[`equality_constraints`](@ref) and [`inequality_constraints`](@ref)
+respectively. If `primal_duals_only` is false, return a constraint tree with the
+solution primal values.
+"""
 function optimized_constraints_with_parameters(
     m::ConstraintTrees.ConstraintTree,
     parameters::Dict{Symbolics.Num,Float64};
@@ -92,7 +115,7 @@ function optimized_constraints_with_parameters(
     objective::ConstraintTrees.Value,
     optimizer,
     sense = COBREXA.Maximal,
-    duals = false,
+    primal_duals_only = false,
 )
     om = optimization_model_with_parameters(m, parameters; objective, optimizer, sense)
     for m in modifications
@@ -102,7 +125,7 @@ function optimized_constraints_with_parameters(
 
     COBREXA.is_solved(om) ?
     (
-        duals ? (JuMP.value.(om[:x]), JuMP.dual.(om[:eqcons]), JuMP.dual.(om[:ineqcons])) :
+        primal_duals_only ? (JuMP.value.(om[:x]), JuMP.dual.(om[:eqcons]), JuMP.dual.(om[:ineqcons])) :
         ConstraintTrees.constraint_values(
             Symbolics.substitute(m, parameters),
             JuMP.value.(om[:x]),
