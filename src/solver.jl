@@ -117,16 +117,16 @@ export optimization_model_with_parameters
 $(TYPEDSIGNATURES)
 
 Solve a model, `m`, by forwarding arguments to
-[`optimization_model_with_parameters`]. 
+[`optimization_model_with_parameters`](@ref). 
 
 Optionally, set optimizer attributes with `modifications`. If the model does not
-solve successfully return `nothing`. Otherwise, if `primal_duals_only` is true,
-return a tuple of vectors containing the values of the primal variables, the
-equality constraint dual variables, and finally the inequality constraint dual
-variables. These duals are ordered according to the constraint output of calling
+solve successfully return `nothing`. Otherwise, return a tuple of the solution
+tree, and vectors containing the values of the primal variables, the equality
+constraint dual variables. 
+
+These duals are ordered according to the constraint output of calling
 [`equality_constraints`](@ref) and [`inequality_constraints`](@ref)
-respectively. If `primal_duals_only` is false, return a constraint tree with the
-solution primal values.
+respectively.
 """
 function optimized_constraints_with_parameters(
     m::ConstraintTrees.ConstraintTree,
@@ -135,7 +135,6 @@ function optimized_constraints_with_parameters(
     objective::ConstraintTrees.Value,
     optimizer,
     sense = COBREXA.Maximal,
-    primal_duals_only = false,
 )
     om = optimization_model_with_parameters(m, parameters; objective, optimizer, sense)
     for m in modifications
@@ -145,12 +144,13 @@ function optimized_constraints_with_parameters(
 
     COBREXA.is_solved(om) ?
     (
-        primal_duals_only ?
-        (JuMP.value.(om[:x]), JuMP.dual.(om[:eqcons]), JuMP.dual.(om[:ineqcons])) :
         ConstraintTrees.constraint_values(
             Symbolics.substitute(m, parameters),
             JuMP.value.(om[:x]),
-        )
+        ),
+        JuMP.value.(om[:x]),
+        JuMP.dual.(om[:eqcons]),
+        JuMP.dual.(om[:ineqcons]),
     ) : nothing
 end
 

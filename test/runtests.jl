@@ -18,7 +18,7 @@ limitations under the License.
 Changes from copied code are indicated.
 =#
 
-import DifferentiableMetabolism
+using DifferentiableMetabolism
 using Test
 
 const TEST_TOLERANCE = 1e-3

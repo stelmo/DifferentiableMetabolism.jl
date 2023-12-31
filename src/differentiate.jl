@@ -21,8 +21,21 @@ Changes from copied code are indicated.
 """
 $(TYPEDSIGNATURES)
 
-Return all the equality constraints of `m` as a tuple `({Parameter}LinearValue,
-value)` representing `{P}LV == value` for each entry.
+Return true if the symbolic expression `x` only contains numbers.
+"""
+no_symbols_left(x::Symbolics.Num) =
+    Symbolics.value(x) isa Float64 || Symbolics.value(x) isa Int
+
+"""
+$(TYPEDSIGNATURES)
+
+Differentiate a model `m` with respect to `parameters` which take on values
+`parameter_values` in the optimal solution with respect to the `objective`. The
+primal variables `x_vals`, and the dual variable values `eq_dual_vals` and
+`ineq_dual_vals` need to be supplied. 
+
+Internally, primal variables with value `abs(x) ≤ zero_tol` are removed from the
+computation, and their sensitivities are not calculated.  
 """
 function differentiate(
     m::ConstraintTrees.ConstraintTree,
@@ -30,7 +43,7 @@ function differentiate(
     x_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
-    parameter_values::Dict{Symbolics.Num, Float64},
+    parameter_values::Dict{Symbolics.Num,Float64},
     parameters::Vector{Symbolics.Num}; # might not diff wrt all params
     zero_tol = 1e-8,
 )
@@ -49,16 +62,17 @@ function differentiate(
     # equality constraints
     # E * x - b = H = 0
     iH = [
-        (i, Symbolics.substitute(ConstraintTrees.substitute(lhs, xs) - rhs, xzeros)) for (i, (lhs, rhs)) in enumerate(equality_constraints(m))
+        (i, Symbolics.substitute(ConstraintTrees.substitute(lhs, xs) - rhs, xzeros)) for
+        (i, (lhs, rhs)) in enumerate(equality_constraints(m))
     ]
     # filter out all equations that only contain the zero primals
-    filter!(x -> !isequal(last(x), -0.0) && !isequal(last(x), 0.0), iH)
+    filter!(x -> !no_symbols_left(last(x)), iH)
     H = last.(iH)
     eq_dual_idxs = first.(iH)
-    
+
     # inequality constraints (must be built the same as in solver.jl)
     # M * x - h = G ≤ 0
-    iG = Vector{Tuple{Int, Symbolics.Num}}()
+    iG = Vector{Tuple{Int,Symbolics.Num}}()
     i = 0
     for (lhs, lower, upper) in inequality_constraints(m)
 
@@ -68,7 +82,16 @@ function differentiate(
             nothing
         else
             i += 1
-            push!(iG, (i, Symbolics.substitute(-ConstraintTrees.substitute(lhs, xs) + lower, xzeros)))
+            push!(
+                iG,
+                (
+                    i,
+                    Symbolics.substitute(
+                        -ConstraintTrees.substitute(lhs, xs) + lower,
+                        xzeros,
+                    ),
+                ),
+            )
         end
 
         # upper: x ≤ u
@@ -77,19 +100,29 @@ function differentiate(
             nothing
         else
             i += 1
-            push!(iG, (i, Symbolics.substitute(ConstraintTrees.substitute(lhs, xs) - upper, xzeros)))
+            push!(
+                iG,
+                (
+                    i,
+                    Symbolics.substitute(
+                        ConstraintTrees.substitute(lhs, xs) - upper,
+                        xzeros,
+                    ),
+                ),
+            )
         end
     end
 
     # filter out all equations that only contain the zero primals
-    filter!(x -> !isequal(last(x), -0.0) && !isequal(last(x), 0.0), iG)
+    filter!(x -> !no_symbols_left(last(x)), iG)
     G = last.(iG)
     ineq_dual_idxs = first.(iG)
 
     Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
 
     kkt_eqns = [ # negatives because of KKT formulation in JuMP
-        Symbolics.sparsejacobian([f], xs[nonzero_primal_idxs])' - Symbolics.sparsejacobian(H, xs[nonzero_primal_idxs])' * eq_duals -
+        Symbolics.sparsejacobian([f], xs[nonzero_primal_idxs])' -
+        Symbolics.sparsejacobian(H, xs[nonzero_primal_idxs])' * eq_duals -
         Symbolics.sparsejacobian(G, xs[nonzero_primal_idxs])' * ineq_duals
         H
         G .* ineq_duals
@@ -99,13 +132,15 @@ function differentiate(
         kkt_eqns[:],
         [xs[nonzero_primal_idxs]; eq_duals; ineq_duals],
     )
-    B = Symbolics.sparsejacobian(
-        kkt_eqns[:],
-        parameters,
-    )
+    B = Symbolics.sparsejacobian(kkt_eqns[:], parameters)
 
     syms_to_vals = merge(
-        Dict(zip([xs; eq_duals; ineq_duals], [x_vals; eq_dual_vals[eq_dual_idxs]; ineq_dual_vals[ineq_dual_idxs]])),
+        Dict(
+            zip(
+                [xs; eq_duals; ineq_duals],
+                [x_vals; eq_dual_vals[eq_dual_idxs]; ineq_dual_vals[ineq_dual_idxs]],
+            ),
+        ),
         parameter_values,
     )
 
@@ -118,10 +153,17 @@ function differentiate(
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
     b = Array(sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
 
-   rank(a)
-    t = qr(a)
-
-    -a \ b # sensitivities
+    # calculate sensitivities
+    if size(a, 1) >= size(a, 2)
+        #=
+        If a is rectangular (more equations than variables), then this should
+        still work because the equations should not be in conflict (in an ideal
+        world).
+        =#
+        -a \ b
+    else # something went wrong
+        zeros(0, 0)
+    end
 end
 
-export kkt
+export differentiate

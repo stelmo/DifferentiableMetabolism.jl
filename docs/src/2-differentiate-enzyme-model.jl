@@ -69,8 +69,7 @@ m *=
         ),
         bound = ParameterBetween(0.0, capacitylimitation),
     )
-# m.enzymes.g3.bound = ConstraintTrees.Between(0, 0.01)
-m.fluxes.r2.bound = ConstraintTrees.Between(0, 100)
+m.fluxes.r2.bound = ConstraintTrees.Between(0, 100) # remove typical FBA constraint on mass input
 
 # substitute params into model
 parameter_values = Dict(
@@ -85,7 +84,7 @@ parameter_values = Dict(
     capacitylimitation => 0.5,
 )
 
-ec_solution = optimized_constraints_with_parameters(
+ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
     m,
     parameter_values;
     objective = m.objective.value,
@@ -93,24 +92,21 @@ ec_solution = optimized_constraints_with_parameters(
     modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
 
-# @test isapprox(ec_solution.objective, 0.9599999986359624, atol = TEST_TOLERANCE)
-# @test isapprox(ec_solution.enzymes.g4, 0.02000000004275052, atol = TEST_TOLERANCE)
-# @test isapprox(ec_solution.:total_proteome_bound, 0.5, atol = TEST_TOLERANCE)
+@test isapprox(ec_solution.objective, 3.1818181867946134, atol = TEST_TOLERANCE)
+@test isapprox(ec_solution.enzymes.g4, 0.09090909089739453, atol = TEST_TOLERANCE)
+@test isapprox(ec_solution.:total_proteome_bound, 0.5, atol = TEST_TOLERANCE)
 
 ec_solution.fluxes
 ec_solution.enzymes
 
-
-# substitute params into model
-
-x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
+sens = differentiate(
     m,
-    parameter_values;
-    objective = m.objective.value,
-    optimizer = Tulip.Optimizer,
-    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
-    primal_duals_only = true,
+    m.objective.value,
+    x_vals,
+    eq_dual_vals,
+    ineq_dual_vals,
+    parameter_values,
+    [capacitylimitation; kcats_forward; kcats_backward],
 )
 
-objective = m.objective.value
-parameters = [capacitylimitation; kcats_forward; kcats_backward]
+
