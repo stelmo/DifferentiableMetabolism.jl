@@ -9,12 +9,10 @@ This package extends [COBREXA.jl](https://github.com/LCSB-BioCore/COBREXA.jl)
 constraint-based metabolic model with respect to parameters. 
 
 Note, only non-degenerate (unique) solutions can be differentiated for the
-derivatives to have a concrete interpretation. For enzyme kinetics constrained
-models, this means that you will only be able to differentiate the model if you
-prune the inactive reactions from the solution (see the documentation for
-examples). For other types of models, you need to ensure that your solution is
-non-degenerate, otherwise you will only compute sub-gradients (this corresponds
-to the typical finite difference approach typically used in the field).
+derivatives to have a concrete interpretation. For other types of models, you
+need to ensure that your solution is non-degenerate, otherwise you will only
+compute sub-gradients (this corresponds to the typical finite difference
+approach if used carelessly).
 
 To use this package, [download and install Julia](https://julialang.org/downloads/), and add 
 the following packages using the built in package manager:
