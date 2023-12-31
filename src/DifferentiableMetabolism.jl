@@ -25,8 +25,9 @@ import COBREXA
 import JuMP
 import ConstraintTrees
 import Symbolics
-import LinearAlgebra: qr, :(\)
+import LinearAlgebra: qr, :(\), rank
 import SparseArrays: sparse, sparsevec, findnz
+import RowEchelon
 
 # Define new parameter-based types
 include("parameter_bound.jl")
@@ -42,6 +43,8 @@ include("symbolics.jl")
 # the juice
 include("get_constraints.jl")
 include("solver.jl")
+include("utils.jl")
 include("differentiate.jl")
+
 
 end
