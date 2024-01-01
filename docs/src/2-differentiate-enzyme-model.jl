@@ -109,4 +109,30 @@ sens = differentiate(
     [capacitylimitation; kcats_forward; kcats_backward],
 )
 
+# 
+m.flux_stoichiometry[:m2lp] = ConstraintTrees.Constraint(
+    value = ConstraintTrees.LinearValue([2, 3, 5], [2.0, -2.0, -2.0]),
+    bound = ConstraintTrees.EqualTo(0.0),
+)
 
+m.flux_stoichiometry
+objective = m.objective.value
+
+ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
+    m,
+    parameter_values;
+    objective = m.objective.value,
+    optimizer = Tulip.Optimizer,
+    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+)
+ec_solution
+
+sens = differentiate(
+    m,
+    m.objective.value,
+    x_vals,
+    eq_dual_vals,
+    ineq_dual_vals,
+    parameter_values,
+    [capacitylimitation; kcats_forward; kcats_backward],
+)

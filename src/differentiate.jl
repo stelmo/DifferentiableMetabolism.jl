@@ -17,15 +17,9 @@ limitations under the License.
 
 Changes from copied code are indicated.
 =#
-
-"""
-$(TYPEDSIGNATURES)
-
-Return true if the symbolic expression `x` only contains numbers.
-"""
 no_symbols_left(x::Symbolics.Num) =
     Symbolics.value(x) isa Float64 || Symbolics.value(x) isa Int
-
+export no_symbols_left
 """
 $(TYPEDSIGNATURES)
 
@@ -46,14 +40,15 @@ function differentiate(
     parameter_values::Dict{Symbolics.Num,Float64},
     parameters::Vector{Symbolics.Num}; # might not diff wrt all params
     zero_tol = 1e-8,
-)
-
-    Symbolics.@variables x[1:ConstraintTrees.var_count(m)] # primal
-    xs = collect(x)
-
+)   
+    # create symbolic values of the primal and dual variables
+    Symbolics.@variables x[1:ConstraintTrees.var_count(m)]
+    xs = collect(x) # to make overloads in DiffMet work correctly
+    
+    # filter out all the primal values that are 0, these get pruned
     nonzero_primal_idxs = [i for i in eachindex(xs) if abs(x_vals[i]) > zero_tol]
-    zero_primal_idxs = setdiff(1:ConstraintTrees.var_count(m), nonzero_primal_idxs)
-    xzeros = Dict(xs[zero_primal_idxs] .=> 0.0)
+    # create a substutition dict for the zero 
+    xzeros = Dict(xs[i] => 0.0 for i in eachindex(xs) if !(i in nonzero_primal_idxs))
 
     # objective
     f = ConstraintTrees.substitute(objective, xs)
@@ -61,14 +56,50 @@ function differentiate(
 
     # equality constraints
     # E * x - b = H = 0
-    iH = [
-        (i, Symbolics.substitute(ConstraintTrees.substitute(lhs, xs) - rhs, xzeros)) for
-        (i, (lhs, rhs)) in enumerate(equality_constraints(m))
+    eqs = equality_constraints(m)
+
+    # find indices of equality constraints that still matter after removing zeros
+    H_idxs = [ i for
+        (i, (lhs, _)) in enumerate(eqs) if !isempty(intersect(lhs.idxs, nonzero_primal_idxs))
     ]
-    # filter out all equations that only contain the zero primals
-    filter!(x -> !no_symbols_left(last(x)), iH)
-    H = last.(iH)
-    eq_dual_idxs = first.(iH)
+    
+    #= 
+    Filter out linearly dependent constraints using QR decomposition. Since the
+    problem solved, assume there are no contradictory constraints. 
+    
+    See: https://math.stackexchange.com/questions/748500/how-to-find-linearly-independent-columns-in-a-matrix
+    
+    Make use of the fact that sparse QR returns a staircase profile with column
+    ordering by default. The default tolerance of what is a 0 seems okay to rely
+    on. Could be a source of bugs though...
+    =#
+    Is = Int[]
+    Js = Int[]
+    Vs = Float64[]
+    for (i, eq) in enumerate(eqs[H_idxs])
+        lhs = first(eq)
+        append!(Is, fill(i, length(lhs.idxs)))
+        append!(Js, lhs.idxs)
+        append!(Vs, Symbolics.value.(Symbolics.substitute(lhs.weights, parameter_values)))
+    end    
+    H_sparse_transposed = sparse(Js, Is, Vs) # do transpose here
+
+    t = qr(H_sparse_transposed)
+    max_lin_indep_columns = 0
+    for i in axes(t.R, 2) # depends on preordered QR!
+        Is, _ = findnz(t.R[:, i])
+        if maximum(Is) == i
+            max_lin_indep_columns = i
+        end
+    end
+    lin_indep_rows = t.pcol[1:max_lin_indep_columns] # undo permumation
+    
+    # final equality constraints
+    eq_dual_idxs =  H_idxs[lin_indep_rows]
+    H = [
+        ConstraintTrees.substitute(lhs, xs) - rhs for
+        (lhs, rhs) in eqs[eq_dual_idxs]
+    ]
 
     # inequality constraints (must be built the same as in solver.jl)
     # M * x - h = G ≤ 0
@@ -118,14 +149,44 @@ function differentiate(
     G = last.(iG)
     ineq_dual_idxs = first.(iG)
 
-    Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
+    # creaty symbolic variables for the duals, but only those that are required
+    Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)] 
 
+    # kkt_eqns = [ # negatives because of KKT formulation in JuMP
+    #     Symbolics.sparsejacobian([f], xs[nonzero_primal_idxs])' -
+    #     Symbolics.sparsejacobian(H, xs[nonzero_primal_idxs])' * eq_duals -
+    #     Symbolics.sparsejacobian(G, xs[nonzero_primal_idxs])' * ineq_duals
+    #     H
+    #     G .* ineq_duals
+    # ]
+
+    #=
+    Do all the manipulations manually. This is much faster than using the
+    builtin functions.
+    =#
+    eq1 = Symbolics.sparsejacobian([f], xs[nonzero_primal_idxs])'
+    
+    Is, Js, Vs = findnz(Symbolics.sparsejacobian(H, xs[nonzero_primal_idxs]))
+    eq2 = zeros(Symbolics.Num, size(eq1, 1))
+    for (i, j, v) in zip(Js, Is, Vs) # transpose
+        eq2[i] += v * eq_duals[j]
+    end
+
+    Is, Js, Vs = findnz(Symbolics.sparsejacobian(G, xs[nonzero_primal_idxs]))
+    eq3 = zeros(Symbolics.Num, size(eq1, 1))
+    for (i, j, v) in zip(Js, Is, Vs) # transpose
+        eq3[i] += v * ineq_duals[j]
+    end
+
+    eq4 = zeros(Symbolics.Num, size(ineq_duals, 1))
+    for i in eachindex(G) # transpose
+        eq4[i] +=  G[i] * ineq_duals[i]
+    end
+    
     kkt_eqns = [ # negatives because of KKT formulation in JuMP
-        Symbolics.sparsejacobian([f], xs[nonzero_primal_idxs])' -
-        Symbolics.sparsejacobian(H, xs[nonzero_primal_idxs])' * eq_duals -
-        Symbolics.sparsejacobian(G, xs[nonzero_primal_idxs])' * ineq_duals
+        eq1 - eq2 - eq3
         H
-        G .* ineq_duals
+        eq4
     ]
 
     A = Symbolics.sparsejacobian(
@@ -134,6 +195,7 @@ function differentiate(
     )
     B = Symbolics.sparsejacobian(kkt_eqns[:], parameters)
 
+    # symbolic values at the optimal solution incl parameters
     syms_to_vals = merge(
         Dict(
             zip(
@@ -143,7 +205,7 @@ function differentiate(
         ),
         parameter_values,
     )
-
+    
     # substitute in values
     Is, Js, Vs = findnz(A)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
