@@ -65,8 +65,7 @@ function remove_linearly_dependent_constraints(eqs, nonzero_primal_idxs, paramet
 
     # final equality constraints
     dual_idxs = idxs[lin_indep_rows]
-    # [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs[dual_idxs]], dual_idxs
-    [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs], dual_idxs
+    [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs[dual_idxs]], dual_idxs
 end
 
 export remove_linearly_dependent_constraints

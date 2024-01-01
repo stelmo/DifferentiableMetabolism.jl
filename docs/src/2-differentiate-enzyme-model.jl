@@ -127,6 +127,7 @@ m *=
 
 m.flux_stoichiometry
 objective = m.objective.value
+parameters = [capacitylimitation; kcats_forward; kcats_backward]
 
 ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
     m,
