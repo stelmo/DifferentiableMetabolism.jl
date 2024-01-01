@@ -113,17 +113,6 @@ m.flux_stoichiometry[:m2lp] = ConstraintTrees.Constraint(
     value = ConstraintTrees.LinearValue([2, 3, 5], [2.0, -2.0, -2.0]),
     bound = ConstraintTrees.EqualTo(0.0),
 )
-# hmm seems to not make a difference
-m *=
-    :total_proteome_bound2^ConstraintTrees.Constraint(
-        value = sum(
-            2 * m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for
-            gid in AbstractFBCModels.genes(model)
-        ),
-        bound = ParameterBetween(0.0, 2 * capacitylimitation),
-    )
-
-
 
 m.flux_stoichiometry
 objective = m.objective.value

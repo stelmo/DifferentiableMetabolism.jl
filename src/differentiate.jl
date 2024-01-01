@@ -26,8 +26,6 @@ function find_primal_nonzero_constraint_idxs(eqs, nonzero_primal_idxs)
     ]
 end
 
-export  find_primal_nonzero_constraint_idxs
-
 function remove_linearly_dependent_constraints(eqs, nonzero_primal_idxs, parameter_values, xs)
     
     idxs = find_primal_nonzero_constraint_idxs(eqs, nonzero_primal_idxs)
@@ -67,8 +65,6 @@ function remove_linearly_dependent_constraints(eqs, nonzero_primal_idxs, paramet
     dual_idxs = idxs[lin_indep_rows]
     [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs[dual_idxs]], dual_idxs
 end
-
-export remove_linearly_dependent_constraints
 
 """
 $(TYPEDSIGNATURES)
@@ -112,19 +108,6 @@ function differentiate(
         parameter_values,
         xs,
     )
-
-    # Is = Int[]
-    # Js = Int[]
-    # Vs = Float64[]
-    # for (i, eq) in enumerate(eqs[eq_dual_idxs])
-    #     # println(i)
-    #     lhs = first(eq)
-    #     append!(Is, fill(i, length(lhs.idxs)))
-    #     append!(Js, lhs.idxs)
-    #     append!(Vs, Symbolics.value.(Symbolics.substitute(lhs.weights, parameter_values)))
-    # end
-    # A = sparse(Is, Js, Vs)
-    # rank(A)
 
     # inequality constraints (must be built the same as in solver.jl)
     # M * x - h = G ≤ 0
