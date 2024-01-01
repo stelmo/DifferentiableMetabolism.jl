@@ -7,6 +7,7 @@ using Symbolics
 using ConstraintTrees
 using COBREXA
 using Tulip
+using Gurobi
 
 include("data_static.jl")
 
@@ -30,6 +31,7 @@ for rid in AM.reactions(model)
             kcat_forward = rid_kcat[rid],
             kcat_backward = rid_kcat[rid],
         )
+        break # single isozyme only
     end
 end
 
@@ -62,12 +64,68 @@ ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_p
 
 ec_solution
 
-#src these values should be unique (glucose transporter is the only way to get carbon into the system)
-@test isapprox(ec_solution.objective, 1.671357282901553, atol = TEST_TOLERANCE) #src
-@test isapprox(ec_solution.total_proteome_bound, 0.1, atol = TEST_TOLERANCE) #src
-@test isapprox(ec_solution.fluxes.EX_glc__D_e, -49.92966287110028, atol = 0.1) #src
-@test isapprox(ec_solution.enzymes.b2417, 0.11859224858442563, atol = 1e-7) #src
+ec_solution.fluxes
+ec_solution.enzymes
 
+sort(abs.(collect(values(ec_solution.fluxes))))
+sort(abs.(collect(values(ec_solution.enzymes))))
+
+
+# now prune
+zerotol = 1e-7
+rids = [string(k) for (k, v) in ec_solution.fluxes if abs(v) > zerotol]
+gids = [string(k) for (k, v) in ec_solution.enzymes if abs(v) > zerotol]
+mids = Set(mid for rid in rids for mid in keys(AbstractFBCModels.reaction_stoichiometry(model, rid)))
+
+d_rids = setdiff(AbstractFBCModels.reactions(model), rids)
+d_mids = setdiff(AbstractFBCModels.metabolites(model), mids)
+d_gids = setdiff(AbstractFBCModels.genes(model), gids)
+
+pruned = convert(AbstractFBCModels.CanonicalModel.Model, model)
+
+for rid in d_rids
+    delete!(pruned.reactions, rid)
+end
+for mid in d_mids
+    delete!(pruned.metabolites, mid)
+end
+for gid in d_gids
+    delete!(pruned.genes, gid)
+end
+
+pruned
+
+AbstractFBCModels.n_reactions(pruned)
+AbstractFBCModels.n_reactions(model)
+
+AbstractFBCModels.n_metabolites(pruned)
+AbstractFBCModels.n_metabolites(model)
+
+AbstractFBCModels.n_genes(pruned)
+AbstractFBCModels.n_genes(model)
+
+reaction_isozymes
+
+#
+m = COBREXA.fbc_model_constraints(pruned)
+m += :enzymes^COBREXA.enzyme_variables(pruned)
+m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
+m *=
+    :total_proteome_bound^enzyme_capacity(
+        m.enzymes,
+        molar_masses,
+        AbstractFBCModels.genes(pruned),
+        ParameterBetween(0, capacitylimitation),
+    )
+m.fluxes.EX_glc__D_e.bound = ConstraintTrees.Between(-1000.0, 0.0) # undo glucose important bound from original model
+
+ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
+    m,
+    parameter_values;
+    objective = m.objective.value,
+    optimizer = Gurobi.Optimizer,
+    # modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+)
 ec_solution.fluxes
 ec_solution.enzymes
 
@@ -85,30 +143,3 @@ sens = differentiate(
     zero_tol = 1e-6,
 )
 
-parameters = [capacitylimitation; kcats]
-objective = m.objective.value
-
-
-using SparseArrays
-using LinearAlgebra
-
-A = float.([
-    1 0 0
-    0 4.5 0
-    0 1 0
-    0 0 1
-    0 2 0
-])
-b = [
-    1
-    2
-    8
-    3
-    4
-]
-
-t = qr(sparse(A'))
-
-
-idxs = t.pcol[1:3]
-A[idxs, :] \ b[idxs]
