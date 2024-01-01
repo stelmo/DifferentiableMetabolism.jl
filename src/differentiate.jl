@@ -17,9 +17,60 @@ limitations under the License.
 
 Changes from copied code are indicated.
 =#
-no_symbols_left(x::Symbolics.Num) =
-    Symbolics.value(x) isa Float64 || Symbolics.value(x) isa Int
-export no_symbols_left
+
+function find_primal_nonzero_constraint_idxs(eqs, nonzero_primal_idxs)
+    # find indices of constraints that still matter after removing primal zeros
+    [
+        i for (i, (lhs, _)) in enumerate(eqs) if
+        !isempty(intersect(lhs.idxs, nonzero_primal_idxs))
+    ]
+end
+
+export  find_primal_nonzero_constraint_idxs
+
+function remove_linearly_dependent_constraints(eqs, nonzero_primal_idxs, parameter_values, xs)
+    
+    idxs = find_primal_nonzero_constraint_idxs(eqs, nonzero_primal_idxs)
+
+    #= 
+    Filter out linearly dependent constraints using QR decomposition. Since the
+    problem solved, assume there are no contradictory constraints. 
+
+    See: https://math.stackexchange.com/questions/748500/how-to-find-linearly-independent-columns-in-a-matrix
+
+    Make use of the fact that sparse QR returns a staircase profile with column
+    ordering by default. The default tolerance of what is a 0 seems okay to rely
+    on. Could be a source of bugs though...
+    =#
+    Is = Int[]
+    Js = Int[]
+    Vs = Float64[]
+    for (i, eq) in enumerate(eqs[idxs])
+        lhs = first(eq)
+        append!(Is, fill(i, length(lhs.idxs)))
+        append!(Js, lhs.idxs)
+        append!(Vs, Symbolics.value.(Symbolics.substitute(lhs.weights, parameter_values)))
+    end
+    mat_sparse_transposed = sparse(Js, Is, Vs) # do transpose here for QR
+
+    t = qr(mat_sparse_transposed)
+    max_lin_indep_columns = 0
+    for i in axes(t.R, 2) # depends on preordered QR!
+        Is, _ = findnz(t.R[:, i])
+        if maximum(Is) == i
+            max_lin_indep_columns = i
+        end
+    end
+    lin_indep_rows = t.pcol[1:max_lin_indep_columns] # undo permumation
+
+    # final equality constraints
+    dual_idxs = idxs[lin_indep_rows]
+    # [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs[dual_idxs]], dual_idxs
+    [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs], dual_idxs
+end
+
+export remove_linearly_dependent_constraints
+
 """
 $(TYPEDSIGNATURES)
 
@@ -40,11 +91,11 @@ function differentiate(
     parameter_values::Dict{Symbolics.Num,Float64},
     parameters::Vector{Symbolics.Num}; # might not diff wrt all params
     zero_tol = 1e-8,
-)   
+)
     # create symbolic values of the primal and dual variables
     Symbolics.@variables x[1:ConstraintTrees.var_count(m)]
     xs = collect(x) # to make overloads in DiffMet work correctly
-    
+
     # filter out all the primal values that are 0, these get pruned
     nonzero_primal_idxs = [i for i in eachindex(xs) if abs(x_vals[i]) > zero_tol]
     # create a substutition dict for the zero 
@@ -56,116 +107,47 @@ function differentiate(
 
     # equality constraints
     # E * x - b = H = 0
-    eqs = equality_constraints(m)
+    H, eq_dual_idxs = remove_linearly_dependent_constraints(
+        equality_constraints(m),
+        nonzero_primal_idxs,
+        parameter_values,
+        xs,
+    )
 
-    # find indices of equality constraints that still matter after removing zeros
-    H_idxs = [ i for
-        (i, (lhs, _)) in enumerate(eqs) if !isempty(intersect(lhs.idxs, nonzero_primal_idxs))
-    ]
-    
-    #= 
-    Filter out linearly dependent constraints using QR decomposition. Since the
-    problem solved, assume there are no contradictory constraints. 
-    
-    See: https://math.stackexchange.com/questions/748500/how-to-find-linearly-independent-columns-in-a-matrix
-    
-    Make use of the fact that sparse QR returns a staircase profile with column
-    ordering by default. The default tolerance of what is a 0 seems okay to rely
-    on. Could be a source of bugs though...
-    =#
-    Is = Int[]
-    Js = Int[]
-    Vs = Float64[]
-    for (i, eq) in enumerate(eqs[H_idxs])
-        lhs = first(eq)
-        append!(Is, fill(i, length(lhs.idxs)))
-        append!(Js, lhs.idxs)
-        append!(Vs, Symbolics.value.(Symbolics.substitute(lhs.weights, parameter_values)))
-    end    
-    H_sparse_transposed = sparse(Js, Is, Vs) # do transpose here
-
-    t = qr(H_sparse_transposed)
-    max_lin_indep_columns = 0
-    for i in axes(t.R, 2) # depends on preordered QR!
-        Is, _ = findnz(t.R[:, i])
-        if maximum(Is) == i
-            max_lin_indep_columns = i
-        end
-    end
-    lin_indep_rows = t.pcol[1:max_lin_indep_columns] # undo permumation
-    
-    # final equality constraints
-    eq_dual_idxs =  H_idxs[lin_indep_rows]
-    H = [
-        ConstraintTrees.substitute(lhs, xs) - rhs for
-        (lhs, rhs) in eqs[eq_dual_idxs]
-    ]
+    # Is = Int[]
+    # Js = Int[]
+    # Vs = Float64[]
+    # for (i, eq) in enumerate(eqs[eq_dual_idxs])
+    #     # println(i)
+    #     lhs = first(eq)
+    #     append!(Is, fill(i, length(lhs.idxs)))
+    #     append!(Js, lhs.idxs)
+    #     append!(Vs, Symbolics.value.(Symbolics.substitute(lhs.weights, parameter_values)))
+    # end
+    # A = sparse(Is, Js, Vs)
+    # rank(A)
 
     # inequality constraints (must be built the same as in solver.jl)
     # M * x - h = G ≤ 0
-    iG = Vector{Tuple{Int,Symbolics.Num}}()
-    i = 0
-    for (lhs, lower, upper) in inequality_constraints(m)
-
-        # lower: l ≤ x => -x ≤ -l
-        l = Symbolics.value(lower)
-        if l isa Float64 && isinf(l)
-            nothing
-        else
-            i += 1
-            push!(
-                iG,
-                (
-                    i,
-                    Symbolics.substitute(
-                        -ConstraintTrees.substitute(lhs, xs) + lower,
-                        xzeros,
-                    ),
-                ),
-            )
-        end
-
-        # upper: x ≤ u
-        u = Symbolics.value(upper)
-        if u isa Float64 && isinf(u)
-            nothing
-        else
-            i += 1
-            push!(
-                iG,
-                (
-                    i,
-                    Symbolics.substitute(
-                        ConstraintTrees.substitute(lhs, xs) - upper,
-                        xzeros,
-                    ),
-                ),
-            )
-        end
-    end
-
-    # filter out all equations that only contain the zero primals
-    filter!(x -> !no_symbols_left(last(x)), iG)
-    G = last.(iG)
-    ineq_dual_idxs = first.(iG)
+    ineqs = inequality_constraints(m)
+    ineq_dual_idxs = find_primal_nonzero_constraint_idxs(ineqs, nonzero_primal_idxs)
+    G = [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in ineqs[ineq_dual_idxs]]
 
     # creaty symbolic variables for the duals, but only those that are required
-    Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)] 
-
-    # kkt_eqns = [ # negatives because of KKT formulation in JuMP
-    #     Symbolics.sparsejacobian([f], xs[nonzero_primal_idxs])' -
-    #     Symbolics.sparsejacobian(H, xs[nonzero_primal_idxs])' * eq_duals -
-    #     Symbolics.sparsejacobian(G, xs[nonzero_primal_idxs])' * ineq_duals
-    #     H
-    #     G .* ineq_duals
-    # ]
+    Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
 
     #=
     Do all the manipulations manually. This is much faster than using the
     builtin functions.
+
+    kkt_eqns = [ 
+        ∇ₓfᵀ - ∇ₓHᵀ ν  - ∇ₓGᵀ λ # negatives because of KKT formulation in JuMP
+        H
+        G .* ineq_duals
+    ]
     =#
     eq1 = Symbolics.sparsejacobian([f], xs[nonzero_primal_idxs])'
-    
+
     Is, Js, Vs = findnz(Symbolics.sparsejacobian(H, xs[nonzero_primal_idxs]))
     eq2 = zeros(Symbolics.Num, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
@@ -180,9 +162,9 @@ function differentiate(
 
     eq4 = zeros(Symbolics.Num, size(ineq_duals, 1))
     for i in eachindex(G) # transpose
-        eq4[i] +=  G[i] * ineq_duals[i]
+        eq4[i] += G[i] * ineq_duals[i]
     end
-    
+
     kkt_eqns = [ # negatives because of KKT formulation in JuMP
         eq1 - eq2 - eq3
         H
@@ -205,7 +187,7 @@ function differentiate(
         ),
         parameter_values,
     )
-    
+
     # substitute in values
     Is, Js, Vs = findnz(A)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))

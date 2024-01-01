@@ -21,6 +21,34 @@ Changes from copied code are indicated.
 """
 $(TYPEDSIGNATURES)
 
+Builds a matrix representation of bounds.
+"""
+function constraint_matrix_vector(eqs, m, parameters)
+    Ib = Int64[]
+    Vb = Float64[]
+    Is = Int64[]
+    Js = Int64[]
+    Vs = Float64[]
+    for (i, (val, rhs)) in enumerate(eqs)
+        rhs = Symbolics.substitute(rhs, parameters)
+        a = Symbolics.substitute(val, parameters)
+
+        # TODO this seems prone to error
+        if Symbolics.value(rhs) != 0.0 && Symbolics.value(rhs) != -0.0
+            push!(Ib, i)
+            push!(Vb, Symbolics.value(rhs))
+        end
+        append!(Is, fill(i, length(a.idxs)))
+        append!(Js, a.idxs)
+        append!(Vs, a.weights)
+    end
+    sparse(Is, Js, Vs, length(eqs), ConstraintTrees.var_count(m)),
+    sparsevec(Ib, Vb, length(eqs))
+end
+
+"""
+$(TYPEDSIGNATURES)
+
 Construct a JuMP model by substituting `parameters` into the model, `m`. Set the
 `objective` and the `optimizer`, as well as the `sense` similar to
 [`COBREXA.optimization_model`](@ref).
@@ -47,65 +75,11 @@ function optimization_model_with_parameters(
     ineqs = inequality_constraints(m)
 
     # E * x = d
-    Ib = Int64[]
-    Vb = Float64[]
-    Is = Int64[]
-    Js = Int64[]
-    Vs = Float64[]
-    for (i, (val, rhs)) in enumerate(eqs)
-        rhs = Symbolics.substitute(rhs, parameters)
-        a = Symbolics.substitute(val, parameters)
-
-        if Symbolics.value(rhs) != 0
-            push!(Ib, i)
-            push!(Vb, Symbolics.value(rhs))
-        end
-        append!(Is, fill(i, length(a.idxs)))
-        append!(Js, a.idxs)
-        append!(Vs, a.weights)
-    end
-    A = sparse(Is, Js, Vs, length(eqs), ConstraintTrees.var_count(m))
-    b = sparsevec(Ib, Vb, length(eqs))
-    JuMP.@constraint(model, eqcons, A * x .== b)
+    E, d = constraint_matrix_vector(eqs, m, parameters)
+    JuMP.@constraint(model, eqcons, E * x .== d)
 
     # M * x ≤ h
-    Ih = Int64[]
-    Vh = Float64[]
-    Is = Int64[]
-    Js = Int64[]
-    Vs = Float64[]
-    k = 0
-    for (val, lower, upper) in ineqs
-        lower = Symbolics.substitute(lower, parameters)
-        upper = Symbolics.substitute(upper, parameters)
-        a = Symbolics.substitute(val, parameters)
-
-        # lower: l ≤ x => -x ≤ -l
-        if !isinf(Symbolics.value(lower))
-            k += 1
-            if Symbolics.value(lower) != 0
-                push!(Ih, k)
-                push!(Vh, -Symbolics.value(lower))
-            end
-            append!(Is, fill(k, length(a.idxs)))
-            append!(Js, a.idxs)
-            append!(Vs, -a.weights)
-        end
-
-        # upper: x ≤ u
-        if !isinf(Symbolics.value(upper))
-            k += 1
-            if Symbolics.value(upper) != 0
-                push!(Ih, k)
-                push!(Vh, Symbolics.value(upper))
-            end
-            append!(Is, fill(k, length(a.idxs)))
-            append!(Js, a.idxs)
-            append!(Vs, a.weights)
-        end
-    end
-    M = sparse(Is, Js, Vs, k, ConstraintTrees.var_count(m))
-    h = sparsevec(Ih, Vh, k)
+    M, h = constraint_matrix_vector(ineqs, m, parameters)
     JuMP.@constraint(model, ineqcons, M * x .<= h)
 
     return model

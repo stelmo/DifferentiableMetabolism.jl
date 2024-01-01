@@ -26,7 +26,7 @@ import JuMP
 import ConstraintTrees
 import Symbolics
 import LinearAlgebra: :(\), rank, qr
-import SparseArrays: sparse, sparsevec, findnz, dropzeros!
+import SparseArrays: sparse, sparsevec, findnz
 
 # Define new parameter-based types
 include("parameter_bound.jl")

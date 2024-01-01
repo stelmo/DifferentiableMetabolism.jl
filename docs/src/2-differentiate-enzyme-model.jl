@@ -62,12 +62,11 @@ m = COBREXA.fbc_model_constraints(model)
 m += :enzymes^COBREXA.enzyme_variables(model)
 m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
 m *=
-    :total_proteome_bound^ConstraintTrees.Constraint(
-        value = sum(
-            m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for
-            gid in AbstractFBCModels.genes(model)
-        ),
-        bound = ParameterBetween(0.0, capacitylimitation),
+    :total_proteome_bound^enzyme_capacity(
+        m.enzymes,
+        gene_molar_masses,
+        AbstractFBCModels.genes(model),
+        ParameterBetween(0, capacitylimitation),
     )
 m.fluxes.r2.bound = ConstraintTrees.Between(0, 100) # remove typical FBA constraint on mass input
 
@@ -114,6 +113,17 @@ m.flux_stoichiometry[:m2lp] = ConstraintTrees.Constraint(
     value = ConstraintTrees.LinearValue([2, 3, 5], [2.0, -2.0, -2.0]),
     bound = ConstraintTrees.EqualTo(0.0),
 )
+# hmm seems to not make a difference
+m *=
+    :total_proteome_bound2^ConstraintTrees.Constraint(
+        value = sum(
+            2 * m.enzymes[Symbol(gid)].value * gene_molar_masses[gid] for
+            gid in AbstractFBCModels.genes(model)
+        ),
+        bound = ParameterBetween(0.0, 2 * capacitylimitation),
+    )
+
+
 
 m.flux_stoichiometry
 objective = m.objective.value

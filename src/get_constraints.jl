@@ -18,6 +18,12 @@ limitations under the License.
 Changes from copied code are indicated.
 =#
 
+constrained(x) = begin
+    y = Symbolics.value(x)
+    y isa Float64 && isinf(y) && return false
+    return true
+end
+
 """
 $(TYPEDSIGNATURES)
 
@@ -47,8 +53,9 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Return all the inequality constraints of `m` as a tuple `({Parameter}LinearValue,
-lower, upper)` representing `lower ≤ {P}LV ≤ upper` for each entry.
+Return all the inequality constraints of `m` as a tuple of bounds converted to
+the form `({Parameter}LinearValue, upper)` representing `{P}LV ≤ upper` for each
+entry. 
 """
 function inequality_constraints(m::ConstraintTrees.ConstraintTree)
     sink = Vector{
@@ -59,7 +66,15 @@ function inequality_constraints(m::ConstraintTrees.ConstraintTree)
         },
     }()
     get_inequality_constraints(m, sink)
-    sink
+
+    [
+        [ # lower bounds to l ≤ x → -x ≤ -l
+            (-val, -lower) for (val, lower, _) in sink if constrained(lower)
+        ]
+        [ # upper bounds are already in the correct format
+            (val, upper) for (val, _, upper) in sink if constrained(upper)
+        ]
+    ]
 end
 
 export inequality_constraints
