@@ -17,11 +17,10 @@ Symbolics.@variables kcats[1:length(ecoli_core_reaction_kcats)]
 rid_kcat = Dict(zip(keys(ecoli_core_reaction_kcats), kcats))
 parameter_values =
     Dict(kid => ecoli_core_reaction_kcats[rid] * 3.6 for (rid, kid) in rid_kcat) # k/h
-# parameter_values = Dict(kid => ecoli_core_reaction_kcats[rid]*3600.0 for (rid, kid) in rid_kcat)
 
 reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
-for rid in AM.reactions(model)
-    grrs = AM.reaction_gene_association_dnf(model, rid)
+for rid in AbstractFBCModels.reactions(model)
+    grrs = AbstractFBCModels.reaction_gene_association_dnf(model, rid)
     isnothing(grrs) && continue # skip if no grr available
     haskey(ecoli_core_reaction_kcats, rid) || continue # skip if no kcat data available
     for (i, grr) in enumerate(grrs)
@@ -104,9 +103,7 @@ AbstractFBCModels.n_metabolites(model)
 AbstractFBCModels.n_genes(pruned)
 AbstractFBCModels.n_genes(model)
 
-reaction_isozymes
 
-#
 m = COBREXA.fbc_model_constraints(pruned)
 m += :enzymes^COBREXA.enzyme_variables(pruned)
 m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)

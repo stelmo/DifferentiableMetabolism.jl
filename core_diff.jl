@@ -19,8 +19,8 @@ parameter_values =
 # parameter_values = Dict(kid => ecoli_core_reaction_kcats[rid]*3600.0 for (rid, kid) in rid_kcat)
 
 reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
-for rid in AM.reactions(model)
-    grrs = AM.reaction_gene_association_dnf(model, rid)
+for rid in AbstractFBCModels.reactions(model)
+    grrs = AbstractFBCModels.reaction_gene_association_dnf(model, rid)
     isnothing(grrs) && continue # skip if no grr available
     haskey(ecoli_core_reaction_kcats, rid) || continue # skip if no kcat data available
     for (i, grr) in enumerate(grrs)
@@ -30,6 +30,7 @@ for rid in AM.reactions(model)
             kcat_forward = rid_kcat[rid],
             kcat_backward = rid_kcat[rid],
         )
+        break
     end
 end
 
@@ -82,33 +83,6 @@ sens = differentiate(
     ineq_dual_vals,
     parameter_values,
     [capacitylimitation; kcats],
-    zero_tol = 1e-6,
+    primal_zero_tol = 1e-6,
 )
 
-parameters = [capacitylimitation; kcats]
-objective = m.objective.value
-
-
-using SparseArrays
-using LinearAlgebra
-
-A = float.([
-    1 0 0
-    0 4.5 0
-    0 1 0
-    0 0 1
-    0 2 0
-])
-b = [
-    1
-    2
-    8
-    3
-    4
-]
-
-t = qr(sparse(A'))
-
-
-idxs = t.pcol[1:3]
-A[idxs, :] \ b[idxs]

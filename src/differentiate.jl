@@ -14,8 +14,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Changes from copied code are indicated.
 =#
 
 function find_primal_nonzero_constraint_idxs(eqs, nonzero_primal_idxs)
@@ -25,6 +23,8 @@ function find_primal_nonzero_constraint_idxs(eqs, nonzero_primal_idxs)
         !isempty(intersect(lhs.idxs, nonzero_primal_idxs))
     ]
 end
+
+export find_primal_nonzero_constraint_idxs
 
 function remove_linearly_dependent_constraints(eqs, nonzero_primal_idxs, parameter_values, xs)
     
@@ -66,6 +66,8 @@ function remove_linearly_dependent_constraints(eqs, nonzero_primal_idxs, paramet
     [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs[dual_idxs]], dual_idxs
 end
 
+export remove_linearly_dependent_constraints
+
 """
 $(TYPEDSIGNATURES)
 
@@ -74,8 +76,8 @@ Differentiate a model `m` with respect to `parameters` which take on values
 primal variables `x_vals`, and the dual variable values `eq_dual_vals` and
 `ineq_dual_vals` need to be supplied. 
 
-Internally, primal variables with value `abs(x) ≤ zero_tol` are removed from the
-computation, and their sensitivities are not calculated.  
+Internally, primal variables with value `abs(x) ≤ primal_zero_tol` are removed
+from the computation, and their sensitivities are not calculated.  
 """
 function differentiate(
     m::ConstraintTrees.ConstraintTree,
@@ -85,14 +87,15 @@ function differentiate(
     ineq_dual_vals::Vector{Float64},
     parameter_values::Dict{Symbolics.Num,Float64},
     parameters::Vector{Symbolics.Num}; # might not diff wrt all params
-    zero_tol = 1e-8,
+    primal_zero_tol = 1e-8,
+    rank_zero_tol = 1e-8,
 )
     # create symbolic values of the primal and dual variables
     Symbolics.@variables x[1:ConstraintTrees.var_count(m)]
     xs = collect(x) # to make overloads in DiffMet work correctly
 
     # filter out all the primal values that are 0, these get pruned
-    nonzero_primal_idxs = [i for i in eachindex(xs) if abs(x_vals[i]) > zero_tol]
+    nonzero_primal_idxs = [i for i in eachindex(xs) if abs(x_vals[i]) > primal_zero_tol]
     # create a substutition dict for the zero 
     xzeros = Dict(xs[i] => 0.0 for i in eachindex(xs) if !(i in nonzero_primal_idxs))
 
@@ -172,8 +175,25 @@ function differentiate(
 
     # substitute in values
     Is, Js, Vs = findnz(A)
-    vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
+    vs = round.(float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals))); digits=12)
     a = sparse(Is, Js, vs, size(A)...)
+
+    rank(a)
+
+    size(eq1)
+    af = dropzeros(round.(a[1:size(eq1,1), :]; digits=12))
+    rank(af)
+
+    size(H)
+    ah =  dropzeros(round.(a[(1 + size(eq1,1)):(size(H,1) + size(eq1,1)), :]; digits=12))
+    rank(ah)
+
+    size(G)
+    rank(a[(1 + size(eq1,1) + size(eq4,1)):end, :])
+
+    ag = dropzeros(round.(a[(1 + size(eq1,1) + size(eq4,1)):end, :], digits=12))
+    rank(ag)
+    
 
     Is, Js, Vs = findnz(B)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
@@ -186,7 +206,12 @@ function differentiate(
         still work because the equations should not be in conflict (in an ideal
         world).
         =#
-        -a \ b
+        if rank(a; tol=rank_zero_tol) < size(a, 2)
+            throw(ArgumentError("The optimal solution is not unique, the derivatives cannot be calculated."))
+        else
+            -a \ b
+        end
+        
     else # something went wrong
         zeros(0, 0)
     end

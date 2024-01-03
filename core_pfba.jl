@@ -14,13 +14,11 @@ model = load_model("e_coli_core.json")
 
 Symbolics.@variables kcats[1:length(ecoli_core_reaction_kcats)]
 rid_kcat = Dict(zip(keys(ecoli_core_reaction_kcats), kcats))
-parameter_values =
-    Dict(kid => ecoli_core_reaction_kcats[rid] * 3.6 for (rid, kid) in rid_kcat) # k/h
-# parameter_values = Dict(kid => ecoli_core_reaction_kcats[rid]*3600.0 for (rid, kid) in rid_kcat)
+parameter_values = Dict(kid => ecoli_core_reaction_kcats[rid] * 3.6/100.0 for (rid, kid) in rid_kcat) # k/h
 
 reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
-for rid in AM.reactions(model)
-    grrs = AM.reaction_gene_association_dnf(model, rid)
+for rid in AbstractFBCModels.reactions(model)
+    grrs = AbstractFBCModels.reaction_gene_association_dnf(model, rid)
     isnothing(grrs) && continue # skip if no grr available
     haskey(ecoli_core_reaction_kcats, rid) || continue # skip if no kcat data available
     for (i, grr) in enumerate(grrs)
@@ -34,7 +32,7 @@ for rid in AM.reactions(model)
 end
 
 Symbolics.@variables capacitylimitation
-total_enzyme_capacity = 0.1 * 1000.0 # mg enzyme/gDW
+total_enzyme_capacity = 0.1 * 1000.0 * 100 # mg enzyme/gDW
 parameter_values[capacitylimitation] = total_enzyme_capacity
 
 molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_masses)
@@ -52,10 +50,34 @@ m *=
     )
 m.fluxes.EX_glc__D_e.bound = ConstraintTrees.Between(-1000.0, 0.0) # undo glucose important bound from original model
 
+# add small quadratic weight
+m.objective = ConstraintTrees.Constraint(
+    value =  1e-4*(sum(x.value * x.value for x in values(m.fluxes)) + sum(x.value * x.value for x in values(m.enzymes))) - m.objective.value,
+    bound = nothing,
+) 
+
+using Gurobi
 ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
     m,
     parameter_values;
     objective = m.objective.value,
-    optimizer = Tulip.Optimizer,
-    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    optimizer = Gurobi.Optimizer,
+    sense = COBREXA.Minimal,
 )
+
+ec_solution.fluxes.BIOMASS_Ecoli_core_w_GAM
+ec_solution.fluxes
+ec_solution.enzymes
+
+sens = differentiate(
+    m,
+    m.objective.value,
+    x_vals,
+    eq_dual_vals,
+    ineq_dual_vals,
+    parameter_values,
+    [capacitylimitation; kcats],
+)
+
+objective = m.objective.value
+parameters = [capacitylimitation; kcats]
