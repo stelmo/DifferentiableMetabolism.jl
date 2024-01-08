@@ -26,8 +26,13 @@ end
 
 export find_primal_nonzero_constraint_idxs
 
-function remove_linearly_dependent_constraints(eqs, nonzero_primal_idxs, parameter_values, xs)
-    
+function remove_linearly_dependent_constraints(
+    eqs,
+    nonzero_primal_idxs,
+    parameter_values,
+    xs,
+)
+
     idxs = find_primal_nonzero_constraint_idxs(eqs, nonzero_primal_idxs)
 
     #= 
@@ -175,25 +180,32 @@ function differentiate(
 
     # substitute in values
     Is, Js, Vs = findnz(A)
-    vs = round.(float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals))); digits=12)
+    vs =
+        round.(
+            float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)));
+            digits = 9,
+        )
     a = sparse(Is, Js, vs, size(A)...)
-
+    dropzeros!(a)
     rank(a)
+    _,_,vs = findnz(a)
+    minimum(abs, vs)
 
     size(eq1)
-    af = dropzeros(round.(a[1:size(eq1,1), :]; digits=12))
+    af = a[1:size(eq1, 1), :]
     rank(af)
 
     size(H)
-    ah =  dropzeros(round.(a[(1 + size(eq1,1)):(size(H,1) + size(eq1,1)), :]; digits=12))
+    ah = a[(1+size(eq1, 1)):(size(H, 1)+size(eq1, 1)), :]
     rank(ah)
 
-    size(G)
-    rank(a[(1 + size(eq1,1) + size(eq4,1)):end, :])
-
-    ag = dropzeros(round.(a[(1 + size(eq1,1) + size(eq4,1)):end, :], digits=12))
+    size(eq4)
+    ag = a[(1+size(eq1, 1)+size(H, 1)):end, :]
     rank(ag)
-    
+
+    t = qr(a)
+    setdiff(collect(1:size(a, 2)), t.pcol[1:max_lin_indep_columns])
+
 
     Is, Js, Vs = findnz(B)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
@@ -206,12 +218,16 @@ function differentiate(
         still work because the equations should not be in conflict (in an ideal
         world).
         =#
-        if rank(a; tol=rank_zero_tol) < size(a, 2)
-            throw(ArgumentError("The optimal solution is not unique, the derivatives cannot be calculated."))
+        if rank(a; tol = rank_zero_tol) < size(a, 2)
+            throw(
+                ArgumentError(
+                    "The optimal solution is not unique, the derivatives cannot be calculated.",
+                ),
+            )
         else
             -a \ b
         end
-        
+
     else # something went wrong
         zeros(0, 0)
     end

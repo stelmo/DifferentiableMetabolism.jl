@@ -118,7 +118,7 @@ function optimized_constraints_with_parameters(
 
     COBREXA.is_solved(om) ?
     (
-        ConstraintTrees.constraint_values(
+        ConstraintTrees.substitute_values(
             Symbolics.substitute(m, parameters),
             JuMP.value.(om[:x]),
         ),

@@ -60,8 +60,8 @@ Symbolics.substitute(x::ConstraintTrees.Constraint, rule::Dict{Symbolics.Num,Flo
     )
 
 Symbolics.substitute(x::ConstraintTrees.ConstraintTree, rule::Dict{Symbolics.Num,Float64}) =
-    ConstraintTrees.tree_map(
-        x,
+    ConstraintTrees.map(
         c -> Symbolics.substitute(c, rule),
+        x,
         ConstraintTrees.Constraint,
     )

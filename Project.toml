@@ -15,7 +15,7 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
 COBREXA = "2"
-ConstraintTrees = "0.8"
+ConstraintTrees = "0.9"
 DocStringExtensions = "0.8, 0.9"
 JuMP = "1"
 RowEchelon = "0.2"
@@ -24,12 +24,12 @@ julia = "≥ 1.9"
 
 [extras]
 AbstractFBCModels = "5a4f3dfa-1789-40f8-8221-69268c29937c"
-Clarabel = "61c947e1-3e6d-4ee4-985a-eec8c727bd6e"
 COBREXA = "babc4406-5200-4a30-9033-bf5ae714c842"
+Clarabel = "61c947e1-3e6d-4ee4-985a-eec8c727bd6e"
 ConstraintTrees = "5515826b-29c3-47a5-8849-8513ac836620"
 Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Tulip = "6dd1b50a-3aae-11e9-10b5-ef983d2400fa"
 
 [targets]
-test = ["Test", "COBREXA", "Tulip", "Clarabel", "AbstractFBCModels", "Symbolics", "ConstraintTrees", ]
+test = ["Test", "COBREXA", "Tulip", "Clarabel", "AbstractFBCModels", "Symbolics", "ConstraintTrees"]

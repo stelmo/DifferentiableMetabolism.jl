@@ -95,9 +95,12 @@ ec_solution.objective
 
 # add small quadratic weight
 m.objective = ConstraintTrees.Constraint(
-    value = 0.001 * (sum(x.value * x.value for x in values(m.fluxes)) + sum(x.value * x.value for x in values(m.enzymes))) - m.objective.value,
+    value = 0.001 * (
+        sum(x.value * x.value for x in values(m.fluxes)) +
+        sum(x.value * x.value for x in values(m.enzymes))
+    ) - m.objective.value,
     bound = nothing,
-) 
+)
 
 using Gurobi
 ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
