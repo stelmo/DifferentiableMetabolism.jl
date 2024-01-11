@@ -21,66 +21,51 @@ using ConstraintTrees
 using COBREXA
 using Tulip
 
-include("../../test/simple_model.jl") #hide
+import JSONFBCModels
+import Tulip
+using Symbolics
+using DifferentiableMetabolism
+import AbstractFBCModels
+using Symbolics
+using ConstraintTrees
+using COBREXA
+using Tulip
 
-# ![simple_model](./assets/simple_model.svg)
+include("data_static.jl")
 
-model
+model = load_model("e_coli_core.json")
 
-# ## Add enzyme kinetic information
+Symbolics.@variables kcats[1:length(ecoli_core_reaction_kcats)]
+rid_kcat = Dict(zip(keys(ecoli_core_reaction_kcats), kcats))
+parameter_values =
+    Dict(kid => ecoli_core_reaction_kcats[rid] * 3.6 for (rid, kid) in rid_kcat) # k/h
 
-Symbolics.@variables kcats_forward[1:4] kcats_backward[1:4]
+reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
+for rid in AbstractFBCModels.reactions(model)
+    grrs = AbstractFBCModels.reaction_gene_association_dnf(model, rid)
+    isnothing(grrs) && continue # skip if no grr available
+    haskey(ecoli_core_reaction_kcats, rid) || continue # skip if no kcat data available
+    for (i, grr) in enumerate(grrs)
+        d = get!(reaction_isozymes, rid, Dict{String,ParameterIsozyme}())
+        d["isozyme_"*string(i)] = ParameterIsozyme(
+            gene_product_stoichiometry = Dict(grr .=> fill(1.0, size(grr))), # assume subunit stoichiometry of 1 for all isozymes
+            kcat_forward = rid_kcat[rid],
+            kcat_reverse = rid_kcat[rid],
+        )
+    end
+end
 
-reaction_isozymes = Dict(
-    "r3" => Dict(
-        "iso1" =>
-            ParameterIsozyme(Dict("g1" => 1), kcats_forward[1], kcats_backward[1]),
-    ),
-    "r4" => Dict(
-        "iso1" =>
-            ParameterIsozyme(Dict("g2" => 1), kcats_forward[2], kcats_backward[2]),
-        "iso2" =>
-            ParameterIsozyme(Dict("g3" => 1), kcats_forward[3], kcats_backward[3]),
-    ),
-    "r5" => Dict(
-        "iso1" => ParameterIsozyme(
-            Dict("g4" => 1, "g5" => 2),
-            kcats_forward[4],
-            kcats_backward[4],
-        ),
-    ),
-)
-
-gene_molar_masses = Dict("g1" => 1.0, "g2" => 2.0, "g3" => 3.0, "g4" => 4.0, "g5" => 1.0)
-
-# ## Add a parameterized capacity limitation
+gene_product_molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_masses)
 
 Symbolics.@variables capacitylimitation
+parameter_values[capacitylimitation] = 50.0 # mg enzyme/gDW
 
-# Build differentiable enzyme constrained model
-m = COBREXA.fbc_model_constraints(model)
-m += :enzymes^COBREXA.enzyme_variables(model)
-m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
-m *=
-    :total_proteome_bound^enzyme_capacity(
-        m.enzymes,
-        gene_molar_masses,
-        AbstractFBCModels.genes(model),
-        ParameterBetween(0, capacitylimitation),
-    )
-m.fluxes.r2.bound = ConstraintTrees.Between(0, 100) # remove typical FBA constraint on mass input
 
-# substitute params into model
-parameter_values = Dict(
-    kcats_forward[1] => 1.0,
-    kcats_forward[2] => 2.0,
-    kcats_forward[3] => 3.0,
-    kcats_forward[4] => 2.0,
-    kcats_backward[1] => 1.0,
-    kcats_backward[2] => 2.0,
-    kcats_backward[3] => 3.0,
-    kcats_backward[4] => 2.0,
-    capacitylimitation => 0.5,
+m = build_kinetic_model(
+    model;
+    reaction_isozymes,
+    gene_product_molar_masses,
+    capacity = capacitylimitation,
 )
 
 ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
@@ -91,71 +76,39 @@ ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_p
     modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
 
-# @test isapprox(ec_solution.objective, 3.1818181867946134, atol = TEST_TOLERANCE)
-# @test isapprox(ec_solution.enzymes.g4, 0.09090909089739453, atol = TEST_TOLERANCE)
-# @test isapprox(ec_solution.:total_proteome_bound, 0.5, atol = TEST_TOLERANCE)
+ec_solution
 
 ec_solution.fluxes
-ec_solution.enzymes
+ec_solution.gene_product_amounts
 
-sens = differentiate(
-    m,
-    m.objective.value,
-    x_vals,
-    eq_dual_vals,
-    ineq_dual_vals,
-    parameter_values,
-    [capacitylimitation; kcats_forward; kcats_backward],
-)
+sort(abs.(collect(values(ec_solution.fluxes))))
+sort(abs.(collect(values(ec_solution.gene_product_amounts))))
 
-# make solution unique
 
-reaction_isozymes = Dict(
-    "r3" => Dict(
-        "iso1" =>
-            ParameterIsozyme(Dict("g1" => 1), kcats_forward[1], kcats_backward[1]),
-    ),
-    "r4" => Dict(
-        "iso1" =>
-            ParameterIsozyme(Dict("g2" => 1), kcats_forward[2], kcats_backward[2]),
-        "iso2" =>
-            ParameterIsozyme(Dict("g3" => 1), kcats_forward[3], kcats_backward[3]),
-    ),
-    "r5" => Dict(
-        "iso1" => ParameterIsozyme(
-            Dict("g4" => 1, "g5" => 2),
-            kcats_forward[4],
-            kcats_backward[4],
-        ),
-    ),
-)
+m = build_pruned_model(
+    model,
+    ec_solution,
+    reaction_isozymes,
+    gene_product_molar_masses,
+    capacitylimitation;
+    zerotol = 1e-7)
 
-delete!(reaction_isozymes["r4"], "iso2")
-
-m = COBREXA.fbc_model_constraints(model)
-m += :enzymes^COBREXA.enzyme_variables(model)
-m = COBREXA.add_enzyme_constraints!(m, reaction_isozymes)
-m *=
-    :total_proteome_bound^enzyme_capacity(
-        m.enzymes,
-        gene_molar_masses,
-        AbstractFBCModels.genes(model),
-        ParameterBetween(0, capacitylimitation),
-    )
-m.fluxes.r2.bound = ConstraintTrees.Between(0, 100) # remove typical FBA constraint on mass input
-
+using CPLEX, Gurobi
 
 ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
     m,
     parameter_values;
     objective = m.objective.value,
-    optimizer = Tulip.Optimizer,
-    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    optimizer = CPLEX.Optimizer,
+    # modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
 
-ec_solution.fluxes
-ec_solution.enzymes
+ec_solution
 
+sort(abs.(collect(values(ec_solution.fluxes))))
+sort(abs.(collect(values(ec_solution.gene_product_amounts))))
+
+## 
 sens = differentiate(
     m,
     m.objective.value,
@@ -163,5 +116,6 @@ sens = differentiate(
     eq_dual_vals,
     ineq_dual_vals,
     parameter_values,
-    [capacitylimitation; kcats_forward; kcats_backward],
+    [capacitylimitation; kcats],
 )
+

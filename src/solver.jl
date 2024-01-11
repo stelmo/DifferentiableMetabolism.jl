@@ -73,6 +73,7 @@ function optimization_model_with_parameters(
 
     eqs = equality_constraints(m)
     ineqs = inequality_constraints(m)
+    # variables with nothing bounds are implicitly handeled by the solver
 
     # E * x = d
     E, d = constraint_matrix_vector(eqs, m, parameters)
