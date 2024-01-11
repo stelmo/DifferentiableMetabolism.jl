@@ -16,7 +16,6 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-
 function remove_linearly_dependent_constraints(eqs, parameter_values, xs)
 
     #= 
@@ -54,8 +53,6 @@ function remove_linearly_dependent_constraints(eqs, parameter_values, xs)
     [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs[lin_indep_rows]],
     lin_indep_rows
 end
-
-export remove_linearly_dependent_constraints
 
 """
 $(TYPEDSIGNATURES)

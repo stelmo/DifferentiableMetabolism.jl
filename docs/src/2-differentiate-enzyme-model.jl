@@ -15,25 +15,15 @@
 # # Differentiating enzyme constrained metabolic models 
 
 using DifferentiableMetabolism
-import AbstractFBCModels
+using AbstractFBCModels
 using Symbolics
 using ConstraintTrees
 using COBREXA
 using Tulip
+using JSONFBCModels
 
-import JSONFBCModels
-import Tulip
-using Symbolics
-using DifferentiableMetabolism
-import AbstractFBCModels
-using Symbolics
-using ConstraintTrees
-using COBREXA
-using Tulip
-
-include("data_static.jl")
-
-model = load_model("e_coli_core.json")
+include("test/data_static.jl")
+model = load_model("test/e_coli_core.json")
 
 Symbolics.@variables kcats[1:length(ecoli_core_reaction_kcats)]
 rid_kcat = Dict(zip(keys(ecoli_core_reaction_kcats), kcats))
@@ -78,33 +68,36 @@ ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_p
 
 ec_solution
 
-ec_solution.fluxes
-ec_solution.gene_product_amounts
+@test isapprox(ec_solution.objective, 0.7069933828497013; atol = TEST_TOLERANCE)
 
-sort(abs.(collect(values(ec_solution.fluxes))))
+sort(abs.(collect(values(ec_solution.fluxes)))) # lots of zeros
 sort(abs.(collect(values(ec_solution.gene_product_amounts))))
 
+flux_zero_tol = 1e-8
+gene_zero_tol = 1e-8
 
-m = build_pruned_model(
+m = build_pruned_kinetic_model(
     model,
     ec_solution,
     reaction_isozymes,
     gene_product_molar_masses,
-    capacitylimitation;
-    zerotol = 1e-7)
+    capacitylimitation,
+    flux_zero_tol,
+    gene_zero_tol,
+)
 
-using CPLEX, Gurobi
 
 ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
     m,
     parameter_values;
     objective = m.objective.value,
-    optimizer = CPLEX.Optimizer,
-    # modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    optimizer = Tulip.Optimizer,
+    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
 
 ec_solution
 
+# no zeros
 sort(abs.(collect(values(ec_solution.fluxes))))
 sort(abs.(collect(values(ec_solution.gene_product_amounts))))
 
