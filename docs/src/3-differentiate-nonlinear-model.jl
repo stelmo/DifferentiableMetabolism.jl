@@ -25,7 +25,12 @@ using Clarabel
 using JSONFBCModels
 
 include("test/data_static.jl")
-model = load_model("test/e_coli_core.json")
+
+import Downloads: download
+
+!isfile("e_coli_core.json") && download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
+
+model = load_model("e_coli_core.json")
 
 Symbolics.@variables kcats[1:length(ecoli_core_reaction_kcats)]
 rid_kcat = Dict(zip(keys(ecoli_core_reaction_kcats), kcats))

@@ -149,34 +149,6 @@ function differentiate(
     Is, Js, Vs = findnz(A)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
     a = sparse(Is, Js, vs, size(A)...)
-    # rank(a)
-
-    # _,_,vs = findnz(a)
-    # minimum(abs, vs)
-
-    # size(eq1)
-    # af = a[1:size(eq1, 1), :]
-    # rank(af)
-
-    # size(H)
-    # ah = a[(1+size(eq1, 1)):(size(H, 1)+size(eq1, 1)), :]
-    # rank(ah)
-
-    # size(eq4)
-    # ag = a[(1+size(eq1, 1)+size(H, 1)):end, :]
-    # rank(ag)
-
-    # t = qr(a)
-    # max_lin_indep_columns = 0
-    # for i in axes(t.R, 2) # depends on preordered QR!
-    #     Is, _ = findnz(t.R[:, i])
-    #     if maximum(Is) == i
-    #         max_lin_indep_columns = i
-    #     end
-    # end
-    # lin_indep_rows = t.pcol[1:max_lin_indep_columns] # undo permumation
-    # setdiff(collect(1:size(a, 2)), lin_indep_rows)
-
 
     Is, Js, Vs = findnz(B)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
@@ -200,7 +172,11 @@ function differentiate(
         end
 
     else # something went wrong
-        zeros(0, 0)
+        throw(
+                ArgumentError(
+                    "Something went wrong :/",
+                ),
+            )
     end
 end
 

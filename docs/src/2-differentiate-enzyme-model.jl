@@ -22,8 +22,13 @@ using COBREXA
 using Tulip
 using JSONFBCModels
 
+import Downloads: download
+
+!isfile("e_coli_core.json") && download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
+
 include("test/data_static.jl")
-model = load_model("test/e_coli_core.json")
+
+model = load_model("e_coli_core.json")
 
 Symbolics.@variables kcats[1:length(ecoli_core_reaction_kcats)]
 rid_kcat = Dict(zip(keys(ecoli_core_reaction_kcats), kcats))
@@ -69,6 +74,17 @@ ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_p
 ec_solution
 
 @test isapprox(ec_solution.objective, 0.7069933828497013; atol = TEST_TOLERANCE)
+
+sens = differentiate(
+    m,
+    m.objective.value,
+    x_vals,
+    eq_dual_vals,
+    ineq_dual_vals,
+    parameter_values,
+    [capacitylimitation; kcats],
+) # fails, need to prune
+
 
 sort(abs.(collect(values(ec_solution.fluxes)))) # lots of zeros
 sort(abs.(collect(values(ec_solution.gene_product_amounts))))
