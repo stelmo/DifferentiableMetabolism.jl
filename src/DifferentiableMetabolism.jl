@@ -19,6 +19,7 @@ module DifferentiableMetabolism
 
 using DocStringExtensions
 
+import AbstractFBCModels
 import COBREXA
 import JuMP
 import ConstraintTrees
@@ -41,5 +42,7 @@ include("symbolics.jl")
 include("get_constraints.jl")
 include("solver.jl")
 include("differentiate.jl")
+include("kinetic_model.jl")
+include("pruned_kinetic_model.jl")
 
 end

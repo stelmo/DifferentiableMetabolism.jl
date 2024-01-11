@@ -16,24 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-function find_primal_nonzero_constraint_idxs(eqs, nonzero_primal_idxs)
-    # find indices of constraints that still matter after removing primal zeros
-    [
-        i for (i, (lhs, _)) in enumerate(eqs) if
-        !isempty(intersect(lhs.idxs, nonzero_primal_idxs))
-    ]
-end
-
-export find_primal_nonzero_constraint_idxs
-
-function remove_linearly_dependent_constraints(
-    eqs,
-    nonzero_primal_idxs,
-    parameter_values,
-    xs,
-)
-
-    idxs = find_primal_nonzero_constraint_idxs(eqs, nonzero_primal_idxs)
+function remove_linearly_dependent_constraints(eqs, parameter_values, xs)
 
     #= 
     Filter out linearly dependent constraints using QR decomposition. Since the
@@ -48,7 +31,7 @@ function remove_linearly_dependent_constraints(
     Is = Int[]
     Js = Int[]
     Vs = Float64[]
-    for (i, eq) in enumerate(eqs[idxs])
+    for (i, eq) in enumerate(eqs)
         lhs = first(eq)
         append!(Is, fill(i, length(lhs.idxs)))
         append!(Js, lhs.idxs)
@@ -67,11 +50,9 @@ function remove_linearly_dependent_constraints(
     lin_indep_rows = t.pcol[1:max_lin_indep_columns] # undo permumation
 
     # final equality constraints
-    dual_idxs = idxs[lin_indep_rows]
-    [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs[dual_idxs]], dual_idxs
+    [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs[lin_indep_rows]],
+    lin_indep_rows
 end
-
-export remove_linearly_dependent_constraints
 
 """
 $(TYPEDSIGNATURES)
@@ -92,36 +73,25 @@ function differentiate(
     ineq_dual_vals::Vector{Float64},
     parameter_values::Dict{Symbolics.Num,Float64},
     parameters::Vector{Symbolics.Num}; # might not diff wrt all params
-    primal_zero_tol = 1e-8,
     rank_zero_tol = 1e-8,
 )
     # create symbolic values of the primal and dual variables
     Symbolics.@variables x[1:ConstraintTrees.var_count(m)]
     xs = collect(x) # to make overloads in DiffMet work correctly
 
-    # filter out all the primal values that are 0, these get pruned
-    nonzero_primal_idxs = [i for i in eachindex(xs) if abs(x_vals[i]) > primal_zero_tol]
-    # create a substutition dict for the zero 
-    xzeros = Dict(xs[i] => 0.0 for i in eachindex(xs) if !(i in nonzero_primal_idxs))
-
     # objective
     f = ConstraintTrees.substitute(objective, xs)
-    f = Symbolics.substitute(f, xzeros)
 
     # equality constraints
     # E * x - b = H = 0
-    H, eq_dual_idxs = remove_linearly_dependent_constraints(
-        equality_constraints(m),
-        nonzero_primal_idxs,
-        parameter_values,
-        xs,
-    )
+    H, lin_indep_rows =
+        remove_linearly_dependent_constraints(equality_constraints(m), parameter_values, xs)
 
     # inequality constraints (must be built the same as in solver.jl)
     # M * x - h = G ≤ 0
     ineqs = inequality_constraints(m)
-    ineq_dual_idxs = find_primal_nonzero_constraint_idxs(ineqs, nonzero_primal_idxs)
-    G = [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in ineqs[ineq_dual_idxs]]
+    G = [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in ineqs]
+
 
     # creaty symbolic variables for the duals, but only those that are required
     Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
@@ -136,15 +106,15 @@ function differentiate(
         G .* ineq_duals
     ]
     =#
-    eq1 = Symbolics.sparsejacobian([f], xs[nonzero_primal_idxs])'
+    eq1 = Symbolics.sparsejacobian([f], xs)'
 
-    Is, Js, Vs = findnz(Symbolics.sparsejacobian(H, xs[nonzero_primal_idxs]))
+    Is, Js, Vs = findnz(Symbolics.sparsejacobian(H, xs))
     eq2 = zeros(Symbolics.Num, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq2[i] += v * eq_duals[j]
     end
 
-    Is, Js, Vs = findnz(Symbolics.sparsejacobian(G, xs[nonzero_primal_idxs]))
+    Is, Js, Vs = findnz(Symbolics.sparsejacobian(G, xs))
     eq3 = zeros(Symbolics.Num, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq3[i] += v * ineq_duals[j]
@@ -161,10 +131,7 @@ function differentiate(
         eq4
     ]
 
-    A = Symbolics.sparsejacobian(
-        kkt_eqns[:],
-        [xs[nonzero_primal_idxs]; eq_duals; ineq_duals],
-    )
+    A = Symbolics.sparsejacobian(kkt_eqns[:], [xs; eq_duals; ineq_duals])
     B = Symbolics.sparsejacobian(kkt_eqns[:], parameters)
 
     # symbolic values at the optimal solution incl parameters
@@ -172,7 +139,7 @@ function differentiate(
         Dict(
             zip(
                 [xs; eq_duals; ineq_duals],
-                [x_vals; eq_dual_vals[eq_dual_idxs]; ineq_dual_vals[ineq_dual_idxs]],
+                [x_vals; eq_dual_vals[lin_indep_rows]; ineq_dual_vals],
             ),
         ),
         parameter_values,
@@ -180,31 +147,35 @@ function differentiate(
 
     # substitute in values
     Is, Js, Vs = findnz(A)
-    vs =
-        round.(
-            float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)));
-            digits = 9,
-        )
+    vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
     a = sparse(Is, Js, vs, size(A)...)
-    dropzeros!(a)
-    rank(a)
-    _,_,vs = findnz(a)
-    minimum(abs, vs)
+    # rank(a)
 
-    size(eq1)
-    af = a[1:size(eq1, 1), :]
-    rank(af)
+    # _,_,vs = findnz(a)
+    # minimum(abs, vs)
 
-    size(H)
-    ah = a[(1+size(eq1, 1)):(size(H, 1)+size(eq1, 1)), :]
-    rank(ah)
+    # size(eq1)
+    # af = a[1:size(eq1, 1), :]
+    # rank(af)
 
-    size(eq4)
-    ag = a[(1+size(eq1, 1)+size(H, 1)):end, :]
-    rank(ag)
+    # size(H)
+    # ah = a[(1+size(eq1, 1)):(size(H, 1)+size(eq1, 1)), :]
+    # rank(ah)
 
-    t = qr(a)
-    setdiff(collect(1:size(a, 2)), t.pcol[1:max_lin_indep_columns])
+    # size(eq4)
+    # ag = a[(1+size(eq1, 1)+size(H, 1)):end, :]
+    # rank(ag)
+
+    # t = qr(a)
+    # max_lin_indep_columns = 0
+    # for i in axes(t.R, 2) # depends on preordered QR!
+    #     Is, _ = findnz(t.R[:, i])
+    #     if maximum(Is) == i
+    #         max_lin_indep_columns = i
+    #     end
+    # end
+    # lin_indep_rows = t.pcol[1:max_lin_indep_columns] # undo permumation
+    # setdiff(collect(1:size(a, 2)), lin_indep_rows)
 
 
     Is, Js, Vs = findnz(B)

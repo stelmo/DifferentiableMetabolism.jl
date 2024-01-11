@@ -30,7 +30,7 @@ $(TYPEDFIELDS)
 @kwdef mutable struct ParameterIsozyme{T}
     gene_product_stoichiometry::Dict{String,T}
     kcat_forward::COBREXA.Maybe{Symbolics.Num} = nothing
-    kcat_backward::COBREXA.Maybe{Symbolics.Num} = nothing
+    kcat_reverse::COBREXA.Maybe{Symbolics.Num} = nothing
 end
 
 export ParameterIsozyme
