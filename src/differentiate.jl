@@ -105,6 +105,10 @@ function differentiate(
         H
         G .* ineq_duals
     ]
+
+    Note, make sure all the lazy operations are expanded to avoid running into bugs:
+    https://github.com/JuliaSymbolics/Symbolics.jl/issues/518
+    https://github.com/JuliaSymbolics/Symbolics.jl/issues/498
     =#
     eq1 = Symbolics.sparsejacobian([f], xs)'
 
