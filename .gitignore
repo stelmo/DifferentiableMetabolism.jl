@@ -4,9 +4,6 @@
 ./vscode
 /vscode
 
-# ignore temporary files
-temp*
-
 # ignore julia files
 *.jl.cov
 *.jl.*.cov
@@ -14,3 +11,5 @@ temp*
 /deps/deps.jl
 /docs/build
 Manifest.toml
+
+*.json

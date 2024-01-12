@@ -1,14 +1,8 @@
-```@meta
-CurrentModule = DifferentiableMetabolism
-```
-
-# DifferentiableMetabolism
+# DifferentiableMetabolism.jl
 
 Documentation for [DifferentiableMetabolism](https://github.com/stelmo/DifferentiableMetabolism.jl).
 
-```@index
-```
-
 ```@autodocs
 Modules = [DifferentiableMetabolism]
+Pages = ["src/DifferentiableMetabolism.jl"]
 ```
