@@ -10,6 +10,7 @@ using DocStringExtensions
 include("DifferentiableModel.jl")
 include("Enzyme.jl")
 include("differentiate.jl")
+include("differentiate_efm.jl")
 include("scale.jl")
 include("utils.jl")
 include("update.jl")
