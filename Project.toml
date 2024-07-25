@@ -16,12 +16,12 @@ Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
 COBREXA = "2"
-ConstraintTrees = "0.9"
+ConstraintTrees = "1.0"
 DocStringExtensions = "0.8, 0.9"
 JuMP = "1"
 RowEchelon = "0.2"
 Symbolics = "5"
-julia = "≥ 1.9"
+julia = "1"
 
 [extras]
 AbstractFBCModels = "5a4f3dfa-1789-40f8-8221-69268c29937c"
