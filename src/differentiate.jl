@@ -176,11 +176,7 @@ function differentiate(
         end
 
     else # something went wrong
-        throw(
-                ArgumentError(
-                    "Something went wrong :/",
-                ),
-            )
+        throw(ArgumentError("Something went wrong :/"))
     end
 end
 

@@ -114,7 +114,7 @@ function build_pruned_kinetic_model(
 
     # build pruned model
     m = COBREXA.fbc_model_constraints(pruned)
-    
+
     # less structure is required than with usual ec models, because the remaining reactiosn 
     m =
         m +

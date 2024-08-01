@@ -28,7 +28,8 @@ include("test/data_static.jl")
 
 import Downloads: download
 
-!isfile("e_coli_core.json") && download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
+!isfile("e_coli_core.json") &&
+    download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
 
 model = load_model("e_coli_core.json")
 
@@ -94,10 +95,8 @@ m = build_pruned_kinetic_model(
 )
 
 m.fluxes.BIOMASS_Ecoli_core_w_GAM.bound = ConstraintTrees.Between(0.5, 1000)
-m.objective = ConstraintTrees.Constraint(
-    sum(c.value * c.value for (_, c) in m.fluxes),
-    nothing,
-)
+m.objective =
+    ConstraintTrees.Constraint(sum(c.value * c.value for (_, c) in m.fluxes), nothing)
 
 ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
     m,
