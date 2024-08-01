@@ -1,6 +1,4 @@
-using COBREXA, AbstractFBCModels
 
-const AC = AbstractFBCModels.CanonicalModel
 
 rs = [
     AC.Reaction(;

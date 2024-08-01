@@ -19,18 +19,17 @@ limitations under the License.
 """
 $(TYPEDEF)
 
-Subtype of [`COBREXA.Isozyme`](@ref) which includes parameters in
-`gene_product_stoichiometry` (optionally), the `kcat_forward`, and the
-`kcat_backward`. If the reaction does not have a turnover number, `nothing` can
-be used. 
+A parameterized isozyme struct which includes parameters in the `kcat_forward`,
+and the `kcat_backward`. If the reaction does not have a turnover
+number,`nothing` can be used. 
 
 # Fields
 $(TYPEDFIELDS)
 """
 @kwdef mutable struct ParameterIsozyme
     gene_product_stoichiometry::Dict{String,Float64}
-    kcat_forward::COBREXA.Maybe{Symbolics.Num} = nothing
-    kcat_reverse::COBREXA.Maybe{Symbolics.Num} = nothing
+    kcat_forward::Maybe{Symbolics.Num} = nothing
+    kcat_reverse::Maybe{Symbolics.Num} = nothing
 end
 
 export ParameterIsozyme

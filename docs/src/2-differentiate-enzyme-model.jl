@@ -118,8 +118,8 @@ sort(abs.(collect(values(ec_solution.gene_product_amounts))))
 
 ## 
 sens = differentiate(
-    m,
-    m.objective.value,
+    pkm,
+    pkm.objective.value,
     x_vals,
     eq_dual_vals,
     ineq_dual_vals,

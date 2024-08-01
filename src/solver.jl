@@ -109,7 +109,7 @@ function optimized_constraints_with_parameters(
     modifications = [],
     objective::ConstraintTrees.Value,
     optimizer,
-    sense = COBREXA.Maximal,
+    sense = Maximal,
 )
     om = optimization_model_with_parameters(m, parameters; objective, optimizer, sense)
     for m in modifications
@@ -117,7 +117,7 @@ function optimized_constraints_with_parameters(
     end
     JuMP.optimize!(om)
 
-    COBREXA.is_solved(om) ?
+    is_solved(om) ?
     (
         ConstraintTrees.substitute_values(
             Symbolics.substitute(m, parameters),

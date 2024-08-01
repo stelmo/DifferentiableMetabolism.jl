@@ -20,12 +20,19 @@ module DifferentiableMetabolism
 using DocStringExtensions
 
 import AbstractFBCModels
+import AbstractFBCModels: reaction_stoichiometry, reactions, metabolites, genes
+const AC = AbstractFBCModels.CanonicalModel
+
 import COBREXA:
     flux_balance_constraints,
     sign_split_variables,
     enzyme_variables,
     sign_split_constraints,
-    enzyme_constraints
+    enzyme_constraints,
+    is_solved,
+    Maximal,
+    Maybe,
+    Isozyme
 import JuMP
 import ConstraintTrees
 import Symbolics

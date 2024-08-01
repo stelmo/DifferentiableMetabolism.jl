@@ -34,14 +34,14 @@ function prune_model(model, ec_solution, flux_zero_tol, gene_zero_tol)
         [string(k) for (k, v) in ec_solution.gene_product_amounts if abs(v) > gene_zero_tol]
     mids = Set(
         mid for rid in rids for
-        mid in keys(AbstractFBCModels.reaction_stoichiometry(model, rid))
+        mid in keys(reaction_stoichiometry(model, rid))
     )
 
-    d_rids = setdiff(AbstractFBCModels.reactions(model), rids)
-    d_mids = setdiff(AbstractFBCModels.metabolites(model), mids)
-    d_gids = setdiff(AbstractFBCModels.genes(model), gids)
+    d_rids = setdiff(reactions(model), rids)
+    d_mids = setdiff(metabolites(model), mids)
+    d_gids = setdiff(genes(model), gids)
 
-    pruned = convert(AbstractFBCModels.CanonicalModel.Model, model)
+    pruned = convert(AC.Model, model)
 
     for rid in d_rids
         delete!(pruned.reactions, rid)

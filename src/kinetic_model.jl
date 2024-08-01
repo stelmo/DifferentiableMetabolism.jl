@@ -1,7 +1,7 @@
 function build_kinetic_model(
     model::AbstractFBCModels.AbstractFBCModel;
     reaction_isozymes::Union{
-        Dict{String,Dict{String,COBREXA.Isozyme}},
+        Dict{String,Dict{String,Isozyme}},
         Dict{String,Dict{String,ParameterIsozyme}},
     },
     gene_product_molar_masses::Dict{String,Float64},
