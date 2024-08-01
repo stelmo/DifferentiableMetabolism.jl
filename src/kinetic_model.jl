@@ -46,7 +46,7 @@ function build_kinetic_model(
         Vector{Tuple{String,Vector{String},Symbolics.Num}},
     },
 )
-    constraints = COBREXA.fbc_model_constraints(model)
+    constraints = COBREXA.flux_balance_constraints(model)
 
     # might be nice to omit some conditionally (e.g. slash the direction if one
     # kcat is nothing)
@@ -84,7 +84,7 @@ function build_kinetic_model(
             constraints.fluxes_forward,
             (rid, isozyme) -> COBREXA.maybemap(
                 x -> x.kcat_forward,
-                COBREXA.maybeget(reaction_isozymes, string(rid), string(isozyme)),
+                maybeget(reaction_isozymes, string(rid), string(isozyme)),
             ),
         ) *
         :isozyme_flux_reverse_balance^COBREXA.isozyme_flux_constraints(
@@ -92,15 +92,14 @@ function build_kinetic_model(
             constraints.fluxes_reverse,
             (rid, isozyme) -> COBREXA.maybemap(
                 x -> x.kcat_reverse,
-                COBREXA.maybeget(reaction_isozymes, string(rid), string(isozyme)),
+                maybeget(reaction_isozymes, string(rid), string(isozyme)),
             ),
         ) *
-        :gene_product_isozyme_balance^COBREXA.gene_product_isozyme_constraints(
-            constraints.gene_product_amounts,
+        :gene_product_isozyme_balance^COBREXA.isozyme_gene_product_amount_constraints(
             (constraints.isozyme_forward_amounts, constraints.isozyme_reverse_amounts),
             (rid, isozyme) -> COBREXA.maybemap(
                 x -> [(Symbol(k), v) for (k, v) in x.gene_product_stoichiometry],
-                COBREXA.maybeget(reaction_isozymes, string(rid), string(isozyme)),
+                maybeget(reaction_isozymes, string(rid), string(isozyme)),
             ),
         ) *
         :gene_product_capacity^(

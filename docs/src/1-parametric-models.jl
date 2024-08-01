@@ -37,11 +37,8 @@ model
 m = COBREXA.flux_balance_constraints(model)
 
 # Solve normally
-base_model = COBREXA.optimized_values(
-    m;
-    optimizer = Tulip.Optimizer,
-    objective = m.objective.value,
-)
+base_model =
+    COBREXA.optimized_values(m; optimizer = Tulip.Optimizer, objective = m.objective.value)
 base_model.fluxes
 
 @test isapprox(base_model.objective, 1.0; atol = TEST_TOLERANCE)
@@ -74,30 +71,30 @@ parameter_substitutions = Dict(
     p[3] => 4.0,
 )
 
-m_noparams = optimized_constraints_with_parameters(
+m_noparams, _, _, _ = optimized_constraints_with_parameters(
     m,
     parameter_substitutions;
     objective = m.objective.value,
     optimizer = Tulip.Optimizer,
 )
-first(m_noparams).fluxes
+m_noparams.fluxes
 
-@test isapprox(first(m_noparams).objective, 3.8; atol = TEST_TOLERANCE)
+@test isapprox(m_noparams.objective, 3.8; atol = TEST_TOLERANCE)
 
 # ## Change the parameters and re-solve
 
 # substitute params into model
 parameter_substitutions[m3bound] = 0.0
 
-m_noparams = optimized_constraints_with_parameters(
+m_noparams, _, _, _ = optimized_constraints_with_parameters(
     m,
     parameter_substitutions;
     objective = m.objective.value,
     optimizer = Tulip.Optimizer,
 )
-first(m_noparams).fluxes
+m_noparams.fluxes
 
-@test isapprox(first(m_noparams).objective, 4.0; atol = TEST_TOLERANCE)
+@test isapprox(m_noparams.objective, 4.0; atol = TEST_TOLERANCE)
 
 # ## Quadratic parameters also work
 
@@ -114,13 +111,13 @@ m *= :objective_bound^ConstraintTrees.Constraint(value = m.fluxes.r6.value, boun
 
 parameter_substitutions = merge(parameter_substitutions, Dict(zip(q, fill(1.0, 6))))
 
-m_noparams = optimized_constraints_with_parameters(
+m_noparams, _, _, _ = optimized_constraints_with_parameters(
     m,
     parameter_substitutions;
     objective = m.objective.value,
     optimizer = Clarabel.Optimizer,
     sense = Minimal,
 )
-first(m_noparams).fluxes
+m_noparams.fluxes
 
-@test isapprox(first(m_noparams).objective, 11.0; atol = TEST_TOLERANCE)
+@test isapprox(m_noparams.objective, 11.0; atol = TEST_TOLERANCE)

@@ -27,8 +27,8 @@ be used.
 # Fields
 $(TYPEDFIELDS)
 """
-@kwdef mutable struct ParameterIsozyme{T}
-    gene_product_stoichiometry::Dict{String,T}
+@kwdef mutable struct ParameterIsozyme
+    gene_product_stoichiometry::Dict{String,Float64}
     kcat_forward::COBREXA.Maybe{Symbolics.Num} = nothing
     kcat_reverse::COBREXA.Maybe{Symbolics.Num} = nothing
 end

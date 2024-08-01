@@ -46,18 +46,18 @@ rs = [
 ]
 
 ms = [
-    AC.Metabolite(;name = "m1")
-    AC.Metabolite(;name = "m2")
-    AC.Metabolite(;name = "m3")
-    AC.Metabolite(;name = "m4")
+    AC.Metabolite(; name = "m1")
+    AC.Metabolite(; name = "m2")
+    AC.Metabolite(; name = "m3")
+    AC.Metabolite(; name = "m4")
 ]
 
 gs = [
-    AC.Gene(;name="g1")
-    AC.Gene(;name="g2")
-    AC.Gene(;name="g3")
-    AC.Gene(;name="g4")
-    AC.Gene(;name="g5")
+    AC.Gene(; name = "g1")
+    AC.Gene(; name = "g2")
+    AC.Gene(; name = "g3")
+    AC.Gene(; name = "g4")
+    AC.Gene(; name = "g5")
 ]
 
 model = AC.Model(
