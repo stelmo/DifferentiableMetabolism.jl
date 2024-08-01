@@ -47,7 +47,7 @@ include("symbolics.jl")
 include("get_constraints.jl")
 include("solver.jl")
 include("differentiate.jl")
-include("kinetic_model2.jl")
-include("pruned_kinetic_model.jl")
+include("kinetic_model.jl")
+include("prune.jl")
 
 end

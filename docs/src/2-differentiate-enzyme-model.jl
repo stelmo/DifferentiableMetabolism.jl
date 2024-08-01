@@ -88,24 +88,22 @@ sens = differentiate(
 
 
 sort(abs.(collect(values(ec_solution.fluxes)))) # lots of zeros
+
 sort(abs.(collect(values(ec_solution.gene_product_amounts))))
 
-flux_zero_tol = 1e-8
-gene_zero_tol = 1e-8
+flux_zero_tol = 1e-6
+gene_zero_tol = 1e-6
 
-m = build_pruned_kinetic_model(
-    model,
-    ec_solution,
-    reaction_isozymes,
-    gene_product_molar_masses,
-    capacitylimitation,
-    flux_zero_tol,
-    gene_zero_tol,
+pkm = build_kinetic_model(
+    prune_model(model, ec_solution, flux_zero_tol, gene_zero_tol);
+    reaction_isozymes = prune_reaction_isozymes(reaction_isozymes, ec_solution, flux_zero_tol, gene_zero_tol),
+    gene_product_molar_masses = prune_gene_product_molar_masses(gene_product_molar_masses, ec_solution, flux_zero_tol, gene_zero_tol),
+    capacity = capacitylimitation,
 )
 
 
 ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
-    m,
+    pkm,
     parameter_values;
     objective = m.objective.value,
     optimizer = Tulip.Optimizer,
