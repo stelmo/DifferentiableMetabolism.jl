@@ -32,12 +32,17 @@ import COBREXA:
     is_solved,
     Maximal,
     Maybe,
-    Isozyme
+    Isozyme,
+    equal_value_constraint,
+    positive_bound_contribution
+
 import JuMP
 import ConstraintTrees
+
 import Symbolics
 import LinearAlgebra: :(\), rank, qr
 import SparseArrays: sparse, sparsevec, findnz, dropzeros, dropzeros!
+using RowEchelon
 
 # Define new parameter-based types
 include("parameter_bound.jl")

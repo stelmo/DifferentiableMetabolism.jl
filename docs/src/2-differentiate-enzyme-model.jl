@@ -21,7 +21,7 @@ using ConstraintTrees
 using COBREXA
 using Tulip
 using JSONFBCModels
-
+using Gurobi
 import Downloads: download
 
 !isfile("e_coli_core.json") &&
@@ -56,7 +56,6 @@ gene_product_molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_ma
 Symbolics.@variables capacitylimitation
 parameter_values[capacitylimitation] = 50.0 # mg enzyme/gDW
 
-
 m = build_kinetic_model(
     model;
     reaction_isozymes,
@@ -64,57 +63,60 @@ m = build_kinetic_model(
     capacity = capacitylimitation,
 )
 
-ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
+ec_solution, _, _, _ = optimized_constraints_with_parameters(
     m,
     parameter_values;
     objective = m.objective.value,
-    optimizer = Tulip.Optimizer,
-    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    optimizer = Gurobi.Optimizer,
+    # modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
 
 ec_solution
 
 @test isapprox(ec_solution.objective, 0.7069933828497013; atol = TEST_TOLERANCE)
 
-sens = differentiate(
-    m,
-    m.objective.value,
-    x_vals,
-    eq_dual_vals,
-    ineq_dual_vals,
-    parameter_values,
-    [capacitylimitation; kcats],
-) # fails, need to prune
-
-
 sort(abs.(collect(values(ec_solution.fluxes)))) # lots of zeros
 
 sort(abs.(collect(values(ec_solution.gene_product_amounts))))
 
-flux_zero_tol = 1e-6
-gene_zero_tol = 1e-6
+flux_zero_tol = 1e-8
+gene_zero_tol = 1e-8
 
 pkm = build_kinetic_model(
     prune_model(model, ec_solution, flux_zero_tol, gene_zero_tol);
-    reaction_isozymes = prune_reaction_isozymes(reaction_isozymes, ec_solution, flux_zero_tol, gene_zero_tol),
-    gene_product_molar_masses = prune_gene_product_molar_masses(gene_product_molar_masses, ec_solution, flux_zero_tol, gene_zero_tol),
+    reaction_isozymes = prune_reaction_isozymes(
+        reaction_isozymes,
+        ec_solution,
+        flux_zero_tol,
+        gene_zero_tol,
+    ),
+    gene_product_molar_masses = prune_gene_product_molar_masses(
+        gene_product_molar_masses,
+        ec_solution,
+        flux_zero_tol,
+        gene_zero_tol,
+    ),
     capacity = capacitylimitation,
 )
 
-
-ec_solution, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
+ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
     pkm,
     parameter_values;
-    objective = m.objective.value,
-    optimizer = Tulip.Optimizer,
-    modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    objective = pkm.objective.value,
+    optimizer = Gurobi.Optimizer,
+    # modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
 
-ec_solution
+ec_solution2
+
+@test isapprox(ec_solution2.objective, 0.7069933828497013; atol = TEST_TOLERANCE)
+
+
+sort(abs.(x_vals))
 
 # no zeros
-sort(abs.(collect(values(ec_solution.fluxes))))
-sort(abs.(collect(values(ec_solution.gene_product_amounts))))
+sort(abs.(collect(values(ec_solution2.fluxes))))
+sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
 
 ## 
 sens = differentiate(

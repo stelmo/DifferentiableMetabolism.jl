@@ -7,10 +7,6 @@ function build_kinetic_model(
     gene_product_molar_masses::Dict{String,Float64},
     capacity::Union{Vector{Tuple{String,Vector{String},Real}},Real},
 )
-    # prepare some accessor functions for the later stuff
-    # TODO: might be nicer to somehow parametrize the fwd/rev directions out.
-    # Also there is a lot of conversion between symbols and strings, might be
-    # nicer to have that sorted out in some better way.
     function isozyme_forward_ids(rid)
         haskey(reaction_isozymes, String(rid)) || return nothing
         return [
@@ -37,10 +33,35 @@ function build_kinetic_model(
     # allocate all variables and build the system
     constraints = flux_balance_constraints(model)
 
-    constraints += sign_split_variables(
-        constraints.fluxes,
-        positive = :fluxes_forward,
-        negative = :fluxes_reverse,
+    reqf = [
+        (k, positive_bound_contribution(v.bound)) for
+        (k, v) in constraints.fluxes if v.bound.upper > 0
+    ]
+    required_forward =
+        ConstraintTrees.variables(; keys = first.(reqf), bounds = last.(reqf))
+
+    reqr = [
+        (k, positive_bound_contribution(-v.bound)) for
+        (k, v) in constraints.fluxes if v.bound.lower < 0
+    ]
+    required_reverse =
+        ConstraintTrees.variables(; keys = first.(reqr), bounds = last.(reqr))
+
+    constraints += :fluxes_forward^required_forward
+
+    constraints += :fluxes_reverse^required_reverse
+
+    dir_constraints = ConstraintTrees.ConstraintTree(
+        k => equal_value_constraint(
+            ConstraintTrees.value(
+                get(constraints.fluxes_reverse, k, ConstraintTrees.LinearValue(0)),
+            ) + ConstraintTrees.value(
+                get(constraints.fluxes, k, ConstraintTrees.LinearValue(0)),
+            ),
+            ConstraintTrees.value(
+                get(constraints.fluxes_forward, k, ConstraintTrees.LinearValue(0)),
+            ),
+        ) for (k, v) in constraints.fluxes
     )
 
     constraints += enzyme_variables(;
@@ -51,11 +72,7 @@ function build_kinetic_model(
     )
 
     return constraints *
-           :directional_flux_balance^sign_split_constraints(;
-               positive = constraints.fluxes_forward,
-               negative = constraints.fluxes_reverse,
-               signed = constraints.fluxes,
-           ) *
+           :directional_flux_balance^dir_constraints *
            enzyme_constraints(;
                fluxes_forward = constraints.fluxes_forward,
                fluxes_reverse = constraints.fluxes_reverse,

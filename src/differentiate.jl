@@ -16,8 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-function remove_linearly_dependent_constraints(eqs, parameter_values, xs)
-
+function findall_indeps_qr(A; rows=true)
     #= 
     Filter out linearly dependent constraints using QR decomposition. Since the
     problem solved, assume there are no contradictory constraints. 
@@ -28,31 +27,29 @@ function remove_linearly_dependent_constraints(eqs, parameter_values, xs)
     ordering by default. The default tolerance of what is a 0 seems okay to rely
     on. Could be a source of bugs though...
     =#
-    Is = Int[]
-    Js = Int[]
-    Vs = Float64[]
-    for (i, eq) in enumerate(eqs)
-        lhs = first(eq)
-        append!(Is, fill(i, length(lhs.idxs)))
-        append!(Js, lhs.idxs)
-        append!(Vs, Symbolics.value.(Symbolics.substitute(lhs.weights, parameter_values)))
-    end
-    mat_sparse_transposed = sparse(Js, Is, Vs) # do transpose here for QR
+    Is, Js, Vs = findnz(A)
 
-    t = qr(mat_sparse_transposed)
+    if rows
+        a = sparse(Js, Is, Vs)    
+    else
+        a = sparse(Is, Js, Vs)    
+    end
+
+    t = qr(a)  # do transpose here for QR
     max_lin_indep_columns = 0
     for i in axes(t.R, 2) # depends on preordered QR!
         Is, _ = findnz(t.R[:, i])
-        if maximum(Is) == i
+        if isempty(Is) || maximum(Is) != i
+            break
+        else
             max_lin_indep_columns = i
         end
     end
-    lin_indep_rows = t.pcol[1:max_lin_indep_columns] # undo permumation
 
-    # final equality constraints
-    [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs[lin_indep_rows]],
-    lin_indep_rows
+    t.pcol[1:max_lin_indep_columns] # undo permumation
 end
+
+export findall_indeps_qr
 
 """
 $(TYPEDSIGNATURES)
@@ -84,14 +81,14 @@ function differentiate(
 
     # equality constraints
     # E * x - b = H = 0
-    H, lin_indep_rows =
-        remove_linearly_dependent_constraints(equality_constraints(m), parameter_values, xs)
+    eqs = equality_constraints(m)
+    H = [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs]
+    # H, lin_indep_rows = remove_linearly_dependent_constraints2(eqs, parameter_values, xs)
 
     # inequality constraints (must be built the same as in solver.jl)
     # M * x - h = G ≤ 0
     ineqs = inequality_constraints(m)
     G = [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in ineqs]
-
 
     # creaty symbolic variables for the duals, but only those that are required
     Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
@@ -143,7 +140,7 @@ function differentiate(
         Dict(
             zip(
                 [xs; eq_duals; ineq_duals],
-                [x_vals; eq_dual_vals[lin_indep_rows]; ineq_dual_vals],
+                [x_vals; eq_dual_vals; ineq_dual_vals],
             ),
         ),
         parameter_values,
@@ -153,31 +150,44 @@ function differentiate(
     Is, Js, Vs = findnz(A)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
     a = sparse(Is, Js, vs, size(A)...)
+    indep_rows = findall_indeps_qr(a; rows=true) # find independent columns
+    # indep_cols = findall_indeps_qr(a[indep_rows, :]; rows=false) # find independent columns
+    # a_indep = a[indep_rows, indep_cols]
+    a_indep = a[indep_rows, :]
 
     Is, Js, Vs = findnz(B)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
     b = Array(sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
-
-    # calculate sensitivities
-    if size(a, 1) >= size(a, 2)
-        #=
-        If a is rectangular (more equations than variables), then this should
-        still work because the equations should not be in conflict (in an ideal
-        world).
-        =#
-        if rank(a; tol = rank_zero_tol) < size(a, 2)
-            throw(
-                ArgumentError(
-                    "The optimal solution is not unique, the derivatives cannot be calculated.",
-                ),
-            )
-        else
-            -a \ b
-        end
-
-    else # something went wrong
-        throw(ArgumentError("Something went wrong :/"))
-    end
+    b_indep = b[indep_rows, :]
+    #=
+    If a is rectangular (more equations than variables), then this should
+    still work because the equations should not be in conflict (in an ideal
+    world).
+    =#
+    # a_indep
+    # rank(a_indep)
+    c = -a_indep \ b_indep # sensitivities, unscaled
+    # get primal variable sensitivities
+    c[1:length(xs), :], variable_order(m)
 end
 
 export differentiate
+
+
+function variable_order(m)
+    c = []
+    ff(p, x::ConstraintTrees.ConstraintTree) = nothing
+    ff(p, x::ConstraintTrees.Constraint) = begin
+        if length(x.value.idxs) == 1 && !isnothing(x.bound) #TODO assumes that all variables are bounded somehow!!
+            push!(c, (first(x.value.idxs), p))
+        end
+    end
+    
+    ConstraintTrees.itraverse(ff, m)
+
+    idxs = first.(c)
+    _idxs = sortperm(idxs)
+    last.(c)[_idxs]
+end
+
+export variable_order
