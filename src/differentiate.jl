@@ -70,7 +70,7 @@ function differentiate(
     ineq_dual_vals::Vector{Float64},
     parameter_values::Dict{Symbolics.Num,Float64},
     parameters::Vector{Symbolics.Num}; # might not diff wrt all params
-    rank_zero_tol = 1e-8,
+    scale = false, # scale sensitivities
 )
     # create symbolic values of the primal and dual variables
     Symbolics.@variables x[1:ConstraintTrees.var_count(m)]
@@ -151,28 +151,38 @@ function differentiate(
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
     a = sparse(Is, Js, vs, size(A)...)
     indep_rows = findall_indeps_qr(a; rows=true) # find independent columns
-    # indep_cols = findall_indeps_qr(a[indep_rows, :]; rows=false) # find independent columns
-    # a_indep = a[indep_rows, indep_cols]
-    a_indep = a[indep_rows, :]
-
-    Is, Js, Vs = findnz(B)
-    vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
-    b = Array(sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
-    b_indep = b[indep_rows, :]
     #=
     If a is rectangular (more equations than variables), then this should
     still work because the equations should not be in conflict (in an ideal
     world).
     =#
-    # a_indep
-    # rank(a_indep)
+    a_indep = a[indep_rows, :]
+
+    # indep_cols = sort(findall_indeps_qr(a[indep_rows, :]; rows=false)) # find independent columns
+    # a_indep = a[indep_rows, indep_cols]
+    
+    Is, Js, Vs = findnz(B)
+    vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
+    b = Array(sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
+    b_indep = b[indep_rows, :]
+
     c = -a_indep \ b_indep # sensitivities, unscaled
-    # get primal variable sensitivities
-    c[1:length(xs), :], variable_order(m)
+    # get primal variable sensitivities only
+    if scale
+        sc = similar(c[1:length(xs), :])
+        for i in axes(sc, 1)
+            for j in axes(sc, 2)
+                sc[i, j] = c[1:length(xs), :][i, j] * (parameter_values[parameters[j]] / x_vals[i])
+            end
+        end
+        
+        sc, variable_order(m)
+    else
+        c[1:length(xs), :], variable_order(m)
+    end
 end
 
 export differentiate
-
 
 function variable_order(m)
     c = []
@@ -190,4 +200,3 @@ function variable_order(m)
     last.(c)[_idxs]
 end
 
-export variable_order

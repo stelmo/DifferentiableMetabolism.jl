@@ -30,6 +30,10 @@ import Downloads: download
 include("./test/data_static.jl")
 
 model = load_model("e_coli_core.json")
+# unconstrain glucose
+rids = [x["id"] for x in model.reactions]
+glc_idx = first(indexin(["EX_glc__D_e"], rids))
+model.reactions[glc_idx]["lower_bound"] = -1000.0
 
 Symbolics.@variables kcats[1:length(ecoli_core_reaction_kcats)]
 rid_kcat = Dict(zip(keys(ecoli_core_reaction_kcats), kcats))
@@ -111,21 +115,24 @@ ec_solution2
 
 @test isapprox(ec_solution2.objective, 0.7069933828497013; atol = TEST_TOLERANCE)
 
-
-sort(abs.(x_vals))
-
-# no zeros
+# no zero fluxes
 sort(abs.(collect(values(ec_solution2.fluxes))))
+
+# no zero genes
 sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
 
 ## 
-sens = differentiate(
+parameters = [capacitylimitation; kcats]
+
+sens, vids = differentiate(
     pkm,
     pkm.objective.value,
     x_vals,
     eq_dual_vals,
     ineq_dual_vals,
     parameter_values,
-    [capacitylimitation; kcats],
+    parameters;
+    scale = true,
 )
 
+[vids sens[:, 1]]
