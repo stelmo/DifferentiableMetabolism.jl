@@ -30,7 +30,8 @@ removed.
 function prune_model(model, ec_solution, flux_zero_tol, gene_zero_tol)
 
     rids = [string(k) for (k, v) in ec_solution.fluxes if abs(v) > flux_zero_tol]
-    gids =  [string(k) for (k, v) in ec_solution.gene_product_amounts if abs(v) > gene_zero_tol]
+    gids =
+        [string(k) for (k, v) in ec_solution.gene_product_amounts if abs(v) > gene_zero_tol]
     mids = Set(mid for rid in rids for mid in keys(reaction_stoichiometry(model, rid)))
 
     d_rids = setdiff(reactions(model), rids)

@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-function findall_indeps_qr(A; rows=true)
+function findall_indeps_qr(A; rows = true)
     #= 
     Filter out linearly dependent constraints using QR decomposition. Since the
     problem solved, assume there are no contradictory constraints. 
@@ -30,9 +30,9 @@ function findall_indeps_qr(A; rows=true)
     Is, Js, Vs = findnz(A)
 
     if rows
-        a = sparse(Js, Is, Vs)    
+        a = sparse(Js, Is, Vs)
     else
-        a = sparse(Is, Js, Vs)    
+        a = sparse(Is, Js, Vs)
     end
 
     t = qr(a)  # do transpose here for QR
@@ -137,12 +137,7 @@ function differentiate(
 
     # symbolic values at the optimal solution incl parameters
     syms_to_vals = merge(
-        Dict(
-            zip(
-                [xs; eq_duals; ineq_duals],
-                [x_vals; eq_dual_vals; ineq_dual_vals],
-            ),
-        ),
+        Dict(zip([xs; eq_duals; ineq_duals], [x_vals; eq_dual_vals; ineq_dual_vals])),
         parameter_values,
     )
 
@@ -150,7 +145,7 @@ function differentiate(
     Is, Js, Vs = findnz(A)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
     a = sparse(Is, Js, vs, size(A)...)
-    indep_rows = findall_indeps_qr(a; rows=true) # find independent columns
+    indep_rows = findall_indeps_qr(a; rows = true) # find independent columns
     #=
     If a is rectangular (more equations than variables), then this should
     still work because the equations should not be in conflict (in an ideal
@@ -160,7 +155,7 @@ function differentiate(
 
     # indep_cols = sort(findall_indeps_qr(a[indep_rows, :]; rows=false)) # find independent columns
     # a_indep = a[indep_rows, indep_cols]
-    
+
     Is, Js, Vs = findnz(B)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
     b = Array(sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
@@ -172,10 +167,11 @@ function differentiate(
         sc = similar(c[1:length(xs), :])
         for i in axes(sc, 1)
             for j in axes(sc, 2)
-                sc[i, j] = c[1:length(xs), :][i, j] * (parameter_values[parameters[j]] / x_vals[i])
+                sc[i, j] =
+                    c[1:length(xs), :][i, j] * (parameter_values[parameters[j]] / x_vals[i])
             end
         end
-        
+
         sc, variable_order(m)
     else
         c[1:length(xs), :], variable_order(m)
@@ -192,7 +188,7 @@ function variable_order(m)
             push!(c, (first(x.value.idxs), p))
         end
     end
-    
+
     ConstraintTrees.itraverse(ff, m)
 
     idxs = first.(c)

@@ -124,6 +124,7 @@ sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
 ## 
 parameters = [capacitylimitation; kcats]
 
+function tp()
 sens, vids = differentiate(
     pkm,
     pkm.objective.value,
@@ -134,5 +135,7 @@ sens, vids = differentiate(
     parameters;
     scale = true,
 )
+end
 
-[vids sens[:, 1]]
+@b tp()
+
