@@ -1,7 +1,7 @@
 name = "DifferentiableMetabolism"
 uuid = "9677e053-0fc1-49e6-98a8-2ad3a1525e54"
 authors = ["St. Elmo Wilken <stelmozors@gmail.com> and contributors"]
-version = "0.3.0"
+version = "0.2.0"
 
 [deps]
 AbstractFBCModels = "5a4f3dfa-1789-40f8-8221-69268c29937c"
@@ -35,3 +35,15 @@ Tulip = "6dd1b50a-3aae-11e9-10b5-ef983d2400fa"
 
 [targets]
 test = ["Test", "COBREXA", "Tulip", "Clarabel", "AbstractFBCModels", "Symbolics", "ConstraintTrees"]
+
+[compat]
+COBREXA = "1,2"
+DocStringExtensions = "0.9"
+ForwardDiff = "0.10"
+RowEchelon = "0.2"
+Symbolics = "5"
+Tulip = "0.9"
+Ipopt = "1"
+JuMP = "1"
+julia = "1"
+
