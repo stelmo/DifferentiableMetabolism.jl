@@ -63,21 +63,34 @@ end
 
 export prune_model
 
-function prune_reaction_isozymes(
-    reaction_isozymes,
-    ec_solution,
-    flux_zero_tol,
-    gene_zero_tol,
-)
-    active_isozymes = Dict(
-        k => iso for
-        c in (ec_solution.isozyme_forward_amounts, ec_solution.isozyme_reverse_amounts)
-        for (k, v) in c for (iso, val) in v if val > gene_zero_tol
-    )
+function prune_reaction_isozymes(reaction_isozymes, ec_solution, gene_zero_tol)
+    active_isozymes = [
+        rid => iso_id for iso_amounts in
+        (ec_solution.isozyme_forward_amounts, ec_solution.isozyme_reverse_amounts) for
+        (rid, iso_vals) in iso_amounts for
+        (iso_id, iso_val) in iso_vals if iso_val > gene_zero_tol
+    ]
+
+    @assert length(x.first for x in active_isozymes) ==
+            length(unique(x.first for x in active_isozymes))
+
+    remove_unused_kcat(isostruct, flux) = begin
+        x = deepcopy(isostruct)
+        if flux < 0
+            x.kcat_forward = nothing
+        else
+            x.kcat_reverse = nothing
+        end
+        x
+    end
 
     Dict(  # pruned_reaction_isozymes
-        k => Dict(kk => vv for (kk, vv) in v if Symbol(kk) == active_isozymes[Symbol(k)])
-        for (k, v) in reaction_isozymes if haskey(active_isozymes, Symbol(k))
+        string(rid) => Dict(
+            string(iso_id) => remove_unused_kcat(
+                reaction_isozymes[string(rid)][string(iso_id)],
+                ec_solution.fluxes[rid],
+            ),
+        ) for (rid, iso_id) in active_isozymes
     )
 end
 
@@ -86,7 +99,6 @@ export prune_reaction_isozymes
 function prune_gene_product_molar_masses(
     gene_product_molar_masses,
     ec_solution,
-    flux_zero_tol,
     gene_zero_tol,
 )
     Dict(
