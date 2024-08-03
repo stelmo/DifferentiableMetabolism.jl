@@ -24,7 +24,7 @@ using Tulip
 using JSONFBCModels
 using CairoMakie
 
-include("./test/simple_model.jl") #hide
+include("../../test/simple_model.jl") #hide
 
 # prune model for brevity
 delete!(model.reactions, "r5")
@@ -147,7 +147,7 @@ for k = 1:150
     estimated_parameters[r4] -= η * dL_dkcats[2]
 end
 
-lines(losses; axis=(xlabel="Iterations",ylabel="L2 loss"))
+lines(losses; axis = (xlabel = "Iterations", ylabel = "L2 loss"))
 
 estimated_parameters
 

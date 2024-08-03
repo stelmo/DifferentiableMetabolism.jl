@@ -32,7 +32,7 @@ const TEST_TOLERANCE = 1e-3
         include("../docs/src/2-differentiate-enzyme-model.jl")
     end
 
-    @testset "Differentiating nonlinear models" begin
-        include("../docs/src/3-differentiate-nonlinear-model.jl")
+    @testset "Parameter estimation" begin
+        include("../docs/src/3-parameter-estimation.jl")
     end
 end

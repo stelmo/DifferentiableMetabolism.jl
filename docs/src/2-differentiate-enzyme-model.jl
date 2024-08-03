@@ -27,7 +27,7 @@ using CairoMakie
 !isfile("e_coli_core.json") &&
     download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
 
-include("./test/data_static.jl")
+include("../../test/data_static.jl")
 
 model = load_model("e_coli_core.json")
 # unconstrain glucose
