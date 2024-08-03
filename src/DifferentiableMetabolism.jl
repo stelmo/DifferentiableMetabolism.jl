@@ -1,29 +1,65 @@
+#=
+Copyright (c) 2023, Heinrich-Heine University Duesseldorf
+Copyright (c) 2023, University of Luxembourg
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+=#
+
 module DifferentiableMetabolism
 
-using COBREXA, JuMP
-# using Enzyme: jacobian, Forward, Val, Reverse
-using ForwardDiff
-using Symbolics
-using LinearAlgebra, SparseArrays, RowEchelon
 using DocStringExtensions
 
-include("DifferentiableModel.jl")
-include("Enzyme.jl")
-include("differentiate.jl")
-include("scale.jl")
-include("utils.jl")
-include("update.jl")
-include("differentiable_models/gecko.jl")
-include("differentiable_models/smoment.jl")
-include("analytic_derivatives/analytic_derivatives.jl")
-include("analytic_derivatives/analytic_derivatives_with_scaling.jl")
+import AbstractFBCModels
+import AbstractFBCModels: reaction_stoichiometry, reactions, metabolites, genes
+const AC = AbstractFBCModels.CanonicalModel
 
-# export everything that isn't prefixed with _ (inspired by JuMP.jl, thanks!)
-for sym in names(@__MODULE__, all = true)
-    if sym in [Symbol(@__MODULE__), :eval, :include] || startswith(string(sym), ['_', '#'])
-        continue
-    end
-    @eval export $sym
-end
+import COBREXA:
+    flux_balance_constraints,
+    sign_split_variables,
+    enzyme_variables,
+    sign_split_constraints,
+    enzyme_constraints,
+    is_solved,
+    Maximal,
+    Maybe,
+    Isozyme,
+    equal_value_constraint,
+    positive_bound_contribution
+
+import JuMP
+import ConstraintTrees
+
+import Symbolics
+import LinearAlgebra: :(\), rank, qr
+import SparseArrays: sparse, sparsevec, findnz, dropzeros, dropzeros!
+using RowEchelon
+
+# Define new parameter-based types
+include("parameter_bound.jl")
+include("parameter_isozyme.jl")
+include("parameter_linearvalue.jl")
+include("parameter_quadraticvalue.jl")
+include("parameter_promotion.jl")
+
+# ConstraintTrees and Symbolics
+include("constraint_trees.jl")
+include("symbolics.jl")
+
+# the juice
+include("get_constraints.jl")
+include("solver.jl")
+include("differentiate.jl")
+include("kinetic_model.jl")
+include("prune.jl")
 
 end

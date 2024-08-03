@@ -14,25 +14,22 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Changes from copied code are indicated.
 =#
 
-using DifferentiableMetabolism
-using Test
+"""
+$(TYPEDEF)
 
-const TEST_TOLERANCE = 1e-3
+A parameterized isozyme struct which includes parameters in the `kcat_forward`,
+and the `kcat_backward`. If the reaction does not have a turnover
+number,`nothing` can be used. 
 
-@testset "DifferentiableMetabolism tests" begin
-    @testset "Parametric models" begin
-        include("../docs/src/1-parametric-models.jl")
-    end
-
-    @testset "Differentiating enzyme constrained models" begin
-        include("../docs/src/2-differentiate-enzyme-model.jl")
-    end
-
-    @testset "Differentiating nonlinear models" begin
-        include("../docs/src/3-differentiate-nonlinear-model.jl")
-    end
+# Fields
+$(TYPEDFIELDS)
+"""
+@kwdef mutable struct ParameterIsozyme
+    gene_product_stoichiometry::Dict{String,Float64}
+    kcat_forward::Maybe{Symbolics.Num} = nothing
+    kcat_reverse::Maybe{Symbolics.Num} = nothing
 end
+
+export ParameterIsozyme
