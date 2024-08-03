@@ -36,14 +36,4 @@ Tulip = "6dd1b50a-3aae-11e9-10b5-ef983d2400fa"
 [targets]
 test = ["Test", "COBREXA", "Tulip", "Clarabel", "AbstractFBCModels", "Symbolics", "ConstraintTrees"]
 
-[compat]
-COBREXA = "1,2"
-DocStringExtensions = "0.9"
-ForwardDiff = "0.10"
-RowEchelon = "0.2"
-Symbolics = "5"
-Tulip = "0.9"
-Ipopt = "1"
-JuMP = "1"
-julia = "1"
 
