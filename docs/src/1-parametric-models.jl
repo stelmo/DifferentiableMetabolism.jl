@@ -48,10 +48,11 @@ base_model.fluxes
 # Make bound of r2 and mass balance of m3 parameters
 Symbolics.@variables r2bound m3bound
 
-m.fluxes.r2 = ConstraintTrees.Constraint(m.fluxes.r2.value, ParameterBetween(-r2bound, 0))
+m.fluxes.r2 =
+    ConstraintTrees.Constraint(m.fluxes.r2.value, -2 * ParameterBetween(r2bound, 0))
 
 m.flux_stoichiometry.m3 =
-    ConstraintTrees.Constraint(m.flux_stoichiometry.m3.value, ParameterEqualTo(m3bound))
+    ConstraintTrees.Constraint(m.flux_stoichiometry.m3.value, ParameterEqualTo(m3bound) / 2)
 
 # # add parametric constraints
 Symbolics.@variables p[1:4]
@@ -59,7 +60,7 @@ Symbolics.@variables p[1:4]
 m *=
     :linparam^ConstraintTrees.Constraint(
         value = p[1] * m.fluxes.r1.value + p[2] * m.fluxes.r2.value,
-        bound = ParameterBetween(-p[3], 0),
+        bound = -ParameterBetween(p[3], 0),
     )
 
 # substitute params into model
@@ -79,7 +80,7 @@ m_noparams, _, _, _ = optimized_constraints_with_parameters(
 )
 m_noparams.fluxes
 
-@test isapprox(m_noparams.objective, 3.8; atol = TEST_TOLERANCE)
+@test isapprox(m_noparams.objective, 3.899999999938411; atol = TEST_TOLERANCE) #src
 
 # ## Change the parameters and re-solve
 
@@ -94,7 +95,7 @@ m_noparams, _, _, _ = optimized_constraints_with_parameters(
 )
 m_noparams.fluxes
 
-@test isapprox(m_noparams.objective, 4.0; atol = TEST_TOLERANCE)
+@test isapprox(m_noparams.objective, 4.0; atol = TEST_TOLERANCE) #src
 
 # ## Quadratic parameters also work
 
@@ -120,4 +121,4 @@ m_noparams, _, _, _ = optimized_constraints_with_parameters(
 )
 m_noparams.fluxes
 
-@test isapprox(m_noparams.objective, 11.0; atol = TEST_TOLERANCE)
+@test isapprox(m_noparams.objective, 11.0; atol = TEST_TOLERANCE) #src

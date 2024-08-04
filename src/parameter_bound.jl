@@ -39,8 +39,9 @@ export ParameterBetween
 
 Base.:-(x::ParameterBetween) = -1 * x
 Base.:*(a::ParameterBetween, b::Real) = b * a
+Base.:/(a::ParameterBetween, b::Real) = (1 / b) * a
+Base.:/(a::Real, b::ParameterBetween) = (1 / a) * b
 Base.:*(a::Real, b::ParameterBetween) = ParameterBetween(a * b.lower, a * b.upper)
-Base.:/(a::ParameterBetween, b::Real) = ParameterBetween(a.lower / b, a.upper / b)
 
 """
 $(TYPEDEF)
@@ -63,5 +64,6 @@ export ParameterEqualTo
 
 Base.:-(x::ParameterEqualTo) = -1 * x
 Base.:*(a::ParameterEqualTo, b::Real) = b * a
-Base.:/(a::ParameterEqualTo, b::Real) = ParameterEqualTo(a.equal_to / b)
+Base.:/(a::ParameterEqualTo, b::Real) = (1 / b) * a
+Base.:/(a::Real, b::ParameterEqualTo) = (1 / a) * b
 Base.:*(a::Real, b::ParameterEqualTo) = ParameterEqualTo(a * b.equal_to)

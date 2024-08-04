@@ -1,7 +1,7 @@
 function build_kinetic_model(
     model::AbstractFBCModels.AbstractFBCModel;
     reaction_isozymes::Union{
-        Dict{String,Dict{String,Isozyme}},
+        Dict{String,Dict{String,COBREXA.Isozyme}},
         Dict{String,Dict{String,ParameterIsozyme}},
     },
     gene_product_molar_masses::Dict{String,Float64},
@@ -31,17 +31,17 @@ function build_kinetic_model(
     gene_product_molar_mass(gid) = get(gene_product_molar_masses, String(gid), 0.0)
 
     # allocate all variables and build the system
-    constraints = flux_balance_constraints(model)
+    constraints = COBREXA.flux_balance_constraints(model)
 
     reqf = [
-        (k, positive_bound_contribution(v.bound)) for
+        (k, COBREXA.positive_bound_contribution(v.bound)) for
         (k, v) in constraints.fluxes if v.bound.upper > 0
     ]
     required_forward =
         ConstraintTrees.variables(; keys = first.(reqf), bounds = last.(reqf))
 
     reqr = [
-        (k, positive_bound_contribution(-v.bound)) for
+        (k, COBREXA.positive_bound_contribution(-v.bound)) for
         (k, v) in constraints.fluxes if v.bound.lower < 0
     ]
     required_reverse =
@@ -52,7 +52,7 @@ function build_kinetic_model(
     constraints += :fluxes_reverse^required_reverse
 
     dir_constraints = ConstraintTrees.ConstraintTree(
-        k => equal_value_constraint(
+        k => COBREXA.equal_value_constraint(
             ConstraintTrees.value(
                 get(constraints.fluxes_reverse, k, ConstraintTrees.LinearValue(0)),
             ) + ConstraintTrees.value(
@@ -64,7 +64,7 @@ function build_kinetic_model(
         ) for (k, v) in constraints.fluxes
     )
 
-    constraints += enzyme_variables(;
+    constraints += COBREXA.enzyme_variables(;
         fluxes_forward = constraints.fluxes_forward,
         fluxes_reverse = constraints.fluxes_reverse,
         isozyme_forward_ids,
@@ -73,7 +73,7 @@ function build_kinetic_model(
 
     return constraints *
            :directional_flux_balance^dir_constraints *
-           enzyme_constraints(;
+           COBREXA.enzyme_constraints(;
                fluxes_forward = constraints.fluxes_forward,
                fluxes_reverse = constraints.fluxes_reverse,
                isozyme_forward_amounts = constraints.isozyme_forward_amounts,
@@ -86,14 +86,14 @@ function build_kinetic_model(
                                  [(
                    :total_capacity,
                    gene_ids,
-                   capacity isa Float64 ? C.Between(0, capacity) :
+                   capacity isa Float64 ? ConstraintTrees.Between(0, capacity) :
                    ParameterBetween(0, capacity),
                )] :
                                  [
                    (
                        Symbol(k),
                        Symbol.(gs),
-                       capacity isa Float64 ? C.Between(0, capacity) :
+                       capacity isa Float64 ? ConstraintTrees.Between(0, capacity) :
                        ParameterBetween(0, cap),
                    ) for (k, gs, cap) in capacity
                ],

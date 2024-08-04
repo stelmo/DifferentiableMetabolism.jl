@@ -44,7 +44,7 @@ withenv("COLUMNS" => 150) do
         ),
         sitename = "DifferentiableMetabolism.jl",
         linkcheck = false,
-        pages = ["README" => "indeCOBREXA.md"; example_mds; "Reference" => "reference.md"],
+        pages = ["README" => "index.md"; example_mds; "Reference" => "reference.md"],
     )
 end
 

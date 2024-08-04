@@ -20,29 +20,12 @@ module DifferentiableMetabolism
 using DocStringExtensions
 
 import AbstractFBCModels
-import AbstractFBCModels: reaction_stoichiometry, reactions, metabolites, genes
-const AC = AbstractFBCModels.CanonicalModel
-
-import COBREXA:
-    flux_balance_constraints,
-    sign_split_variables,
-    enzyme_variables,
-    sign_split_constraints,
-    enzyme_constraints,
-    is_solved,
-    Maximal,
-    Maybe,
-    Isozyme,
-    equal_value_constraint,
-    positive_bound_contribution
-
+import COBREXA
 import JuMP
 import ConstraintTrees
-
 import Symbolics
-import LinearAlgebra: :(\), rank, qr
-import SparseArrays: sparse, sparsevec, findnz, dropzeros, dropzeros!
-using RowEchelon
+import LinearAlgebra
+import SparseArrays
 
 # Define new parameter-based types
 include("parameter_bound.jl")

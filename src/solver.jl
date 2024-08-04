@@ -42,8 +42,8 @@ function constraint_matrix_vector(eqs, m, parameters)
         append!(Js, a.idxs)
         append!(Vs, a.weights)
     end
-    sparse(Is, Js, Vs, length(eqs), ConstraintTrees.var_count(m)),
-    sparsevec(Ib, Vb, length(eqs))
+    SparseArrays.sparse(Is, Js, Vs, length(eqs), ConstraintTrees.var_count(m)),
+    SparseArrays.sparsevec(Ib, Vb, length(eqs))
 end
 
 """
@@ -109,7 +109,7 @@ function optimized_constraints_with_parameters(
     modifications = [],
     objective::ConstraintTrees.Value,
     optimizer,
-    sense = Maximal,
+    sense = COBREXA.Maximal,
 )
     om = optimization_model_with_parameters(m, parameters; objective, optimizer, sense)
     for m in modifications
@@ -117,7 +117,7 @@ function optimized_constraints_with_parameters(
     end
     JuMP.optimize!(om)
 
-    is_solved(om) ?
+    COBREXA.is_solved(om) ?
     (
         ConstraintTrees.substitute_values(
             Symbolics.substitute(m, parameters),

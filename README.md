@@ -9,16 +9,16 @@ This package extends [COBREXA.jl](https://github.com/LCSB-BioCore/COBREXA.jl)
 constraint-based metabolic model with respect to parameters. 
 
 Note, only non-degenerate (unique) solutions can be differentiated for the
-derivatives to have a concrete interpretation. For other types of models, you
-need to ensure that your solution is non-degenerate, otherwise you will only
-compute sub-gradients.
+derivatives to have a concrete interpretation. You need to ensure that your
+solution is non-degenerate, otherwise you will only compute sub-gradients.
+Builtin functionality (pruning) can help with this.
 
 To use this package, [download and install Julia](https://julialang.org/downloads/), and add 
 the following packages using the built in package manager:
 ```julia
 ] add COBREXA, DifferentiableMetabolism
 ```
-Note, any optimization solver that is compatible with [JuMP](https://jump.dev/)
+Any optimization solver that is compatible with [JuMP](https://jump.dev/)
 can be used, provided it can solve the optimization problems you are interested
 in (LPs and QPs), and it returns the dual variables through the JuMP interface.
 In the tests we use [Tulip.jl](https://github.com/ds4dm/Tulip.jl) for LPs, and

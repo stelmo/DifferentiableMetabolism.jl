@@ -27,18 +27,18 @@ function findall_indeps_qr(A; rows = true)
     ordering by default. The default tolerance of what is a 0 seems okay to rely
     on. Could be a source of bugs though...
     =#
-    Is, Js, Vs = findnz(A)
+    Is, Js, Vs = SparseArrays.findnz(A)
 
     if rows
-        a = sparse(Js, Is, Vs)
+        a = SparseArrays.sparse(Js, Is, Vs)
     else
-        a = sparse(Is, Js, Vs)
+        a = SparseArrays.sparse(Is, Js, Vs)
     end
 
-    t = qr(a)  # do transpose here for QR
+    t = LinearAlgebra.qr(a)  # do transpose here for QR
     max_lin_indep_columns = 0
     for i in axes(t.R, 2) # depends on preordered QR!
-        Is, _ = findnz(t.R[:, i])
+        Is, _ = SparseArrays.findnz(t.R[:, i])
         if isempty(Is) || maximum(Is) != i
             break
         else
@@ -109,13 +109,13 @@ function differentiate(
     =#
     eq1 = Symbolics.sparsejacobian([f], xs)'
 
-    Is, Js, Vs = findnz(Symbolics.sparsejacobian(H, xs))
+    Is, Js, Vs = SparseArrays.findnz(Symbolics.sparsejacobian(H, xs))
     eq2 = zeros(Symbolics.Num, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq2[i] += v * eq_duals[j]
     end
 
-    Is, Js, Vs = findnz(Symbolics.sparsejacobian(G, xs))
+    Is, Js, Vs = SparseArrays.findnz(Symbolics.sparsejacobian(G, xs))
     eq3 = zeros(Symbolics.Num, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq3[i] += v * ineq_duals[j]
@@ -142,26 +142,29 @@ function differentiate(
     )
 
     # substitute in values
-    Is, Js, Vs = findnz(A)
+    Is, Js, Vs = SparseArrays.findnz(A)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
-    a = sparse(Is, Js, vs, size(A)...)
-    indep_rows = findall_indeps_qr(a; rows = true) # find independent columns
-    #=
-    If a is rectangular (more equations than variables), then this should
-    still work because the equations should not be in conflict (in an ideal
-    world).
-    =#
+    a = SparseArrays.sparse(Is, Js, vs, size(A)...)
+    indep_rows = findall_indeps_qr(a; rows = true) # find independent rows, prevent singularity issues with \
     a_indep = a[indep_rows, :]
 
+    #=
+    If a is rectangular (more equations than variables), then the above should
+    be sufficient, because the equations should not be in conflict (in an ideal
+    world). 
+
+    Unnecessary:
     # indep_cols = sort(findall_indeps_qr(a[indep_rows, :]; rows=false)) # find independent columns
     # a_indep = a[indep_rows, indep_cols]
+    =#
 
-    Is, Js, Vs = findnz(B)
+    Is, Js, Vs = SparseArrays.findnz(B)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
-    b = Array(sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
+    b = Array(SparseArrays.sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
     b_indep = b[indep_rows, :]
 
     c = -a_indep \ b_indep # sensitivities, unscaled
+
     # get primal variable sensitivities only
     if scale
         sc = similar(c[1:length(xs), :])
