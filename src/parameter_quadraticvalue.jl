@@ -53,9 +53,12 @@ ParameterQuadraticValue(x::Real) =
     ParameterQuadraticValue(idxs = [(0, 0)], weights = [Symbolics.Num(x)])
 
 Base.convert(::Type{ParameterQuadraticValue}, x::Real) = ParameterQuadraticValue(x)
-Base.convert(::Type{ParameterQuadraticValue}, x::ParameterLinearValue) = ParameterQuadraticValue(x)
-Base.convert(::Type{ParameterQuadraticValue}, x::ConstraintTrees.LinearValue) = ParameterQuadraticValue(x)
-Base.convert(::Type{ParameterQuadraticValue}, x::ConstraintTrees.QuadraticValue) = ParameterQuadraticValue(x)
+Base.convert(::Type{ParameterQuadraticValue}, x::ParameterLinearValue) =
+    ParameterQuadraticValue(x)
+Base.convert(::Type{ParameterQuadraticValue}, x::ConstraintTrees.LinearValue) =
+    ParameterQuadraticValue(x)
+Base.convert(::Type{ParameterQuadraticValue}, x::ConstraintTrees.QuadraticValue) =
+    ParameterQuadraticValue(x)
 
 Base.zero(::Type{ParameterQuadraticValue}) =
     ParameterQuadraticValue(idxs = [], weights = [])
@@ -63,21 +66,25 @@ Base.zero(::Type{ParameterQuadraticValue}) =
 Base.:+(a::Real, b::ParameterQuadraticValue) = b + a
 Base.:+(a::ParameterQuadraticValue, b::Real) = a + ParameterQuadraticValue(b)
 Base.:+(a::ParameterLinearValue, b::ParameterQuadraticValue) = b + a
-Base.:+(a::ParameterQuadraticValue, b::ParameterLinearValue) = a + ParameterQuadraticValue(b)
+Base.:+(a::ParameterQuadraticValue, b::ParameterLinearValue) =
+    a + ParameterQuadraticValue(b)
 
 Base.:-(a::ParameterQuadraticValue) = -1 * a
 Base.:-(a::Real, b::ParameterQuadraticValue) = -b + a
 Base.:-(a::ParameterQuadraticValue, b::Real) = a - ParameterQuadraticValue(b)
 
 Base.:-(a::ParameterLinearValue, b::ParameterQuadraticValue) = -b + a
-Base.:-(a::ParameterQuadraticValue, b::ParameterLinearValue) = a - ParameterQuadraticValue(b)
+Base.:-(a::ParameterQuadraticValue, b::ParameterLinearValue) =
+    a - ParameterQuadraticValue(b)
 
 Base.:*(a::Real, b::ParameterQuadraticValue) = b * a
-Base.:*(a::ParameterQuadraticValue, b::Real) = ParameterQuadraticValue(idxs = a.idxs, weights = b .* a.weights)
+Base.:*(a::ParameterQuadraticValue, b::Real) =
+    ParameterQuadraticValue(idxs = a.idxs, weights = b .* a.weights)
 
 Base.:-(a::ParameterQuadraticValue, b::ParameterQuadraticValue) = a + (-1 * b)
 
-Base.:/(a::ParameterQuadraticValue, b::Real) = ParameterQuadraticValue(idxs = a.idxs, weights = a.weights ./ b)
+Base.:/(a::ParameterQuadraticValue, b::Real) =
+    ParameterQuadraticValue(idxs = a.idxs, weights = a.weights ./ b)
 
 function Base.:+(a::ParameterQuadraticValue, b::ParameterQuadraticValue)
     # Code mostly copied from ConstraintTrees.jl, but marginally changed some

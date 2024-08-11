@@ -30,7 +30,7 @@ function findall_indeps_qr(A)
     Is, Js, Vs = SparseArrays.findnz(A)
 
     a = SparseArrays.sparse(Js, Is, Vs)
-    
+
 
     t = LinearAlgebra.qr(a)  # do transpose here for QR
     max_lin_indep_columns = 0

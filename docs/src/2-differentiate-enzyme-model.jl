@@ -95,20 +95,20 @@ ec_solution_cobrexa = enzyme_constrained_flux_balance_analysis( #src
     gene_product_molar_masses = ecoli_core_gene_product_masses, #src
     capacity = 50.0, #src
     optimizer = Tulip.Optimizer, #src
-)
+) #src
 
 @test isapprox(ec_solution.objective, ec_solution_cobrexa.objective; atol = TEST_TOLERANCE) #src
 
 # This solution contains many inactive reactions
 sort(abs.(collect(values(ec_solution.fluxes))))
 
-@test any(abs.(collect(values(ec_solution.fluxes))) .≈ 0)
+@test any(abs.(collect(values(ec_solution.fluxes))) .≈ 0) #src
 
 # And also many inactive gene products. 
 
 sort(abs.(collect(values(ec_solution.gene_product_amounts))))
 
-@test any(round.(abs.(collect(values(ec_solution.gene_product_amounts))); digits = 8) .≈ 0)
+@test any(round.(abs.(collect(values(ec_solution.gene_product_amounts))); digits = 8) .≈ 0) #src
 
 # With theory, you can show that this introduces flux variability into the
 # solution, making it non-unique, and consequently non-differentiable. To fix
@@ -154,12 +154,13 @@ sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
 
 @test isapprox(ec_solution2.objective, ec_solution.objective; atol = TEST_TOLERANCE) #src
 
-@test all(
-    abs(ec_solution.fluxes[k] - ec_solution2.fluxes[k]) <= 1e-6 for
-    k in intersect(keys(ec_solution.fluxes), keys(ec_solution2.fluxes))
+@test all( #src
+    abs(ec_solution.fluxes[k] - ec_solution2.fluxes[k]) <= 1e-6 for #src
+    k in intersect(keys(ec_solution.fluxes), keys(ec_solution2.fluxes)) #src
 ) #src
 
-##
+# prune the kcats, leaving only those that are actually used
+
 pruned_kcats = [
     begin
         x = first(values(v))
