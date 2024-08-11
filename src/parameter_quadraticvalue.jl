@@ -36,6 +36,8 @@ Base.@kwdef struct ParameterQuadraticValue <: ConstraintTrees.Value
     weights::Vector{Symbolics.Num}
 end
 
+export ParameterQuadraticValue
+
 ParameterQuadraticValue(idxs::Vector{Tuple{Int,Int}}, weights::Vector{Union{Int,Float64}}) =
     ParameterQuadraticValue(idxs, convert.(Symbolics.Num, weights))
 
@@ -44,50 +46,38 @@ ParameterQuadraticValue(x::ConstraintTrees.QuadraticValue) =
 
 ParameterQuadraticValue(x::ParameterLinearValue) =
     ParameterQuadraticValue(idxs = [(0, idx) for idx in x.idxs], weights = x.weights)
-
+ParameterQuadraticValue(x::ConstraintTrees.LinearValue) =
+    ParameterQuadraticValue(idxs = [(0, idx) for idx in x.idxs], weights = x.weights)
 ParameterQuadraticValue(x::Real) =
     iszero(x) ? ParameterQuadraticValue(idxs = [], weights = []) :
     ParameterQuadraticValue(idxs = [(0, 0)], weights = [Symbolics.Num(x)])
 
 Base.convert(::Type{ParameterQuadraticValue}, x::Real) = ParameterQuadraticValue(x)
-
-Base.convert(::Type{ParameterQuadraticValue}, x::ParameterLinearValue) =
-    ParameterQuadraticValue(x)
+Base.convert(::Type{ParameterQuadraticValue}, x::ParameterLinearValue) = ParameterQuadraticValue(x)
+Base.convert(::Type{ParameterQuadraticValue}, x::ConstraintTrees.LinearValue) = ParameterQuadraticValue(x)
+Base.convert(::Type{ParameterQuadraticValue}, x::ConstraintTrees.QuadraticValue) = ParameterQuadraticValue(x)
 
 Base.zero(::Type{ParameterQuadraticValue}) =
     ParameterQuadraticValue(idxs = [], weights = [])
 
-Base.:+(a::Real, b::ParameterQuadraticValue) = ParameterQuadraticValue(a) + b
-
+Base.:+(a::Real, b::ParameterQuadraticValue) = b + a
 Base.:+(a::ParameterQuadraticValue, b::Real) = a + ParameterQuadraticValue(b)
-
-Base.:+(a::ParameterLinearValue, b::ParameterQuadraticValue) =
-    ParameterQuadraticValue(a) + b
-
-Base.:+(a::ParameterQuadraticValue, b::ParameterLinearValue) =
-    a + ParameterQuadraticValue(b)
+Base.:+(a::ParameterLinearValue, b::ParameterQuadraticValue) = b + a
+Base.:+(a::ParameterQuadraticValue, b::ParameterLinearValue) = a + ParameterQuadraticValue(b)
 
 Base.:-(a::ParameterQuadraticValue) = -1 * a
-
-Base.:-(a::Real, b::ParameterQuadraticValue) = ParameterQuadraticValue(a) - b
-
+Base.:-(a::Real, b::ParameterQuadraticValue) = -b + a
 Base.:-(a::ParameterQuadraticValue, b::Real) = a - ParameterQuadraticValue(b)
 
-Base.:-(a::ParameterLinearValue, b::ParameterQuadraticValue) =
-    ParameterQuadraticValue(a) - b
-
-Base.:-(a::ParameterQuadraticValue, b::ParameterLinearValue) =
-    a - ParameterQuadraticValue(b)
+Base.:-(a::ParameterLinearValue, b::ParameterQuadraticValue) = -b + a
+Base.:-(a::ParameterQuadraticValue, b::ParameterLinearValue) = a - ParameterQuadraticValue(b)
 
 Base.:*(a::Real, b::ParameterQuadraticValue) = b * a
-
-Base.:*(a::ParameterQuadraticValue, b::Real) =
-    ParameterQuadraticValue(idxs = a.idxs, weights = b .* a.weights)
+Base.:*(a::ParameterQuadraticValue, b::Real) = ParameterQuadraticValue(idxs = a.idxs, weights = b .* a.weights)
 
 Base.:-(a::ParameterQuadraticValue, b::ParameterQuadraticValue) = a + (-1 * b)
 
-Base.:/(a::ParameterQuadraticValue, b::Real) =
-    ParameterQuadraticValue(idxs = a.idxs, weights = a.weights ./ b)
+Base.:/(a::ParameterQuadraticValue, b::Real) = ParameterQuadraticValue(idxs = a.idxs, weights = a.weights ./ b)
 
 function Base.:+(a::ParameterQuadraticValue, b::ParameterQuadraticValue)
     # Code mostly copied from ConstraintTrees.jl, but marginally changed some

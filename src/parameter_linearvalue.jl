@@ -52,11 +52,11 @@ Base.convert(::Type{ParameterLinearValue}, x::Real) = ParameterLinearValue(x)
 
 Base.zero(::Type{ParameterLinearValue}) = ParameterLinearValue(idxs = [], weights = [])
 
-Base.:+(a::Real, b::ParameterLinearValue) = ParameterLinearValue(a) + b
+Base.:+(a::Real, b::ParameterLinearValue) = b + a
 
 Base.:+(a::ParameterLinearValue, b::Real) = a + ParameterLinearValue(b)
 
-Base.:-(a::Real, b::ParameterLinearValue) = ParameterLinearValue(a) - b
+Base.:-(a::Real, b::ParameterLinearValue) = -b + a
 
 Base.:-(a::ParameterLinearValue, b::Real) = a - ParameterLinearValue(b)
 
@@ -68,7 +68,7 @@ Base.:*(a::Real, b::ParameterLinearValue) = b * a
 
 Base.:*(a::ParameterLinearValue, b::Real) = ParameterLinearValue(a.idxs, b .* a.weights)
 
-Base.:/(a::ParameterLinearValue, b::Real) = ParameterLinearValue(a.idxs, a.weights ./ b)
+Base.:/(a::ParameterLinearValue, b::Real) = (1 / b) * a
 
 # add two ParameterLinearValues
 function Base.:+(a::ParameterLinearValue, b::ParameterLinearValue)
