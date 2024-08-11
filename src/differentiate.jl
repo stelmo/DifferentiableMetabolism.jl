@@ -16,7 +16,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-function findall_indeps_qr(A; rows = true)
+function findall_indeps_qr(A)
     #= 
     Filter out linearly dependent constraints using QR decomposition. Since the
     problem solved, assume there are no contradictory constraints. 
@@ -29,11 +29,8 @@ function findall_indeps_qr(A; rows = true)
     =#
     Is, Js, Vs = SparseArrays.findnz(A)
 
-    if rows
-        a = SparseArrays.sparse(Js, Is, Vs)
-    else
-        a = SparseArrays.sparse(Is, Js, Vs)
-    end
+    a = SparseArrays.sparse(Js, Is, Vs)
+    
 
     t = LinearAlgebra.qr(a)  # do transpose here for QR
     max_lin_indep_columns = 0
@@ -48,8 +45,6 @@ function findall_indeps_qr(A; rows = true)
 
     t.pcol[1:max_lin_indep_columns] # undo permumation
 end
-
-export findall_indeps_qr
 
 """
 $(TYPEDSIGNATURES)
@@ -145,17 +140,13 @@ function differentiate(
     Is, Js, Vs = SparseArrays.findnz(A)
     vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
     a = SparseArrays.sparse(Is, Js, vs, size(A)...)
-    indep_rows = findall_indeps_qr(a; rows = true) # find independent rows, prevent singularity issues with \
+    indep_rows = findall_indeps_qr(a) # find independent rows, prevent singularity issues with \
     a_indep = a[indep_rows, :]
 
     #=
     If a is rectangular (more equations than variables), then the above should
     be sufficient, because the equations should not be in conflict (in an ideal
     world). 
-
-    Unnecessary:
-    # indep_cols = sort(findall_indeps_qr(a[indep_rows, :]; rows=false)) # find independent columns
-    # a_indep = a[indep_rows, indep_cols]
     =#
 
     Is, Js, Vs = SparseArrays.findnz(B)
