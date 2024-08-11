@@ -201,6 +201,13 @@ pqv19 = pqv18 + pqv1
 @test all(pqv19.idxs .== [(1, 1), (2, 2)]) && all(pqv19.weights .== [Num(2), Num(3)]) #src
 pqv20 = pqv1 + pqv18
 @test all(pqv20.idxs .== [(1, 1), (2, 2)]) && all(pqv19.weights .== [Num(2), Num(3)]) #src
+pqv21 = ParameterQuadraticValue([(1,1), (2,2)], [1, 2.0])
+@test all(pqv21.idxs .== [(1, 1), (2,2),]) && all(pqv21.weights .== [Num(1), Num(2)]) #src
+pqv22 = convert(ParameterQuadraticValue, ConstraintTrees.LinearValue([1],[1]))
+@test all(pqv22.idxs .== [(0, 1),]) && all(pqv22.weights .== [Num(1),]) #src
+pqv23 = convert(ParameterQuadraticValue, ConstraintTrees.QuadraticValue([(1, 1), (2,2),], [1,2]))
+@test all(pqv23.idxs .== [(1, 1), (2,2),]) && all(pqv23.weights .== [Num(1), Num(2)]) #src
+
 
 pr1 = Num(1) + ConstraintTrees.LinearValue([1,2], [1,2]) #src
 @test all(pr1.idxs .== [0,1,2]) && all(pr1.weights .== [Num(1), Num(1), Num(2)]) #src
