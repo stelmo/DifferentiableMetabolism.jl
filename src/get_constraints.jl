@@ -36,8 +36,6 @@ function equality_constraints(m::ConstraintTrees.ConstraintTree)
     sink
 end
 
-export equality_constraints
-
 function get_equality_constraints(m::ConstraintTrees.ConstraintTree, sink)
     get_equality_constraints.(values(m), Ref(sink))
 end
@@ -74,8 +72,6 @@ function inequality_constraints(m::ConstraintTrees.ConstraintTree)
         ]
     ]
 end
-
-export inequality_constraints
 
 function get_inequality_constraints(m::ConstraintTrees.ConstraintTree, sink)
     get_inequality_constraints.(values(m), Ref(sink))

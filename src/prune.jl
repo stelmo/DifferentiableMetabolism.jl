@@ -14,8 +14,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Changes from copied code are indicated.
 =#
 
 """
@@ -66,6 +64,11 @@ end
 
 export prune_model
 
+"""
+$(TYPEDSIGNATURES)
+
+TODO
+"""
 function prune_reaction_isozymes(reaction_isozymes, ec_solution, gene_zero_tol)
     active_isozymes = [
         rid => iso_id for iso_amounts in
@@ -99,6 +102,11 @@ end
 
 export prune_reaction_isozymes
 
+"""
+$(TYPEDSIGNATURES)
+
+TODO
+"""
 function prune_gene_product_molar_masses(
     gene_product_molar_masses,
     ec_solution,

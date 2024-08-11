@@ -1,3 +1,9 @@
+"""
+$(TYPEDSIGNATURES)
+
+Essentially an enzyme constrained metabolic model, but the kcat can be a
+arbitrary symbolic function.
+"""
 function build_kinetic_model(
     model::AbstractFBCModels.AbstractFBCModel;
     reaction_isozymes::Union{
