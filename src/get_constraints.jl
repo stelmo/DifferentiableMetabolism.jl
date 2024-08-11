@@ -16,6 +16,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
+"""
+$(TYPEDSIGNATURES)
+
+TODO
+"""
 constrained(x) = begin
     y = Symbolics.value(x)
     y isa Float64 && isinf(y) && return false
@@ -36,10 +41,20 @@ function equality_constraints(m::ConstraintTrees.ConstraintTree)
     sink
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+TODO
+"""
 function get_equality_constraints(m::ConstraintTrees.ConstraintTree, sink)
     get_equality_constraints.(values(m), Ref(sink))
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+TODO
+"""
 function get_equality_constraints(c::ConstraintTrees.Constraint, sink)
     if c.bound isa ConstraintTrees.EqualTo || c.bound isa ParameterEqualTo
         push!(sink, (ConstraintTrees.value(c), Symbolics.Num(c.bound.equal_to)))
@@ -73,10 +88,20 @@ function inequality_constraints(m::ConstraintTrees.ConstraintTree)
     ]
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+TODO
+"""
 function get_inequality_constraints(m::ConstraintTrees.ConstraintTree, sink)
     get_inequality_constraints.(values(m), Ref(sink))
 end
 
+"""
+$(TYPEDSIGNATURES)
+
+TODO
+"""
 function get_inequality_constraints(c::ConstraintTrees.Constraint, sink)
     if c.bound isa ConstraintTrees.Between || c.bound isa ParameterBetween
         push!(

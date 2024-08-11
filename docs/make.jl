@@ -18,7 +18,7 @@ limitations under the License.
 Changes from copied code are indicated.
 =#
 
-using Documenter, Literate, DifferentiableMetabolism
+using Documenter, Literate, DifferentiableMetabolism, ConstraintTrees, Symbolics, COBREXA
 
 examples =
     sort(filter(x -> endswith(x, ".jl"), readdir(joinpath(@__DIR__, "src"), join = true)))
