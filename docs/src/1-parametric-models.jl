@@ -164,6 +164,7 @@ plv14 = plv8 - plv9 #src
 plv15 = 1.0 + ParameterLinearValue(0) #src
 @test all(plv15.idxs .== [0]) && all(plv15.weights .== [Num(1)]) #src
 
+pqv1 = ParameterQuadraticValue([(1,1)], [1]) #src
 pqv2 = ParameterQuadraticValue(ConstraintTrees.QuadraticValue([(1,1)], [1])) #src
 @test all(pqv2.idxs[1] .== (1,1)) && all(pqv2.weights .== Num(1)) #src
 pqv3 = ParameterQuadraticValue(0) #src
@@ -203,13 +204,13 @@ pqv20 = pqv1 + pqv18 #src
 @test all(pqv20.idxs .== [(1, 1), (2, 2)]) && all(pqv19.weights .== [Num(2), Num(3)]) #src
 pqv21 = ParameterQuadraticValue([(1,1), (2,2)], [1, 2]) #src
 @test all(pqv21.idxs .== [(1, 1), (2,2),]) && all(pqv21.weights .== [Num(1), Num(2)]) #src
-pqv22 = convert(ParameterQuadraticValue, ConstraintTrees.LinearValue([1],[1]))
+pqv22 = convert(ParameterQuadraticValue, ConstraintTrees.LinearValue([1],[1])) #src
 @test all(pqv22.idxs .== [(0, 1),]) && all(pqv22.weights .== [Num(1),]) #src
 pqv23 = convert(ParameterQuadraticValue, ConstraintTrees.QuadraticValue([(1, 1), (2,2),], [1,2])) #src
 @test all(pqv23.idxs .== [(1, 1), (2,2),]) && all(pqv23.weights .== [Num(1), Num(2)]) #src
 pqv24 = Num(5) - ConstraintTrees.QuadraticValue([(1,1)], [1,]) #src
 @test all(pqv24.idxs .== [(0, 0), (1,1),]) && all(pqv24.weights .== [Num(5), Num(-1)]) #src
-pqv25 = pqv18 - 5.0
+pqv25 = pqv18 - 5.0 #src
 @test all(pqv25.idxs .== [(0, 0), (1,1), (2,2)]) && all(pqv25.weights .== [Num(-5), Num(1), Num(3)]) #src
 
 pr1 = Num(1) + ConstraintTrees.LinearValue([1,2], [1,2]) #src
@@ -247,4 +248,4 @@ pr14 = ParameterLinearValue([1,2], [2,3]) * ConstraintTrees.LinearValue([1,2], [
 pr15 = ConstraintTrees.LinearValue([1,2], [1,2]) - ParameterQuadraticValue([(1, 1)], [2,]) #src
 @test all(pr15.idxs .== [(0,1),(1, 1), (0, 2)]) && all(pr15.weights .== [Num(1), Num(-2),Num(2)]) #src
 
-@test ConstraintTrees.substitute(ParameterQuadraticValue([(0,0), (1,1),], [1,2]), [Num(1),Num(2)]) == 3
+@test ConstraintTrees.substitute(ParameterQuadraticValue([(0,0), (1,1),], [1,2]), [Num(1),Num(2)]) == 3 #src
