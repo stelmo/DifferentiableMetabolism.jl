@@ -246,3 +246,5 @@ pr14 = ParameterLinearValue([1,2], [2,3]) * ConstraintTrees.LinearValue([1,2], [
 @test all(pr14.idxs .== [(1, 1), (1,2),(2, 2)]) && all(pr14.weights .== [Num(2), Num(7),Num(6)]) #src
 pr15 = ConstraintTrees.LinearValue([1,2], [1,2]) - ParameterQuadraticValue([(1, 1)], [2,]) #src
 @test all(pr15.idxs .== [(0,1),(1, 1), (0, 2)]) && all(pr15.weights .== [Num(1), Num(-2),Num(2)]) #src
+
+@test ConstraintTrees.substitute(ParameterQuadraticValue([(0,0), (1,1),], [1,2]), [Num(1),Num(2)]) == 3

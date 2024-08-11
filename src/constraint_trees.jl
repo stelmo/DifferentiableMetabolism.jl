@@ -20,17 +20,6 @@ limitations under the License.
 Extend various functions in ConstraintTrees to work with their Parameter based equivalents.
 =#
 
-ConstraintTrees.incr_var_idxs(x::ParameterLinearValue, incr::Int) = ParameterLinearValue(
-    idxs = ConstraintTrees.incr_var_idx.(x.idxs, incr),
-    weights = x.weights,
-)
-
-ConstraintTrees.incr_var_idxs(x::ParameterQuadraticValue, incr::Int) =
-    ParameterQuadraticValue(
-        idxs = broadcast(ii -> ConstraintTrees.incr_var_idx.(ii, incr), x.idxs),
-        weights = x.weights,
-    )
-
 ConstraintTrees.var_count(x::ParameterLinearValue) = isempty(x.idxs) ? 0 : last(x.idxs)
 
 ConstraintTrees.var_count(x::ParameterQuadraticValue) =
