@@ -41,7 +41,7 @@ base_model =
     COBREXA.optimized_values(m; optimizer = Tulip.Optimizer, objective = m.objective.value)
 base_model.fluxes
 
-@test isapprox(base_model.objective, 1.0; atol = TEST_TOLERANCE)
+@test isapprox(base_model.objective, 1.0; atol = TEST_TOLERANCE) #src
 
 # ## Add parameters to the model
 
@@ -206,6 +206,8 @@ pr1 = Num(1) + ConstraintTrees.LinearValue([1,2], [1,2]) #src
 @test all(pr1.idxs .== [0,1,2]) && all(pr1.weights .== [Num(1), Num(1), Num(2)]) #src
 pr2 = ConstraintTrees.LinearValue([1,2], [1,2]) - Num(3) #src
 @test all(pr2.idxs .== [0,1,2]) && all(pr2.weights .== [Num(-3), Num(1), Num(2)]) #src
+pr2b = Num(3) - ConstraintTrees.LinearValue([1,2], [1,2]) #src
+@test all(pr2b.idxs .== [0,1,2]) && all(pr2b.weights .== [Num(3), Num(-1), Num(-2)]) #src
 pr3 = Num(3) * ConstraintTrees.LinearValue([1,2], [1,2]) #src
 @test all(pr3.idxs .== [1,2]) && all(pr3.weights .== [Num(3), Num(6)]) #src
 pr3 = ConstraintTrees.LinearValue([1,2], [1,2]) / Num(2) #src
@@ -214,13 +216,13 @@ pr4 = ConstraintTrees.LinearValue([1,2], [1,2]) + ParameterLinearValue([1,2], [1
 @test all(pr4.idxs .== [1,2]) && all(pr4.weights .== [Num(2), Num(4)]) #src
 pr5 = ParameterLinearValue([1,2], [2,3]) - ConstraintTrees.LinearValue([1,2], [1,2]) #src
 @test all(pr5.idxs .== [1,2]) && all(pr5.weights .== [Num(1), Num(1)]) #src
-pr6 = Num(1) + ParameterQuadraticValue([(1, 1)], [1,]) #src
+pr6 = Num(1) + ConstraintTrees.QuadraticValue([(1, 1)], [1,]) #src
 @test all(pr6.idxs .== [(0,0),(1,1)]) && all(pr6.weights .== [Num(1), Num(1)]) #src
-pr7 = ParameterQuadraticValue([(1, 1)], [1,]) - Num(1) #src
+pr7 = ConstraintTrees.QuadraticValue([(1, 1)], [1,]) - Num(1) #src
 @test all(pr7.idxs .== [(0,0),(1,1)]) && all(pr7.weights .== [Num(-1), Num(1)]) #src
-pr8 = Num(2) * ParameterQuadraticValue([(1, 1)], [1,]) #src
+pr8 = Num(2) * ConstraintTrees.QuadraticValue([(1, 1)], [1,]) #src
 @test all(pr8.idxs .== [(1,1)]) && all(pr8.weights .== [Num(2)]) #src
-pr9 = ParameterQuadraticValue([(1, 1)], [1,]) / Num(2)  #src
+pr9 = ConstraintTrees.QuadraticValue([(1, 1)], [1,]) / Num(2)  #src
 @test all(pr9.idxs .== [(1,1)]) && all(pr9.weights .== [Num(0.5)]) #src
 pr10 = ConstraintTrees.QuadraticValue([(1, 1)], [1,]) + ParameterQuadraticValue([(1, 1)], [1,]) #src
 @test all(pr10.idxs .== [(1,1)]) && all(pr10.weights .== [Num(2)]) #src
@@ -232,3 +234,5 @@ pr13 = ParameterQuadraticValue([(1, 1)], [2,]) - ConstraintTrees.LinearValue([1,
 @test all(pr13.idxs .== [(0, 1), (1,1),(0, 2)]) && all(pr13.weights .== [Num(-1), Num(2),Num(-2)]) #src
 pr14 = ParameterLinearValue([1,2], [2,3]) * ConstraintTrees.LinearValue([1,2], [1,2]) #src
 @test all(pr14.idxs .== [(1, 1), (1,2),(2, 2)]) && all(pr14.weights .== [Num(2), Num(7),Num(6)]) #src
+pr15 = ConstraintTrees.LinearValue([1,2], [1,2]) - ParameterQuadraticValue([(1, 1)], [2,])
+@test all(pr15.idxs .== [(0,1),(1, 1), (0, 2)]) && all(pr15.weights .== [Num(1), Num(-2),Num(2)]) #src
