@@ -1,19 +1,10 @@
-# Copyright (c) 2024, Heinrich-Heine University Duesseldorf                #src
-#                                                                          #src
-# Licensed under the Apache License, Version 2.0 (the "License");          #src
-# you may not use this file except in compliance with the License.         #src
-# You may obtain a copy of the License at                                  #src
-#                                                                          #src
-#     http://www.apache.org/licenses/LICENSE-2.0                           #src
-#                                                                          #src
-# Unless required by applicable law or agreed to in writing, software      #src
-# distributed under the License is distributed on an "AS IS" BASIS,        #src
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #src
-# See the License for the specific language governing permissions and      #src
-# limitations under the License.                                           #src
+```@meta
+EditURL = "2-differentiate-enzyme-model.jl"
+```
 
-# # Differentiating enzyme constrained metabolic models 
+# Differentiating enzyme constrained metabolic models
 
+````@example 2-differentiate-enzyme-model
 using DifferentiableMetabolism
 using AbstractFBCModels
 using Symbolics
@@ -30,11 +21,19 @@ using CairoMakie
 include("../../test/data_static.jl")
 
 model = load_model("e_coli_core.json")
-# unconstrain glucose
+````
+
+unconstrain glucose
+
+````@example 2-differentiate-enzyme-model
 rids = [x["id"] for x in model.reactions]
 glc_idx = first(indexin(["EX_glc__D_e"], rids))
 model.reactions[glc_idx]["lower_bound"] = -1000.0
-# constrain PFL to zero
+````
+
+constrain PFL to zero
+
+````@example 2-differentiate-enzyme-model
 pfl_idx = first(indexin(["PFL"], rids))
 model.reactions[pfl_idx]["upper_bound"] = 0.0
 
@@ -46,24 +45,17 @@ parameter_values =
     Dict(kid => ecoli_core_reaction_kcats[rid] * 3.6 for (rid, kid) in rid_kcat) # change unit to k/h
 
 reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
-float_reaction_isozymes = Dict{String,Dict{String,COBREXA.Isozyme}}() #src
 for rid in AbstractFBCModels.reactions(model)
     grrs = AbstractFBCModels.reaction_gene_association_dnf(model, rid)
     isnothing(grrs) && continue # skip if no grr available
     haskey(ecoli_core_reaction_kcats, rid) || continue # skip if no kcat data available
     for (i, grr) in enumerate(grrs)
         d = get!(reaction_isozymes, rid, Dict{String,ParameterIsozyme}())
-        d2 = get!(float_reaction_isozymes, rid, Dict{String,COBREXA.Isozyme}()) #src
         d["isozyme_"*string(i)] = ParameterIsozyme(
             gene_product_stoichiometry = Dict(grr .=> fill(1.0, size(grr))), # assume subunit stoichiometry of 1 for all isozymes
             kcat_forward = rid_kcat[rid],
             kcat_reverse = rid_kcat[rid],
         )
-        d2["isozyme_"*string(i)] = COBREXA.Isozyme( #src
-            gene_product_stoichiometry = Dict(grr .=> fill(1.0, size(grr))), #src
-            kcat_forward = ecoli_core_reaction_kcats[rid] * 3.6, #src
-            kcat_reverse = ecoli_core_reaction_kcats[rid] * 3.6, #src
-        ) #src
     end
 end
 
@@ -88,35 +80,28 @@ ec_solution, _, _, _ = optimized_constraints_with_parameters(
 )
 
 ec_solution
+````
 
-ec_solution_cobrexa = enzyme_constrained_flux_balance_analysis( #src
-    model; #src
-    reaction_isozymes = float_reaction_isozymes, #src
-    gene_product_molar_masses = ecoli_core_gene_product_masses, #src
-    capacity = 50.0, #src
-    optimizer = Tulip.Optimizer, #src
-) #src
+This solution contains many inactive reactions
 
-@test isapprox(ec_solution.objective, ec_solution_cobrexa.objective; atol = TEST_TOLERANCE) #src
-
-# This solution contains many inactive reactions
+````@example 2-differentiate-enzyme-model
 sort(abs.(collect(values(ec_solution.fluxes))))
+````
 
-@test any(abs.(collect(values(ec_solution.fluxes))) .≈ 0) #src
+And also many inactive gene products.
 
-# And also many inactive gene products. 
-
+````@example 2-differentiate-enzyme-model
 sort(abs.(collect(values(ec_solution.gene_product_amounts))))
+````
 
-@test any(round.(abs.(collect(values(ec_solution.gene_product_amounts))); digits = 8) .≈ 0) #src
+With theory, you can show that this introduces flux variability into the
+solution, making it non-unique, and consequently non-differentiable. To fix
+this, one need to prune the model, to include only the active reactions and
+genes. This can be differentiated uniquely. Below we build a pruned kinetic
+model, by removing all the reactions, metabolites, and genes that are not
+active.
 
-# With theory, you can show that this introduces flux variability into the
-# solution, making it non-unique, and consequently non-differentiable. To fix
-# this, one need to prune the model, to include only the active reactions and
-# genes. This can be differentiated uniquely. Below we build a pruned kinetic
-# model, by removing all the reactions, metabolites, and genes that are not
-# active.
-
+````@example 2-differentiate-enzyme-model
 flux_zero_tol = 1e-6 # these bounds make a real difference!
 gene_zero_tol = 1e-6
 
@@ -140,27 +125,30 @@ ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_
     optimizer = Tulip.Optimizer,
     modifications = [COBREXA.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
+````
 
-# Notice, the solution is exactly the same as before, except that all the
-# inactive elements are gone.
+Notice, the solution is exactly the same as before, except that all the
+inactive elements are gone.
 
+````@example 2-differentiate-enzyme-model
 ec_solution2
+````
 
-# no zero fluxes
+no zero fluxes
+
+````@example 2-differentiate-enzyme-model
 sort(abs.(collect(values(ec_solution2.fluxes))))
+````
 
-# no zero genes
+no zero genes
+
+````@example 2-differentiate-enzyme-model
 sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
+````
 
-@test isapprox(ec_solution2.objective, ec_solution.objective; atol = TEST_TOLERANCE) #src
+prune the kcats, leaving only those that are actually used
 
-@test all( #src
-    abs(ec_solution.fluxes[k] - ec_solution2.fluxes[k]) <= 1e-6 for #src
-    k in intersect(keys(ec_solution.fluxes), keys(ec_solution2.fluxes)) #src
-) #src
-
-# prune the kcats, leaving only those that are actually used
-
+````@example 2-differentiate-enzyme-model
 pruned_kcats = [
     begin
         x = first(values(v))
@@ -180,8 +168,11 @@ sens, vids = differentiate(
     parameters;
     scale = true, # unitless sensitivities
 )
+````
 
-# look at glycolysis and oxidative phosphorylation only
+look at glycolysis and oxidative phosphorylation only
+
+````@example 2-differentiate-enzyme-model
 subset_ids = [
     r["id"] for r in model.reactions[indexin(string.(keys(pkm.fluxes)), rids)] if
     r["subsystem"] in ["Glycolysis/Gluconeogenesis", "Oxidative Phosphorylation"]
@@ -195,8 +186,11 @@ iso_ids = [v[2] for v in vids[iso_idxs]]
 
 param_idxs = findall(x -> string(x) in subset_ids, parameters)
 param_ids = parameters[param_idxs]
+````
 
-# Flux sensitivities
+Flux sensitivities
+
+````@example 2-differentiate-enzyme-model
 f, a, hm = heatmap(
     sens[flux_idxs, param_idxs]';
     axis = (
@@ -210,13 +204,15 @@ f, a, hm = heatmap(
 )
 Colorbar(f[1, 2], hm)
 f
+````
 
-# Isozyme sensitivities. Note, the gene products themselves are not variables in
-# the formulation of the kinetic model. It inherits its structure from COBREXA,
-# where the gene products are derived variables. If you want the sensitivities
-# of the gene products themselves, you just need to multiply the isozyme
-# sensitivity with the subunit stoichiometry of the relevant gene products. 
+Isozyme sensitivities. Note, the gene products themselves are not variables in
+the formulation of the kinetic model. It inherits its structure from COBREXA,
+where the gene products are derived variables. If you want the sensitivities
+of the gene products themselves, you just need to multiply the isozyme
+sensitivity with the subunit stoichiometry of the relevant gene products.
 
+````@example 2-differentiate-enzyme-model
 f, a, hm = heatmap(
     sens[iso_idxs, param_idxs]';
     axis = (
@@ -230,3 +226,9 @@ f, a, hm = heatmap(
 )
 Colorbar(f[1, 2], hm)
 f
+````
+
+---
+
+*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
+

@@ -8,6 +8,7 @@
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/parameter_linearvalue.jl"]
+Private = false
 ```
 
 ### ParameterQuadraticValue
@@ -15,6 +16,7 @@ Pages = ["src/parameter_linearvalue.jl"]
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/parameter_quadraticvalue.jl"]
+Private = false
 ```
 
 ### ParameterBound
@@ -22,6 +24,7 @@ Pages = ["src/parameter_quadraticvalue.jl"]
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/parameter_bound.jl"]
+Private = false
 ```
 
 ### ParameterIsozyme
@@ -29,6 +32,7 @@ Pages = ["src/parameter_bound.jl"]
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/parameter_isozyme.jl"]
+Private = false
 ```
 ## Parameterized models
 
@@ -37,6 +41,7 @@ Pages = ["src/parameter_isozyme.jl"]
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/kinetic_model.jl"]
+Private = false
 ```
 
 ### Solving models
@@ -44,6 +49,7 @@ Pages = ["src/kinetic_model.jl"]
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/solver.jl"]
+Private = false
 ```
 
 ### Pruning models
@@ -51,6 +57,7 @@ Pages = ["src/solver.jl"]
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/prune.jl"]
+Private = false
 ```
 
 ## Differentiation
@@ -58,5 +65,6 @@ Pages = ["src/prune.jl"]
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/differentiate.jl"]
+Private = false
 ```
 

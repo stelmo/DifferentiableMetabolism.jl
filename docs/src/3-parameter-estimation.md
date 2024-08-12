@@ -1,19 +1,10 @@
-# Copyright (c) 2024, Heinrich-Heine University Duesseldorf                #src
-#                                                                          #src
-# Licensed under the Apache License, Version 2.0 (the "License");          #src
-# you may not use this file except in compliance with the License.         #src
-# You may obtain a copy of the License at                                  #src
-#                                                                          #src
-#     http://www.apache.org/licenses/LICENSE-2.0                           #src
-#                                                                          #src
-# Unless required by applicable law or agreed to in writing, software      #src
-# distributed under the License is distributed on an "AS IS" BASIS,        #src
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. #src
-# See the License for the specific language governing permissions and      #src
-# limitations under the License.                                           #src
+```@meta
+EditURL = "3-parameter-estimation.jl"
+```
 
-# # Parameter estimation using proteomics and flux data
+# Parameter estimation using proteomics and flux data
 
+````@example 3-parameter-estimation
 using DifferentiableMetabolism
 using AbstractFBCModels
 using Symbolics
@@ -25,8 +16,11 @@ using JSONFBCModels
 using CairoMakie
 
 include("../../test/simple_model.jl") #hide
+````
 
-# prune model for brevity
+prune model for brevity
+
+````@example 3-parameter-estimation
 delete!(model.reactions, "r5")
 delete!(model.genes, "g4")
 delete!(model.genes, "g5")
@@ -34,11 +28,13 @@ delete!(model.genes, "g3")
 model.reactions["r4"].gene_association_dnf = [["g2"]]
 model.reactions["r1"].lower_bound = -1000.0
 model.reactions["r2"].lower_bound = -1000.0
+````
 
-# now models looks like this
+now models looks like this
 
-# ![simple_model](./assets/simple_model_pruned.svg)
+![simple_model](./assets/simple_model_pruned.svg)
 
+````@example 3-parameter-estimation
 kcats = Symbolics.@variables r3 r4
 
 reaction_isozymes = Dict(
@@ -79,8 +75,11 @@ sol, _, _, _ = optimized_constraints_with_parameters(
 )
 
 sol.fluxes
+````
 
-# create a loss function
+create a loss function
+
+````@example 3-parameter-estimation
 measured = [
     sol.fluxes.r1,
     sol.fluxes.r3,
@@ -152,8 +151,9 @@ lines(losses; axis = (xlabel = "Iterations", ylabel = "L2 loss"))
 estimated_parameters
 
 true_parameter_values
+````
 
-@test abs(estimated_parameters[r3] - true_parameter_values[r3]) <= 0.1 #src
-@test abs(estimated_parameters[r4] - true_parameter_values[r4]) <= 0.1 #src
-@test abs(estimated_parameters[r4] - true_parameter_values[r4]) <= 0.1 #src
-@test all(losses[2:end] .<= losses[1:end-1]) #src
+---
+
+*This page was generated using [Literate.jl](https://github.com/fredrikekre/Literate.jl).*
+

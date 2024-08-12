@@ -1,4 +1,4 @@
-# Copyright (c) 2023, Heinrich-Heine University Duesseldorf                #src
+# Copyright (c) 2024, Heinrich-Heine University Duesseldorf                #src
 #                                                                          #src
 # Licensed under the Apache License, Version 2.0 (the "License");          #src
 # you may not use this file except in compliance with the License.         #src
