@@ -122,8 +122,6 @@ m_noparams, _, _, _ = optimized_constraints_with_parameters(
 m_noparams.fluxes
 
 @test isapprox(m_noparams.objective, 11.0; atol = TEST_TOLERANCE) #src
-
-#src miscellaneous tests
 pb = ParameterBetween(1, 2.0) #src
 @test (-pb).lower == -1 && (-pb).upper == -2  #src
 @test (pb * 2).lower == 2 && (pb * 2).upper == 4  #src
@@ -132,7 +130,6 @@ pe = ParameterEqualTo(1) #src
 @test (-pe).equal_to == -1 #src
 @test (pe * 2).equal_to == 2 #src
 @test (pe / 2).equal_to == 0.5 #src
-
 plv1 = ParameterLinearValue(ConstraintTrees.LinearValue(1)) #src
 @test all(plv1.idxs .== [0]) && all(plv1.weights .== [Num(1.0)]) #src
 plv2 = ParameterLinearValue([0], [1.0]) #src
@@ -163,7 +160,6 @@ plv14 = plv8 - plv9 #src
 @test all(plv14.idxs .== [1, 2, 3]) && all(plv14.weights .== [Num(-3), Num(2), Num(-2)]) #src
 plv15 = 1.0 + ParameterLinearValue(0) #src
 @test all(plv15.idxs .== [0]) && all(plv15.weights .== [Num(1)]) #src
-
 pqv1 = ParameterQuadraticValue([(1, 1)], [1]) #src
 pqv2 = ParameterQuadraticValue(ConstraintTrees.QuadraticValue([(1, 1)], [1])) #src
 @test all(pqv2.idxs[1] .== (1, 1)) && all(pqv2.weights .== Num(1)) #src
