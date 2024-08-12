@@ -2,7 +2,7 @@
 
 | Build status | Documentation |
 |:---:|:---:|
-| ![CI status](https://github.com/stelmo/DifferentiableMetabolism.jl/workflows/CI/badge.svg?branch=master) [![codecov](https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl/branch/master/graph/badge.svg?token=A2ui7exGIH)](https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl) | [![stable documentation](https://img.shields.io/badge/docs-stable-blue)](https://stelmo.github.io/DifferentiableMetabolism.jl/stable) |
+| ![CI status](https://github.com/stelmo/DifferentiableMetabolism.jl/workflows/CI/badge.svg) [![codecov](https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl/branch/master/graph/badge.svg?token=A2ui7exGIH)](https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl) | [![Documentation](https://img.shields.io/badge/documentation-8e44ad?style=for-the-badge)](https://stelmo.github.io/DifferentiableMetabolism.jl/dev) |
 
 This package extends [COBREXA.jl](https://github.com/LCSB-BioCore/COBREXA.jl)
 with the ability to differentiate an optimal solution of a constraint-based
