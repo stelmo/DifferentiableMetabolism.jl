@@ -17,6 +17,16 @@ limitations under the License.
 =#
 
 using Documenter, Literate, DifferentiableMetabolism
+import ConstraintTrees
+import Symbolics
+import COBREXA
+
+import ConstraintTrees.LinearValue
+import ConstraintTrees.QuadraticValue
+import ConstraintTrees.ConstraintTree
+import Symbolics.Num
+import COBREXA.optimization_model
+import ConstraintTrees.Constraint
 
 examples =
     sort(filter(x -> endswith(x, ".jl"), readdir(joinpath(@__DIR__, "src"), join = true)))
