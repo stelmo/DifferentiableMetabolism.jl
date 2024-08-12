@@ -21,11 +21,13 @@ Changes from copied code are indicated.
 """
 $(TYPEDEF)
 
-An extension of [`ConstraintTrees.LinearValue`](@ref) where the weights are parameters.
+An extension of `ConstraintTrees.LinearValue` where the weights are parameters.
 
-`ParameterLinearValue`s can be combined additively and multiplied by real-number constants.
+`ParameterLinearValue`s can be combined additively and multiplied by real-number
+constants.
 
-Multiplying two `ParameterLinearValue`s yields a quadratic form (in a [`ParameterQuadraticValue`](@ref)).
+Multiplying two `ParameterLinearValue`s yields a quadratic form (in a
+[`ParameterQuadraticValue`](@ref)).
 
 # Fields
 $(TYPEDFIELDS)

@@ -8,7 +8,6 @@
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/parameter_linearvalue.jl"]
-Private = false
 ```
 
 ### ParameterQuadraticValue
@@ -16,7 +15,6 @@ Private = false
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/parameter_quadraticvalue.jl"]
-Private = false
 ```
 
 ### ParameterBound
@@ -24,7 +22,6 @@ Private = false
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/parameter_bound.jl"]
-Private = false
 ```
 
 ### ParameterIsozyme
@@ -32,7 +29,6 @@ Private = false
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/parameter_isozyme.jl"]
-Private = false
 ```
 ## Parameterized models
 
@@ -41,7 +37,6 @@ Private = false
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/kinetic_model.jl"]
-Private = false
 ```
 
 ### Solving models
@@ -49,7 +44,6 @@ Private = false
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/solver.jl"]
-Private = false
 ```
 
 ### Pruning models
@@ -57,7 +51,6 @@ Private = false
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/prune.jl"]
-Private = false
 ```
 
 ## Differentiation
@@ -65,6 +58,27 @@ Private = false
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/differentiate.jl"]
-Private = false
 ```
 
+## Internals
+
+### Constraint tree extensions
+
+```@autodocs
+Modules = [DifferentiableMetabolism]
+Pages = ["src/constraint_trees.jl"]
+```
+
+### Optimization problem builders
+
+```@autodocs
+Modules = [DifferentiableMetabolism]
+Pages = ["src/get_constraints.jl"]
+```
+
+### Symbolics extensions
+
+```@autodocs
+Modules = [DifferentiableMetabolism]
+Pages = ["src/symbolics.jl"]
+```

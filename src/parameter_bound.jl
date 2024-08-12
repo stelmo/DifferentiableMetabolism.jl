@@ -20,9 +20,9 @@ limitations under the License.
 $(TYPEDEF)
 
 Representation of an "interval" bound where the lower and upper bound values are
-parameters. Since [`Symbolics.Num`](@ref) is a subtype of `Real`, the bounds
-could also be any real number, but they are converted by the constructors to
-[`Symbolics.Num`](@ref)s. 
+parameters. Since `Symbolics.Num` is a subtype of `Real`, the bounds could also
+be any real number, but they are converted by the constructors to
+`Symbolics.Num`s. 
 
 # Fields
 $(TYPEDFIELDS)
@@ -46,9 +46,8 @@ Base.:*(a::Real, b::ParameterBetween) = ParameterBetween(a * b.lower, a * b.uppe
 $(TYPEDEF)
 
 Representation of an "equality" bound, where the bound value is a parameter.
-Since [`Symbolics.Num`](@ref) is a subtype of `Real`, the bound could also be
-any real number, but it is converted by the constructor to a
-[`Symbolics.Num`](@ref).
+Since `Symbolics.Num` is a subtype of `Real`, the bound could also be any real
+number, but it is converted by the constructor to a `Symbolics.Num`.
 
 # Fields
 $(TYPEDFIELDS)

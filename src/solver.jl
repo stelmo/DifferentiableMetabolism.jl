@@ -51,7 +51,7 @@ $(TYPEDSIGNATURES)
 
 Construct a JuMP model by substituting `parameters` into the model, `m`. Set the
 `objective` and the `optimizer`, as well as the `sense` similar to
-[`COBREXA.optimization_model`](@ref).
+`COBREXA.optimization_model`.
 
 Converts all inequality constraints to the form `A * x ≤ b`.
 """

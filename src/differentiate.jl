@@ -16,6 +16,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
+"""
+$(TYPEDSIGNATURES)
+
+TODO
+"""
 function findall_indeps_qr(A)
     #= 
     Filter out linearly dependent constraints using QR decomposition. Since the
@@ -174,6 +179,11 @@ end
 
 export differentiate
 
+"""
+$(TYPEDSIGNATURES)
+
+TODO
+"""
 function variable_order(m)
     c = []
     ff(p, x::ConstraintTrees.ConstraintTree) = nothing

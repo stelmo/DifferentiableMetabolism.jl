@@ -21,10 +21,10 @@ Changes from copied code are indicated.
 """
 $(TYPEDEF)
 
-An extension of [`ConstraintTrees.QuadraticValue`](@ref) where the weights are
+An extension of `ConstraintTrees.QuadraticValue` where the weights are
 parameters.
 
-Behaves similarly to [`ConstraintTrees.QuadraticValue`](@ref). Thus, the
+Behaves similarly to `ConstraintTrees.QuadraticValue`. Thus, the
 cleanest way to construct a `ParameterQuadraticValue` is to multiply
 two [`ParameterLinearValue`](@ref)s.
 
