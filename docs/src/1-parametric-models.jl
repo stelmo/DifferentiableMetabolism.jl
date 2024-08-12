@@ -27,7 +27,7 @@ using Clarabel
 # The code used to construct the model is located in `test/simple_model.jl`, but
 # it is not shown here for brevity. Below is a visualization of the model.
 
-include("../../test/simple_model.jl") #hide
+include("../../test/simple_model.jl"); #hide
 
 # ![simple_model](./assets/simple_model.svg)
 
