@@ -28,7 +28,7 @@ function build_kinetic_model(
         Dict{String,Dict{String,COBREXA.Isozyme}},
         Dict{String,Dict{String,ParameterIsozyme}},
     },
-    gene_product_molar_masses::Dict{String,R},
+    gene_product_molar_masses::Dict{String,Float64},
     capacity::Union{Vector{Tuple{String,Vector{String},R}},R},
 ) where {R<:Real}
     function isozyme_forward_ids(rid)
