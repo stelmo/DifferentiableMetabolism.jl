@@ -163,7 +163,7 @@ function differentiate(
 
     # get primal variable sensitivities only
     if scale
-        (parameter_values[parameters]' .* c[1:length(xs), :] ./ x_vals), variable_order(m)
+        [parameter_values[parameters[j]] * c[i,j] / x_vals[i] for i in 1:length(xs), j in axes(c,2)], variable_order(m)
     else
         c[1:length(xs), :], variable_order(m)
     end
