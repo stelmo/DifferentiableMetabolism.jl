@@ -18,6 +18,13 @@ limitations under the License.
 Changes from copied code are indicated.
 =#
 
+# TODO the substitute of symbolics is (unnecessarily) much more powerful than
+# the "value with these variable values" that we actually need. Unfortunately
+# Symbolics don't realy have anything that would "just do" the simple thing.
+# Thus this hack.
+fast_subst(x::Symbolics.Num, y) = Symbolics.fast_substitute(x, y)
+fast_subst(x, y) = Symbolics.substitute(x, y)
+
 """
 $(TYPEDSIGNATURES)
 
@@ -30,8 +37,8 @@ function constraint_matrix_vector(eqs, m, parameters)
     Js = Int64[]
     Vs = Float64[]
     for (i, (val, rhs)) in enumerate(eqs)
-        rhs = Symbolics.substitute(rhs, parameters)
-        a = Symbolics.substitute(val, parameters)
+        rhs = fast_subst(rhs, parameters)
+        a = fast_subst(val, parameters)
 
         # TODO this seems prone to error
         if Symbolics.value(rhs) != 0.0 && Symbolics.value(rhs) != -0.0
