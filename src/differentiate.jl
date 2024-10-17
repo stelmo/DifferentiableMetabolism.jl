@@ -191,4 +191,3 @@ function variable_order(m)
     _idxs = sortperm(idxs)
     last.(c)[_idxs]
 end
-
