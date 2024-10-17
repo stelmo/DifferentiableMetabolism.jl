@@ -27,23 +27,23 @@ ConstraintTrees.
 Symbolics.substitute(x::ParameterLinearValue, rule::Dict{Symbolics.Num,Float64}) =
     ConstraintTrees.LinearValue(
         x.idxs,
-        Symbolics.value.(Symbolics.substitute(x.weights, rule)),
+        Symbolics.value.(Symbolics.fast_substitute(x.weights, rule)),
     )
 
 Symbolics.substitute(x::ParameterQuadraticValue, rule::Dict{Symbolics.Num,Float64}) =
     ConstraintTrees.QuadraticValue(
         x.idxs,
-        Symbolics.value.(Symbolics.substitute(x.weights, rule)),
+        Symbolics.value.(Symbolics.fast_substitute(x.weights, rule)),
     )
 
 Symbolics.substitute(x::ParameterBetween, rule::Dict{Symbolics.Num,Float64}) =
     ConstraintTrees.Between(
-        Symbolics.value.(Symbolics.substitute(x.lower, rule)),
-        Symbolics.value.(Symbolics.substitute(x.upper, rule)),
+        Symbolics.value.(Symbolics.fast_substitute(x.lower, rule)),
+        Symbolics.value.(Symbolics.fast_substitute(x.upper, rule)),
     )
 
 Symbolics.substitute(x::ParameterEqualTo, rule::Dict{Symbolics.Num,Float64}) =
-    ConstraintTrees.EqualTo(Symbolics.value.(Symbolics.substitute(x.equal_to, rule)))
+    ConstraintTrees.EqualTo(Symbolics.value.(Symbolics.fast_substitute(x.equal_to, rule)))
 
 Symbolics.substitute(x::ConstraintTrees.Between, rule::Dict{Symbolics.Num,Float64}) = x
 
