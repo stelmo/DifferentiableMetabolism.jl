@@ -143,7 +143,7 @@ function differentiate(
 
     # substitute in values
     Is, Js, Vs = SparseArrays.findnz(A)
-    vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
+    vs = float.(Symbolics.value.(fast_subst.(Vs, Ref(syms_to_vals))))
     a = SparseArrays.sparse(Is, Js, vs, size(A)...)
     indep_rows = findall_indeps_qr(a) # find independent rows, prevent singularity issues with \
     a_indep = a[indep_rows, :]
@@ -155,7 +155,7 @@ function differentiate(
     =#
 
     Is, Js, Vs = SparseArrays.findnz(B)
-    vs = float.(Symbolics.value.(Symbolics.substitute(Vs, syms_to_vals)))
+    vs = float.(Symbolics.value.(fast_subst.(Vs, Ref(syms_to_vals))))
     b = Array(SparseArrays.sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
     b_indep = b[indep_rows, :]
 
@@ -191,4 +191,3 @@ function variable_order(m)
     _idxs = sortperm(idxs)
     last.(c)[_idxs]
 end
-
