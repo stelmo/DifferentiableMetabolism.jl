@@ -84,37 +84,37 @@ ec_solution</code></pre><pre class="documenter-example-output"><code class="nohi
    0.0
    0.0
    0.0
-   4.683067303671569e-15
+   4.685845906545776e-15
    ⋮
-  33.896840167762875
-  33.896840167762875
-  38.66807286990511
-  38.66807286990512
-  39.540588031206
-  64.66664492084865
-  64.6666449229127
- 101.8389646492298
- 101.83896465025363</code></pre><p>And also many inactive gene products.</p><pre><code class="language-julia hljs">sort(abs.(collect(values(ec_solution.gene_product_amounts))))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">124-element Vector{Float64}:
- 8.133074170808445e-17
- 8.133074170808445e-17
- 8.133074170808445e-17
- 9.844822698843576e-13
- 1.0444415257704228e-12
- 1.0444415257704228e-12
- 1.0976073657890304e-12
- 1.2566970863762915e-12
- 1.2948270597782135e-12
- 2.8068931592616887e-12
+  33.89684016777724
+  33.89684016777725
+  38.668072869856005
+  38.668072869856005
+  39.54058803115938
+  64.6666449207555
+  64.66664492281971
+ 101.83896464908304
+ 101.83896465010721</code></pre><p>And also many inactive gene products.</p><pre><code class="language-julia hljs">sort(abs.(collect(values(ec_solution.gene_product_amounts))))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">124-element Vector{Float64}:
+ 8.141678306020198e-17
+ 8.141678306020198e-17
+ 8.141678306020198e-17
+ 9.846484300151926e-13
+ 1.0446152588779501e-12
+ 1.0446152588779501e-12
+ 1.097789630627885e-12
+ 1.256902936168616e-12
+ 1.295043723786085e-12
+ 2.807358103195605e-12
  ⋮
- 0.022586033326176952
- 0.022586033355666647
- 0.022586033355666647
- 0.043486538614138044
- 0.0731266615462505
- 0.11726698379387614
- 0.11726698379387614
- 0.12079853655928265
- 0.16335511688946439</code></pre><p>With theory, you can show that this introduces flux variability into the solution, making it non-unique, and consequently non-differentiable. To fix this, one need to prune the model, to include only the active reactions and genes. This can be differentiated uniquely. Below we build a pruned kinetic model, by removing all the reactions, metabolites, and genes that are not active.</p><pre><code class="language-julia hljs">flux_zero_tol = 1e-6 # these bounds make a real difference!
+ 0.022586033326179002
+ 0.022586033355673742
+ 0.022586033355673742
+ 0.04348653861416314
+ 0.0731266615462882
+ 0.11726698379336735
+ 0.11726698379336735
+ 0.12079853655910855
+ 0.16335511688953944</code></pre><p>With theory, you can show that this introduces flux variability into the solution, making it non-unique, and consequently non-differentiable. To fix this, one need to prune the model, to include only the active reactions and genes. This can be differentiated uniquely. Below we build a pruned kinetic model, by removing all the reactions, metabolites, and genes that are not active.</p><pre><code class="language-julia hljs">flux_zero_tol = 1e-6 # these bounds make a real difference!
 gene_zero_tol = 1e-6
 
 pruned_reaction_isozymes =
@@ -136,7 +136,7 @@ ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_
     objective = pkm.objective.value,
     optimizer = Tulip.Optimizer,
     modifications = [COBREXA.set_optimizer_attribute(&quot;IPM_IterationsLimit&quot;, 10_000)],
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(ConstraintTrees.Tree{Float64}(#= 13 elements =#), [-24.48518948743512, 0.8097342831464754, 0.809734283146501, -24.485189487435118, 8.390000123357188, 0.7505183827480902, -33.20099699220754, 0.8097342831464603, 64.66664537982415, 32.77406461018067  …  0.12079853743661077, 0.005121188382153131, 0.001794785939945985, 0.0010337710784086224, 0.006415206370879354, 0.012263467164832134, 0.010287481239660628, 0.16335511657978555, 0.013360591188965832, 0.014402466503867678], [-0.0003637144327685966, 0.0023267928989637904, 0.0027824213277213715, 0.0, -0.0, -0.0, 0.0, 0.0020147427688167272, 0.0031140358258388286, 0.0010366917501896445  …  0.0009223262087884611, 0.0015352729933074153, 0.0011032142645875927, 0.0007344061982411755, 0.00018361382110090329, 0.0003637144339895737, 0.0021927537387151923, 0.0033911130687809678, 0.00016788735882470866, 0.0014758867713620281], [-2.564658119729536e-15, -2.7306079277658628e-12, -2.6481203081180955e-12, -2.5642560243722185e-15, -0.012533077620649393, -2.234043390535473e-13, -2.7228655729691482e-15, -2.7856597500505597e-12, -1.3087610993912766e-14, -1.959613940103968e-14  …  0.0, 0.0, 0.0, 0.0, -2.4276814704457444e-15, 0.0, -2.7922289252135926e-15, -2.7582801951485097e-15, -2.4039439034840108e-15, -0.017113418119369186])</code></pre><p>Notice, the solution is exactly the same as before, except that all the inactive elements are gone.</p><pre><code class="language-julia hljs">ec_solution2</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Tree{Float64} with 13 elements:
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(ConstraintTrees.Tree{Float64}(#= 13 elements =#), [-24.485189487436223, 0.8097342831463148, 0.8097342831463405, -24.485189487436223, 8.390000123367471, 0.7505183827479407, -33.20099699220691, 0.8097342831462997, 64.66664537982322, 32.774064610180126  …  0.04348653850566591, 0.11726698687786197, 0.0019854019751287073, 0.0014080768108310727, 0.0011775007316609776, 0.014402466503864812, 0.013360591188965609, 0.16335511657978186, 0.010287481239658582, 0.012263467164832686], [-0.00036371443276863767, 0.0023267928989590273, 0.0027824213277173244, 0.0, -0.0, -0.0, 0.0, 0.002014742768812649, 0.00311403582583868, 0.0010366917501896827  …  0.0009223262087880106, 0.001535272993307315, 0.0011032142645869476, 0.0007344061982399577, 0.00018361382110082322, 0.0003637144339892305, 0.002192753738711806, 0.0033911130687834675, 0.00016788735882493586, 0.001475886771361535], [-2.5648632097074113e-15, -2.7307996883186784e-12, -2.6483061786531687e-12, -2.564461081706223e-15, -0.012533077620651405, -2.2341675272995034e-13, -2.7230834434230338e-15, -2.7858554439304114e-12, -1.308862742116795e-14, -1.9597639098730116e-14  …  0.0, 0.0, 0.0, 0.0, -2.427875472008117e-15, 0.0, -2.7924524204713963e-15, -2.7585009434656825e-15, -2.40413598659176e-15, -0.017113418119365467])</code></pre><p>Notice, the solution is exactly the same as before, except that all the inactive elements are gone.</p><pre><code class="language-julia hljs">ec_solution2</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Tree{Float64} with 13 elements:
   :coupling                     =&gt; ConstraintTrees.Tree{Float64}(#= 0 elements =#)
   :directional_flux_balance     =&gt; ConstraintTrees.Tree{Float64}(#= 48 elements =#)
   :flux_stoichiometry           =&gt; ConstraintTrees.Tree{Float64}(#= 52 elements =#)
@@ -150,46 +150,46 @@ ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_
   :isozyme_forward_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 26 elements =#)
   :isozyme_reverse_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 5 elements =#)
   :objective                    =&gt; 0.750518</code></pre><p>no zero fluxes</p><pre><code class="language-julia hljs">sort(abs.(collect(values(ec_solution2.fluxes))))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">48-element Vector{Float64}:
-   0.19190755046859567
-   0.7505183827480902
-   0.8097342831464603
-   0.8097342831464754
-   0.809734283146501
-   0.8097342831465368
-   1.7395389988938417
-   2.010476135065905
-   2.0104761350659057
-   2.1506854776024715
+   0.19190755046855745
+   0.7505183827479407
+   0.8097342831462997
+   0.8097342831463148
+   0.8097342831463405
+   0.8097342831463762
+   1.739538998893496
+   2.010476135065505
+   2.010476135065506
+   2.150685477602044
    ⋮
-  33.8968401107718
-  33.896840110771805
-  38.668073099496674
-  38.668073099496674
-  39.54058824536094
-  64.66664537982413
-  64.66664537982415
- 101.83896538885982
- 101.83896538885982</code></pre><p>no zero genes</p><pre><code class="language-julia hljs">sort(abs.(collect(values(ec_solution2.gene_product_amounts))))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">47-element Vector{Float64}:
- 0.0005876895265928773
- 0.0005934281743690526
- 0.0008428927106182057
- 0.0019854019751291015
- 0.0025855775424925634
- 0.0028285570183546075
- 0.003032537389839215
- 0.0032794216561368985
- 0.0036093078339007735
- 0.004477678876501842
+  33.89684011077103
+  33.89684011077104
+  38.66807309949494
+  38.66807309949494
+  39.54058824535901
+  64.66664537982322
+  64.66664537982322
+ 101.83896538885946
+ 101.83896538885948</code></pre><p>no zero genes</p><pre><code class="language-julia hljs">sort(abs.(collect(values(ec_solution2.gene_product_amounts))))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">47-element Vector{Float64}:
+ 0.0005876895265927602
+ 0.000593428174368933
+ 0.0008428927106180381
+ 0.0019854019751287073
+ 0.0025855775424920503
+ 0.002828557018354045
+ 0.0030325373898386107
+ 0.003279421656136242
+ 0.003609307833900057
+ 0.004477678876501782
  ⋮
- 0.022586033324646485
- 0.022586033324646485
- 0.022586033324646485
- 0.04348653850566663
- 0.0731266613828739
- 0.11726698687786366
- 0.11726698687786366
- 0.12079853743661077
- 0.16335511657978555</code></pre><p>prune the kcats, leaving only those that are actually used</p><pre><code class="language-julia hljs">pruned_kcats = [
+ 0.022586033324645538
+ 0.022586033324645538
+ 0.022586033324645538
+ 0.04348653850566591
+ 0.07312666138287223
+ 0.11726698687786197
+ 0.11726698687786197
+ 0.12079853743661037
+ 0.16335511657978186</code></pre><p>prune the kcats, leaving only those that are actually used</p><pre><code class="language-julia hljs">pruned_kcats = [
     begin
         x = first(values(v))
         isnothing(x.kcat_forward) ? x.kcat_reverse : x.kcat_forward
@@ -207,7 +207,7 @@ sens, vids = differentiate(
     parameter_values,
     parameters;
     scale = true, # unitless sensitivities
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">([0.944774284282412 -0.0 … -0.0 -0.0; 1.140106525775455 0.0 … 0.0 0.0; … ; 0.9941756806741956 -0.0 … -0.0 -0.0; 1.1401065257748115 -0.0 … -0.0 -0.0], Tuple{Symbol, Symbol, Vararg{Symbol}}[(:fluxes, :ACKr), (:fluxes, :ACONTa), (:fluxes, :ACONTb), (:fluxes, :ACt2r), (:fluxes, :ATPM), (:fluxes, :BIOMASS_Ecoli_core_w_GAM), (:fluxes, :CO2t), (:fluxes, :CS), (:fluxes, :CYTBD), (:fluxes, :ENO)  …  (:isozyme_forward_amounts, :SUCCt2_2, :isozyme_1), (:isozyme_forward_amounts, :TALA, :isozyme_1), (:isozyme_forward_amounts, :TKT1, :isozyme_2), (:isozyme_forward_amounts, :TKT2, :isozyme_2), (:isozyme_forward_amounts, :TPI, :isozyme_1), (:isozyme_reverse_amounts, :ACKr, :isozyme_1), (:isozyme_reverse_amounts, :GLUDy, :isozyme_1), (:isozyme_reverse_amounts, :PGK, :isozyme_1), (:isozyme_reverse_amounts, :PGM, :isozyme_3), (:isozyme_reverse_amounts, :RPI, :isozyme_2)])</code></pre><p>look at glycolysis and oxidative phosphorylation only</p><pre><code class="language-julia hljs">subset_ids = [
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">([0.9447742842823873 -0.0 … -0.0 -0.0; 1.1401065257754806 0.0 … 0.0 0.0; … ; 1.140106525774991 0.0 … 0.0 0.0; 0.9447742842823852 0.0 … 0.0 0.0], Tuple{Symbol, Symbol, Vararg{Symbol}}[(:fluxes, :ACKr), (:fluxes, :ACONTa), (:fluxes, :ACONTb), (:fluxes, :ACt2r), (:fluxes, :ATPM), (:fluxes, :BIOMASS_Ecoli_core_w_GAM), (:fluxes, :CO2t), (:fluxes, :CS), (:fluxes, :CYTBD), (:fluxes, :ENO)  …  (:isozyme_forward_amounts, :ENO, :isozyme_1), (:isozyme_forward_amounts, :CYTBD, :isozyme_2), (:isozyme_forward_amounts, :CS, :isozyme_1), (:isozyme_forward_amounts, :ACONTb, :isozyme_1), (:isozyme_forward_amounts, :ACONTa, :isozyme_1), (:isozyme_reverse_amounts, :RPI, :isozyme_2), (:isozyme_reverse_amounts, :PGM, :isozyme_3), (:isozyme_reverse_amounts, :PGK, :isozyme_1), (:isozyme_reverse_amounts, :GLUDy, :isozyme_1), (:isozyme_reverse_amounts, :ACKr, :isozyme_1)])</code></pre><p>look at glycolysis and oxidative phosphorylation only</p><pre><code class="language-julia hljs">subset_ids = [
     r[&quot;id&quot;] for r in model.reactions[indexin(string.(keys(pkm.fluxes)), rids)] if
     r[&quot;subsystem&quot;] in [&quot;Glycolysis/Gluconeogenesis&quot;, &quot;Oxidative Phosphorylation&quot;]
 ]
@@ -222,17 +222,17 @@ param_idxs = findall(x -&gt; string(x) in subset_ids, parameters)
 param_ids = parameters[param_idxs]</code></pre><p class="math-container">\[ \begin{equation}
 \left[
 \begin{array}{c}
-PGK \\
-PDH \\
-PGM \\
-CYTBD \\
-FBA \\
-GAPD \\
-NADH16 \\
-PFK \\
-PGI \\
-TPI \\
-ENO \\
+\mathtt{PGK} \\
+\mathtt{PDH} \\
+\mathtt{PGM} \\
+\mathtt{CYTBD} \\
+\mathtt{FBA} \\
+\mathtt{GAPD} \\
+\mathtt{NADH16} \\
+\mathtt{PFK} \\
+\mathtt{PGI} \\
+\mathtt{TPI} \\
+\mathtt{ENO} \\
 \end{array}
 \right]
 \end{equation}
@@ -260,4 +260,4 @@ f</code></pre><img src="3f08149a.png" alt="Example block output"/><p>Isozyme sen
     ),
 )
 Colorbar(f[1, 2], hm)
-f</code></pre><img src="9ef4204a.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Tuesday 17 September 2024 11:23">Tuesday 17 September 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+f</code></pre><img src="9e6d67a3.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Thursday 24 October 2024 17:24">Thursday 24 October 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
