@@ -23,7 +23,7 @@ import AbstractFBCModels
 import COBREXA
 import JuMP
 import ConstraintTrees
-import Symbolics
+#import Symbolics
 import LinearAlgebra
 import SparseArrays
 import FastDifferentiation
@@ -37,7 +37,7 @@ include("parameter_promotion.jl")
 
 # ConstraintTrees and Symbolics
 include("constraint_trees.jl")
-include("symbolics.jl")
+#include("symbolics.jl")
 
 # the juice
 include("get_constraints.jl")

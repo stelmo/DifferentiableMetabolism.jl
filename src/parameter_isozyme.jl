@@ -28,7 +28,7 @@ $(TYPEDFIELDS)
 """
 @kwdef mutable struct ParameterIsozyme
     gene_product_stoichiometry::Dict{String,Float64}
-    kcat_forward::COBREXA.Maybe{FastDifferentiation.Number} = nothing
+    kcat_forward::COBREXA.Maybe{FastDifferentiation.variable} = nothing
     kcat_reverse::COBREXA.Maybe{FastDifferentiation.Number} = nothing
 end
 

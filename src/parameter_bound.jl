@@ -28,12 +28,12 @@ be any real number, but they are converted by the constructors to
 $(TYPEDFIELDS)
 """
 @kwdef mutable struct ParameterBetween <: ConstraintTrees.Bound
-    lower::FastDifferentiation.Number
-    upper::FastDifferentiation.Number
+    lower::Real
+    upper::Real
 end
 
-ParameterBetween(x::Union{Float64,Int,FastDifferentiation.Number}, y::Union{Float64,Int,FastDifferentiation.Number}) =
-    ParameterBetween(FastDifferentiation.Number(x), FastDifferentiation.Number(y))
+# ParameterBetween(x::Union{Float64,Int,FastDifferentiation.Number}, y::Union{Float64,Int,FastDifferentiation.Number}) =
+#     ParameterBetween(FastDifferentiation.Number(x), FastDifferentiation.Number(y))
 
 export ParameterBetween
 
