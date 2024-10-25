@@ -1,4 +1,4 @@
-using COBREXA, JSON, HiGHS, FastDifferentiation
+using COBREXA, JSON, HiGHS, FastDifferentiation, DifferentiableMetabolism
 import AbstractFBCModels.CanonicalModel as CM
 import AbstractFBCModels as A
 import JSONFBCModels
@@ -80,15 +80,14 @@ for (r, iso) in pruned_reaction_isozymes
         parameter_values[Symbol(k, :_r)] = reaction_isozymes[r][k].kcat_reverse
     end
 end
-variable_values = Dict(FastDifferentiation.variable(k) => v for (k, v) in parameter_values);
 ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
     pkm,
-    variable_values;
+    parameter_values;
     objective=pkm.objective.value,
     optimizer=HiGHS.Optimizer,
     modifications=[silence],
 );
-parameters = [x for (x, y) in variable_values];
+parameters = collect(keys(parameter_values));
 
 sens, vids = differentiate(
     pkm,
@@ -96,7 +95,7 @@ sens, vids = differentiate(
     x_vals,
     eq_dual_vals,
     ineq_dual_vals,
-    variable_values,
+    parameter_values,
     parameters;
     scale=true, # unitless sensitivities
 );

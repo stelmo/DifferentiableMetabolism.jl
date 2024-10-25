@@ -18,13 +18,6 @@ limitations under the License.
 Changes from copied code are indicated.
 =#
 
-# TODO the substitute of symbolics is (unnecessarily) much more powerful than
-# the "value with these variable values" that we actually need. Unfortunately
-# Symbolics don't realy have anything that would "just do" the simple thing.
-# Thus this hack.
-fast_subst(x::Expression, y) = Symbolics.fast_substitute(x, y)
-fast_subst(x, y) = Symbolics.substitute(x, y)
-
 """
 $(TYPEDSIGNATURES)
 
@@ -36,14 +29,17 @@ function constraint_matrix_vector(eqs, m, parameters)
     Is = Int64[]
     Js = Int64[]
     Vs = Float64[]
+
+    parameter_lookup(k) = parameters[k]
+
     for (i, (val, rhs)) in enumerate(eqs)
-        rhs = fast_subst(rhs, parameters)
-        a = fast_subst(val, parameters)
+        rhs = substitute(rhs, parameter_lookup)
+        a = substitute(val, parameter_lookup)
 
         # TODO this seems prone to error
-        if Symbolics.value(rhs) != 0.0 && Symbolics.value(rhs) != -0.0
+        if rhs != 0.0 && rhs != -0.0
             push!(Ib, i)
-            push!(Vb, Symbolics.value(rhs))
+            push!(Vb, rhs)
         end
         append!(Is, fill(i, length(a.idxs)))
         append!(Js, a.idxs)
@@ -64,7 +60,7 @@ Converts all inequality constraints to the form `A * x ≤ b`.
 """
 function optimization_model_with_parameters(
     m::ConstraintTrees.ConstraintTree,
-    parameters::Dict{Expression,Float64};
+    parameters::Dict{Symbol,Float64};
     objective::ConstraintTrees.Value,
     optimizer,
     sense,
@@ -75,7 +71,7 @@ function optimization_model_with_parameters(
     JuMP.@objective(
         model,
         sense,
-        ConstraintTrees.substitute(Symbolics.substitute(objective, parameters), x)
+        ConstraintTrees.substitute(substitute(objective, k -> parameters[k]), x)
     )
 
     eqs = equality_constraints(m)
@@ -112,7 +108,7 @@ respectively.
 """
 function optimized_constraints_with_parameters(
     m::ConstraintTrees.ConstraintTree,
-    parameters::Dict{Expression,Float64};
+    parameters::Dict{Symbol,Float64};
     modifications = [],
     objective::ConstraintTrees.Value,
     optimizer,
@@ -127,7 +123,7 @@ function optimized_constraints_with_parameters(
     COBREXA.is_solved(om) ?
     (
         ConstraintTrees.substitute_values(
-            Symbolics.substitute(m, parameters),
+            substitute(m, k -> parameters[k]),
             JuMP.value.(om[:x]),
         ),
         JuMP.value.(om[:x]),
