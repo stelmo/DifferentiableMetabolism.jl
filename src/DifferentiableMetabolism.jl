@@ -23,6 +23,7 @@ import AbstractFBCModels
 import COBREXA
 import JuMP
 import ConstraintTrees
+import Symbolics
 import LinearAlgebra
 import SparseArrays
 import FastDifferentiation

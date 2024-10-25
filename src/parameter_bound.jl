@@ -20,20 +20,20 @@ limitations under the License.
 $(TYPEDEF)
 
 Representation of an "interval" bound where the lower and upper bound values are
-parameters. Since `Symbolics.Num` is a subtype of `Real`, the bounds could also
+parameters. Since `FastDifferentiation.Number` is a subtype of `Real`, the bounds could also
 be any real number, but they are converted by the constructors to
-`Symbolics.Num`s. 
+`FastDifferentiation.Number`s. 
 
 # Fields
 $(TYPEDFIELDS)
 """
 @kwdef mutable struct ParameterBetween <: ConstraintTrees.Bound
-    lower::Symbolics.Num
-    upper::Symbolics.Num
+    lower::FastDifferentiation.Number
+    upper::FastDifferentiation.Number
 end
 
-ParameterBetween(x::Union{Float64,Int,Symbolics.Num}, y::Union{Float64,Int,Symbolics.Num}) =
-    ParameterBetween(Symbolics.Num(x), Symbolics.Num(y))
+ParameterBetween(x::Union{Float64,Int,FastDifferentiation.Number}, y::Union{Float64,Int,FastDifferentiation.Number}) =
+    ParameterBetween(FastDifferentiation.Number(x), FastDifferentiation.Number(y))
 
 export ParameterBetween
 
@@ -46,17 +46,17 @@ Base.:*(a::Real, b::ParameterBetween) = ParameterBetween(a * b.lower, a * b.uppe
 $(TYPEDEF)
 
 Representation of an "equality" bound, where the bound value is a parameter.
-Since `Symbolics.Num` is a subtype of `Real`, the bound could also be any real
-number, but it is converted by the constructor to a `Symbolics.Num`.
+Since `FastDifferentiation.Number` is a subtype of `Real`, the bound could also be any real
+number, but it is converted by the constructor to a `FastDifferentiation.Number`.
 
 # Fields
 $(TYPEDFIELDS)
 """
 @kwdef mutable struct ParameterEqualTo <: ConstraintTrees.Bound
-    equal_to::Symbolics.Num
+    equal_to::FastDifferentiation.Number
 end
 
-ParameterEqualTo(y::Union{Float64,Int}) = ParameterEqualTo(Symbolics.Num(y))
+ParameterEqualTo(y::Union{Float64,Int}) = ParameterEqualTo(FastDifferentiation.Number(y))
 
 export ParameterEqualTo
 
