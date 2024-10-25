@@ -23,9 +23,9 @@ import AbstractFBCModels
 import COBREXA
 import JuMP
 import ConstraintTrees
-import Symbolics
 import LinearAlgebra
 import SparseArrays
+import FastDifferentiation
 
 # Define new parameter-based types
 include("parameter_bound.jl")

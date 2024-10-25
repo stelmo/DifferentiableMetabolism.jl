@@ -22,7 +22,7 @@ Changes from copied code are indicated.
 # the "value with these variable values" that we actually need. Unfortunately
 # Symbolics don't realy have anything that would "just do" the simple thing.
 # Thus this hack.
-fast_subst(x::Symbolics.Num, y) = Symbolics.fast_substitute(x, y)
+fast_subst(x::FastDifferentiation.Number, y) = Symbolics.fast_substitute(x, y)
 fast_subst(x, y) = Symbolics.substitute(x, y)
 
 """
@@ -64,7 +64,7 @@ Converts all inequality constraints to the form `A * x ≤ b`.
 """
 function optimization_model_with_parameters(
     m::ConstraintTrees.ConstraintTree,
-    parameters::Dict{Symbolics.Num,Float64};
+    parameters::Dict{FastDifferentiation.Number,Float64};
     objective::ConstraintTrees.Value,
     optimizer,
     sense,
@@ -112,7 +112,7 @@ respectively.
 """
 function optimized_constraints_with_parameters(
     m::ConstraintTrees.ConstraintTree,
-    parameters::Dict{Symbolics.Num,Float64};
+    parameters::Dict{FastDifferentiation.Number,Float64};
     modifications = [],
     objective::ConstraintTrees.Value,
     optimizer,

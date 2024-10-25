@@ -68,12 +68,12 @@ function differentiate(
     x_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
-    parameter_values::Dict{Symbolics.Num,Float64},
-    parameters::Vector{Symbolics.Num}; # might not diff wrt all params
+    parameter_values::Dict{FastDifferentiation.Number,Float64},
+    parameters::Vector{FastDifferentiation.Number}; # might not diff wrt all params
     scale = false, # scale sensitivities
 )
     # create symbolic values of the primal and dual variables
-    Symbolics.@variables x[1:ConstraintTrees.var_count(m)]
+    FastDifferentiation.@variables x[1:ConstraintTrees.var_count(m)]
     xs = collect(x) # to make overloads in DiffMet work correctly
 
     # objective
@@ -91,7 +91,7 @@ function differentiate(
     G = [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in ineqs]
 
     # creaty symbolic variables for the duals, but only those that are required
-    Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
+    FastDifferentiation.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
 
     #=
     Do all the manipulations manually. This is much faster than using the
@@ -104,24 +104,24 @@ function differentiate(
     ]
 
     Note, make sure all the lazy operations are expanded to avoid running into bugs:
-    https://github.com/JuliaSymbolics/Symbolics.jl/issues/518
-    https://github.com/JuliaSymbolics/Symbolics.jl/issues/498
+    https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/518
+    https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/498
     =#
-    eq1 = Symbolics.sparsejacobian([f], xs)'
+    eq1 = FastDifferentiation.sparsejacobian([f], xs)'
 
-    Is, Js, Vs = SparseArrays.findnz(Symbolics.sparsejacobian(H, xs))
-    eq2 = zeros(Symbolics.Num, size(eq1, 1))
+    Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparsejacobian(H, xs))
+    eq2 = zeros(FastDifferentiation.Number, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq2[i] += v * eq_duals[j]
     end
 
-    Is, Js, Vs = SparseArrays.findnz(Symbolics.sparsejacobian(G, xs))
-    eq3 = zeros(Symbolics.Num, size(eq1, 1))
+    Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparsejacobian(G, xs))
+    eq3 = zeros(FastDifferentiation.Number, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq3[i] += v * ineq_duals[j]
     end
 
-    eq4 = zeros(Symbolics.Num, size(ineq_duals, 1))
+    eq4 = zeros(FastDifferentiation.Number, size(ineq_duals, 1))
     for i in eachindex(G) # transpose
         eq4[i] += G[i] * ineq_duals[i]
     end
@@ -132,8 +132,8 @@ function differentiate(
         eq4
     ]
 
-    A = Symbolics.sparsejacobian(kkt_eqns[:], [xs; eq_duals; ineq_duals])
-    B = Symbolics.sparsejacobian(kkt_eqns[:], parameters)
+    A = FastDifferentiation.sparsejacobian(kkt_eqns[:], [xs; eq_duals; ineq_duals])
+    B = FastDifferentiation.sparsejacobian(kkt_eqns[:], parameters)
 
     # symbolic values at the optimal solution incl parameters
     syms_to_vals = merge(
@@ -143,7 +143,7 @@ function differentiate(
 
     # substitute in values
     Is, Js, Vs = SparseArrays.findnz(A)
-    vs = float.(Symbolics.value.(fast_subst.(Vs, Ref(syms_to_vals))))
+    vs = float.(FastDifferentiation.value.(fast_subst.(Vs, Ref(syms_to_vals))))
     a = SparseArrays.sparse(Is, Js, vs, size(A)...)
     indep_rows = findall_indeps_qr(a) # find independent rows, prevent singularity issues with \
     a_indep = a[indep_rows, :]
@@ -155,7 +155,7 @@ function differentiate(
     =#
 
     Is, Js, Vs = SparseArrays.findnz(B)
-    vs = float.(Symbolics.value.(fast_subst.(Vs, Ref(syms_to_vals))))
+    vs = float.(FastDifferentiation.value.(fast_subst.(Vs, Ref(syms_to_vals))))
     b = Array(SparseArrays.sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
     b_indep = b[indep_rows, :]
 
