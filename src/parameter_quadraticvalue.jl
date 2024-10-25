@@ -33,16 +33,16 @@ $(TYPEDFIELDS)
 """
 Base.@kwdef struct ParameterQuadraticValue <: ConstraintTrees.Value
     idxs::Vector{Tuple{Int,Int}}
-    weights::Vector{FastDifferentiation.Number}
+    weights::Vector{FastDifferentiation.Node}
 end
 
 export ParameterQuadraticValue
 
 ParameterQuadraticValue(idxs::Vector{Tuple{Int,Int}}, weights::Vector{Union{Int,Float64}}) =
-    ParameterQuadraticValue(idxs, convert.(FastDifferentiation.Number, weights))
+    ParameterQuadraticValue(idxs, convert.(FastDifferentiation.Node, weights))
 
 ParameterQuadraticValue(x::ConstraintTrees.QuadraticValue) =
-    ParameterQuadraticValue(x.idxs, convert.(FastDifferentiation.Number, x.weights))
+    ParameterQuadraticValue(x.idxs, convert.(FastDifferentiation.Node, x.weights))
 
 ParameterQuadraticValue(x::ParameterLinearValue) =
     ParameterQuadraticValue(idxs = [(0, idx) for idx in x.idxs], weights = x.weights)
@@ -50,7 +50,7 @@ ParameterQuadraticValue(x::ConstraintTrees.LinearValue) =
     ParameterQuadraticValue(idxs = [(0, idx) for idx in x.idxs], weights = x.weights)
 ParameterQuadraticValue(x::Real) =
     iszero(x) ? ParameterQuadraticValue(idxs = [], weights = []) :
-    ParameterQuadraticValue(idxs = [(0, 0)], weights = [FastDifferentiation.Number(x)])
+    ParameterQuadraticValue(idxs = [(0, 0)], weights = [FastDifferentiation.Node(x)])
 
 Base.convert(::Type{ParameterQuadraticValue}, x::Real) = ParameterQuadraticValue(x)
 Base.convert(::Type{ParameterQuadraticValue}, x::ParameterLinearValue) =
@@ -90,7 +90,7 @@ function Base.:+(a::ParameterQuadraticValue, b::ParameterQuadraticValue)
     # Code mostly copied from ConstraintTrees.jl, but marginally changed some
     # types
     r_idxs = Tuple{Int,Int}[]
-    r_weights = FastDifferentiation.Number[]
+    r_weights = FastDifferentiation.Node[]
     ai = 1
     ae = length(a.idxs)
     bi = 1

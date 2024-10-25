@@ -20,20 +20,20 @@ limitations under the License.
 $(TYPEDEF)
 
 Representation of an "interval" bound where the lower and upper bound values are
-parameters. Since `FastDifferentiation.Number` is a subtype of `Real`, the bounds could also
+parameters. Since `FastDifferentiation.Node` is a subtype of `Real`, the bounds could also
 be any real number, but they are converted by the constructors to
-`FastDifferentiation.Number`s. 
+`FastDifferentiation.Node`s. 
 
 # Fields
 $(TYPEDFIELDS)
 """
 @kwdef mutable struct ParameterBetween <: ConstraintTrees.Bound
-    lower::Real
-    upper::Real
+    lower::FastDifferentiation.Node
+    upper::FastDifferentiation.Node
 end
 
-# ParameterBetween(x::Union{Float64,Int,FastDifferentiation.Number}, y::Union{Float64,Int,FastDifferentiation.Number}) =
-#     ParameterBetween(FastDifferentiation.Number(x), FastDifferentiation.Number(y))
+# ParameterBetween(x::Union{Float64,Int,FastDifferentiation.Node}, y::Union{Float64,Int,FastDifferentiation.Node}) =
+#     ParameterBetween(FastDifferentiation.Node(x), FastDifferentiation.Node(y))
 
 export ParameterBetween
 
@@ -46,17 +46,17 @@ Base.:*(a::Real, b::ParameterBetween) = ParameterBetween(a * b.lower, a * b.uppe
 $(TYPEDEF)
 
 Representation of an "equality" bound, where the bound value is a parameter.
-Since `FastDifferentiation.Number` is a subtype of `Real`, the bound could also be any real
-number, but it is converted by the constructor to a `FastDifferentiation.Number`.
+Since `FastDifferentiation.Node` is a subtype of `Real`, the bound could also be any real
+number, but it is converted by the constructor to a `FastDifferentiation.Node`.
 
 # Fields
 $(TYPEDFIELDS)
 """
 @kwdef mutable struct ParameterEqualTo <: ConstraintTrees.Bound
-    equal_to::FastDifferentiation.Number
+    equal_to::FastDifferentiation.Node
 end
 
-ParameterEqualTo(y::Union{Float64,Int}) = ParameterEqualTo(FastDifferentiation.Number(y))
+ParameterEqualTo(y::Union{Float64,Int}) = ParameterEqualTo(FastDifferentiation.Node(y))
 
 export ParameterEqualTo
 

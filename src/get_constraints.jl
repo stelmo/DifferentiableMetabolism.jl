@@ -35,7 +35,7 @@ value)` representing `{P}LV == value` for each entry.
 """
 function equality_constraints(m::ConstraintTrees.ConstraintTree)
     sink = Vector{
-        Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},FastDifferentiation.Number},
+        Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},FastDifferentiation.Node},
     }()
     get_equality_constraints(m, sink)
     sink
@@ -57,7 +57,7 @@ TODO
 """
 function get_equality_constraints(c::ConstraintTrees.Constraint, sink)
     if c.bound isa ConstraintTrees.EqualTo || c.bound isa ParameterEqualTo
-        push!(sink, (ConstraintTrees.value(c), FastDifferentiation.Number(c.bound.equal_to)))
+        push!(sink, (ConstraintTrees.value(c), FastDifferentiation.Node(c.bound.equal_to)))
     end
 end
 
@@ -72,8 +72,8 @@ function inequality_constraints(m::ConstraintTrees.ConstraintTree)
     sink = Vector{
         Tuple{
             Union{ParameterLinearValue,ConstraintTrees.LinearValue},
-            FastDifferentiation.Number,
-            FastDifferentiation.Number,
+            FastDifferentiation.Node,
+            FastDifferentiation.Node,
         },
     }()
     get_inequality_constraints(m, sink)
@@ -108,8 +108,8 @@ function get_inequality_constraints(c::ConstraintTrees.Constraint, sink)
             sink,
             (
                 ConstraintTrees.value(c),
-                FastDifferentiation.Number(c.bound.lower),
-                FastDifferentiation.Number(c.bound.upper),
+                FastDifferentiation.Node(c.bound.lower),
+                FastDifferentiation.Node(c.bound.upper),
             ),
         )
     end

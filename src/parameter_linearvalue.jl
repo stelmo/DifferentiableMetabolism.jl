@@ -34,21 +34,21 @@ $(TYPEDFIELDS)
 """
 @kwdef struct ParameterLinearValue <: ConstraintTrees.Value
     idxs::Vector{Int}
-    weights::Vector{FastDifferentiation.Number}
+    weights::Vector{FastDifferentiation.Node}
 end
 
 # convert all weights to Nums
 ParameterLinearValue(idxs::Vector{Int}, weights::Vector{Union{Int,Float64}}) =
-    ParameterLinearValue(idxs, convert.(FastDifferentiation.Number, weights))
+    ParameterLinearValue(idxs, convert.(FastDifferentiation.Node, weights))
 
 ParameterLinearValue(x::ConstraintTrees.LinearValue) =
-    ParameterLinearValue(x.idxs, convert.(FastDifferentiation.Number, x.weights))
+    ParameterLinearValue(x.idxs, convert.(FastDifferentiation.Node, x.weights))
 
 export ParameterLinearValue
 
 ParameterLinearValue(x::Real) =
     iszero(x) ? ParameterLinearValue(idxs = [], weights = []) :
-    ParameterLinearValue(idxs = [0], weights = [FastDifferentiation.Number(x)])
+    ParameterLinearValue(idxs = [0], weights = [FastDifferentiation.Node(x)])
 
 Base.convert(::Type{ParameterLinearValue}, x::Real) = ParameterLinearValue(x)
 
@@ -77,7 +77,7 @@ function Base.:+(a::ParameterLinearValue, b::ParameterLinearValue)
     # Code mostly copied from ConstraintTrees.jl, but marginally changed some
     # types
     r_idxs = Int[]
-    r_weights = FastDifferentiation.Number[]
+    r_weights = FastDifferentiation.Node[]
     ai = 1
     ae = length(a.idxs)
     bi = 1

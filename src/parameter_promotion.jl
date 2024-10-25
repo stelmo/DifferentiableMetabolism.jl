@@ -19,17 +19,17 @@ limitations under the License.
 # Promote LinearValue to ParameterLinearValue if it interacts with a parameter
 
 # Nums and LinearValues
-Base.:+(a::FastDifferentiation.Number, b::ConstraintTrees.LinearValue) = b + a
-Base.:+(a::ConstraintTrees.LinearValue, b::FastDifferentiation.Number) = a + ParameterLinearValue(b)
+Base.:+(a::FastDifferentiation.Node, b::ConstraintTrees.LinearValue) = b + a
+Base.:+(a::ConstraintTrees.LinearValue, b::FastDifferentiation.Node) = a + ParameterLinearValue(b)
 
-Base.:-(a::FastDifferentiation.Number, b::ConstraintTrees.LinearValue) = -b + a
-Base.:-(a::ConstraintTrees.LinearValue, b::FastDifferentiation.Number) = a - ParameterLinearValue(b)
+Base.:-(a::FastDifferentiation.Node, b::ConstraintTrees.LinearValue) = -b + a
+Base.:-(a::ConstraintTrees.LinearValue, b::FastDifferentiation.Node) = a - ParameterLinearValue(b)
 
-Base.:*(a::FastDifferentiation.Number, b::ConstraintTrees.LinearValue) = b * a
-Base.:*(a::ConstraintTrees.LinearValue, b::FastDifferentiation.Number) =
+Base.:*(a::FastDifferentiation.Node, b::ConstraintTrees.LinearValue) = b * a
+Base.:*(a::ConstraintTrees.LinearValue, b::FastDifferentiation.Node) =
     ParameterLinearValue(a.idxs, b .* a.weights)
 
-Base.:/(a::ConstraintTrees.LinearValue, b::FastDifferentiation.Number) =
+Base.:/(a::ConstraintTrees.LinearValue, b::FastDifferentiation.Node) =
     ParameterLinearValue(a.idxs, a.weights ./ b)
 
 # LinearValue and ParameterLinearValues
@@ -44,19 +44,19 @@ Base.:-(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) =
 # Promote QuadraticValue to ParameterQuadraticValue if it interacts with a parameter
 
 # Nums and QuadraticValues
-Base.:+(a::FastDifferentiation.Number, b::ConstraintTrees.QuadraticValue) = b + a
-Base.:+(a::ConstraintTrees.QuadraticValue, b::FastDifferentiation.Number) =
+Base.:+(a::FastDifferentiation.Node, b::ConstraintTrees.QuadraticValue) = b + a
+Base.:+(a::ConstraintTrees.QuadraticValue, b::FastDifferentiation.Node) =
     a + ParameterQuadraticValue(b)
 
-Base.:-(a::FastDifferentiation.Number, b::ConstraintTrees.QuadraticValue) = -b + a
-Base.:-(a::ConstraintTrees.QuadraticValue, b::FastDifferentiation.Number) =
+Base.:-(a::FastDifferentiation.Node, b::ConstraintTrees.QuadraticValue) = -b + a
+Base.:-(a::ConstraintTrees.QuadraticValue, b::FastDifferentiation.Node) =
     a - ParameterQuadraticValue(b)
 
-Base.:*(a::FastDifferentiation.Number, b::ConstraintTrees.QuadraticValue) = b * a
-Base.:*(a::ConstraintTrees.QuadraticValue, b::FastDifferentiation.Number) =
+Base.:*(a::FastDifferentiation.Node, b::ConstraintTrees.QuadraticValue) = b * a
+Base.:*(a::ConstraintTrees.QuadraticValue, b::FastDifferentiation.Node) =
     ParameterQuadraticValue(a.idxs, b .* a.weights)
 
-Base.:/(a::ConstraintTrees.QuadraticValue, b::FastDifferentiation.Number) =
+Base.:/(a::ConstraintTrees.QuadraticValue, b::FastDifferentiation.Node) =
     ParameterQuadraticValue(a.idxs, a.weights ./ b)
 
 # QuadraticValues and ParameterQuadraticValues
