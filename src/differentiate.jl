@@ -62,7 +62,7 @@ primal variables `x_vals`, and the dual variable values `eq_dual_vals` and
 Internally, primal variables with value `abs(x) ≤ primal_zero_tol` are removed
 from the computation, and their sensitivities are not calculated.  
 """
-function _differentiate(
+function differentiate(
     m::ConstraintTrees.ConstraintTree,
     objective::ConstraintTrees.Value,
     x_vals::Vector{Float64},
