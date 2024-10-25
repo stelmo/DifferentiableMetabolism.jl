@@ -28,6 +28,8 @@ import LinearAlgebra
 import SparseArrays
 import FastDifferentiation
 
+const Expression = FastDifferentiation.Node
+
 # Define new parameter-based types
 include("parameter_bound.jl")
 include("parameter_isozyme.jl")

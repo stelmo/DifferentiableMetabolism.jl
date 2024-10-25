@@ -68,8 +68,8 @@ function differentiate(
     x_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
-    parameter_values::Dict{FastDifferentiation.Node,Float64},
-    parameters::Vector{FastDifferentiation.Node}; # might not diff wrt all params
+    parameter_values::Dict{Expression,Float64},
+    parameters::Vector{Expression}; # might not diff wrt all params
     scale = false, # scale sensitivities
 )
     # create symbolic values of the primal and dual variables
@@ -110,18 +110,18 @@ function differentiate(
     eq1 = FastDifferentiation.sparsejacobian([f], xs)'
 
     Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparsejacobian(H, xs))
-    eq2 = zeros(FastDifferentiation.Node, size(eq1, 1))
+    eq2 = zeros(Expression, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq2[i] += v * eq_duals[j]
     end
 
     Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparsejacobian(G, xs))
-    eq3 = zeros(FastDifferentiation.Node, size(eq1, 1))
+    eq3 = zeros(Expression, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq3[i] += v * ineq_duals[j]
     end
 
-    eq4 = zeros(FastDifferentiation.Node, size(ineq_duals, 1))
+    eq4 = zeros(Expression, size(ineq_duals, 1))
     for i in eachindex(G) # transpose
         eq4[i] += G[i] * ineq_duals[i]
     end

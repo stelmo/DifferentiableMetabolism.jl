@@ -20,20 +20,20 @@ limitations under the License.
 $(TYPEDEF)
 
 Representation of an "interval" bound where the lower and upper bound values are
-parameters. Since `FastDifferentiation.Node` is a subtype of `Real`, the bounds could also
+parameters. Since `Expression` is a subtype of `Real`, the bounds could also
 be any real number, but they are converted by the constructors to
-`FastDifferentiation.Node`s. 
+`Expression`s. 
 
 # Fields
 $(TYPEDFIELDS)
 """
 @kwdef mutable struct ParameterBetween <: ConstraintTrees.Bound
-    lower::FastDifferentiation.Node
-    upper::FastDifferentiation.Node
+    lower::Expression
+    upper::Expression
 end
 
-# ParameterBetween(x::Union{Float64,Int,FastDifferentiation.Node}, y::Union{Float64,Int,FastDifferentiation.Node}) =
-#     ParameterBetween(FastDifferentiation.Node(x), FastDifferentiation.Node(y))
+# ParameterBetween(x::Union{Float64,Int,Expression}, y::Union{Float64,Int,Expression}) =
+#     ParameterBetween(Expression(x), Expression(y))
 
 export ParameterBetween
 
@@ -46,17 +46,17 @@ Base.:*(a::Real, b::ParameterBetween) = ParameterBetween(a * b.lower, a * b.uppe
 $(TYPEDEF)
 
 Representation of an "equality" bound, where the bound value is a parameter.
-Since `FastDifferentiation.Node` is a subtype of `Real`, the bound could also be any real
-number, but it is converted by the constructor to a `FastDifferentiation.Node`.
+Since `Expression` is a subtype of `Real`, the bound could also be any real
+number, but it is converted by the constructor to a `Expression`.
 
 # Fields
 $(TYPEDFIELDS)
 """
 @kwdef mutable struct ParameterEqualTo <: ConstraintTrees.Bound
-    equal_to::FastDifferentiation.Node
+    equal_to::Expression
 end
 
-ParameterEqualTo(y::Union{Float64,Int}) = ParameterEqualTo(FastDifferentiation.Node(y))
+ParameterEqualTo(y::Union{Float64,Int}) = ParameterEqualTo(Expression(y))
 
 export ParameterEqualTo
 
