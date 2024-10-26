@@ -70,7 +70,7 @@ end
 gene_product_molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_masses)
 
 @variables capacitylimitation
-parameter_values[capacitylimitation] = 50.0 # mg enzyme/gDW
+parameter_values[:capacitylimitation] = 50.0 # mg enzyme/gDW
 
 km = build_kinetic_model(
     model;
