@@ -54,23 +54,12 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Differentiate a model `m` with respect to `parameters` which take on values
-`parameter_values` in the optimal solution with respect to the `objective`. The
-primal variables `x_vals`, and the dual variable values `eq_dual_vals` and
-`ineq_dual_vals` need to be supplied. 
-
-Internally, primal variables with value `abs(x) ≤ primal_zero_tol` are removed
-from the computation, and their sensitivities are not calculated.  
+Prepare a model `m` with `objective` for differentiation with respect to `parameters`.
 """
-function differentiate(
+function differentiate_prepare_kkt(
     m::ConstraintTrees.ConstraintTree,
     objective::ConstraintTrees.Value,
-    x_vals::Vector{Float64},
-    eq_dual_vals::Vector{Float64},
-    ineq_dual_vals::Vector{Float64},
-    parameter_values::Dict{Symbol,Float64},
     parameters::Vector{Symbol}; # might not diff wrt all params
-    scale = false, # scale sensitivities
 )
     # create symbolic values of the primal and dual variables
     xs = FastDifferentiation.make_variables(:x, ConstraintTrees.var_count(m))
@@ -163,13 +152,13 @@ function differentiate(
 
     # get primal variable sensitivities only
     if scale
-        [parameter_values[parameters[j]] * c[i,j] / x_vals[i] for i in 1:length(xs), j in axes(c,2)], variable_order(m)
+        ([parameter_values[p] for p=parameters]' .* c ./ x_vals)
     else
-        c[1:length(xs), :], variable_order(m)
+        c
     end
 end
 
-export differentiate
+export differentiate_solution
 
 """
 $(TYPEDSIGNATURES)

@@ -80,6 +80,11 @@ for (r, iso) in pruned_reaction_isozymes
         parameter_values[Symbol(k, :_r)] = reaction_isozymes[r][k].kcat_reverse
     end
 end
+parameters = collect(keys(parameter_values));
+
+# costly preparation of KKTs
+pkmKKT, vids = differentiate_prepare_kkt(pkm, pkm.objective.value, parameters)
+
 ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
     pkm,
     parameter_values;
@@ -87,11 +92,10 @@ ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_
     optimizer=HiGHS.Optimizer,
     modifications=[silence],
 );
-parameters = collect(keys(parameter_values));
 
-sens, vids = differentiate(
-    pkm,
-    pkm.objective.value,
+# cheap symbolic differentiation
+sens = differentiate_solution(
+    pkmKKT,
     x_vals,
     eq_dual_vals,
     ineq_dual_vals,
