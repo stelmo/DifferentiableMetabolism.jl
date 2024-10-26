@@ -34,21 +34,21 @@ $(TYPEDFIELDS)
 """
 @kwdef struct ParameterLinearValue <: ConstraintTrees.Value
     idxs::Vector{Int}
-    weights::Vector{Symbolics.Num}
+    weights::Vector{Expression}
 end
 
 # convert all weights to Nums
 ParameterLinearValue(idxs::Vector{Int}, weights::Vector{Union{Int,Float64}}) =
-    ParameterLinearValue(idxs, convert.(Symbolics.Num, weights))
+    ParameterLinearValue(idxs, convert.(Expression, weights))
 
 ParameterLinearValue(x::ConstraintTrees.LinearValue) =
-    ParameterLinearValue(x.idxs, convert.(Symbolics.Num, x.weights))
+    ParameterLinearValue(x.idxs, convert.(Expression, x.weights))
 
 export ParameterLinearValue
 
 ParameterLinearValue(x::Real) =
     iszero(x) ? ParameterLinearValue(idxs = [], weights = []) :
-    ParameterLinearValue(idxs = [0], weights = [Symbolics.Num(x)])
+    ParameterLinearValue(idxs = [0], weights = [Expression(x)])
 
 Base.convert(::Type{ParameterLinearValue}, x::Real) = ParameterLinearValue(x)
 
@@ -77,7 +77,7 @@ function Base.:+(a::ParameterLinearValue, b::ParameterLinearValue)
     # Code mostly copied from ConstraintTrees.jl, but marginally changed some
     # types
     r_idxs = Int[]
-    r_weights = Symbolics.Num[]
+    r_weights = Expression[]
     ai = 1
     ae = length(a.idxs)
     bi = 1

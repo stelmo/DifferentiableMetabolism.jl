@@ -22,7 +22,7 @@ $(TYPEDSIGNATURES)
 TODO
 """
 constrained(x) = begin
-    y = Symbolics.value(x)
+    y = FastDifferentiation.value(x)
     y isa Float64 && isinf(y) && return false
     return true
 end
@@ -35,7 +35,7 @@ value)` representing `{P}LV == value` for each entry.
 """
 function equality_constraints(m::ConstraintTrees.ConstraintTree)
     sink = Vector{
-        Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Symbolics.Num},
+        Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Expression},
     }()
     get_equality_constraints(m, sink)
     sink
@@ -57,7 +57,7 @@ TODO
 """
 function get_equality_constraints(c::ConstraintTrees.Constraint, sink)
     if c.bound isa ConstraintTrees.EqualTo || c.bound isa ParameterEqualTo
-        push!(sink, (ConstraintTrees.value(c), Symbolics.Num(c.bound.equal_to)))
+        push!(sink, (ConstraintTrees.value(c), Expression(c.bound.equal_to)))
     end
 end
 
@@ -72,8 +72,8 @@ function inequality_constraints(m::ConstraintTrees.ConstraintTree)
     sink = Vector{
         Tuple{
             Union{ParameterLinearValue,ConstraintTrees.LinearValue},
-            Symbolics.Num,
-            Symbolics.Num,
+            Expression,
+            Expression,
         },
     }()
     get_inequality_constraints(m, sink)
@@ -108,8 +108,8 @@ function get_inequality_constraints(c::ConstraintTrees.Constraint, sink)
             sink,
             (
                 ConstraintTrees.value(c),
-                Symbolics.Num(c.bound.lower),
-                Symbolics.Num(c.bound.upper),
+                Expression(c.bound.lower),
+                Expression(c.bound.upper),
             ),
         )
     end

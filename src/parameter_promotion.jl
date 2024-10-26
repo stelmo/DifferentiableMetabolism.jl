@@ -19,17 +19,17 @@ limitations under the License.
 # Promote LinearValue to ParameterLinearValue if it interacts with a parameter
 
 # Nums and LinearValues
-Base.:+(a::Symbolics.Num, b::ConstraintTrees.LinearValue) = b + a
-Base.:+(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = a + ParameterLinearValue(b)
+Base.:+(a::Expression, b::ConstraintTrees.LinearValue) = b + a
+Base.:+(a::ConstraintTrees.LinearValue, b::Expression) = a + ParameterLinearValue(b)
 
-Base.:-(a::Symbolics.Num, b::ConstraintTrees.LinearValue) = -b + a
-Base.:-(a::ConstraintTrees.LinearValue, b::Symbolics.Num) = a - ParameterLinearValue(b)
+Base.:-(a::Expression, b::ConstraintTrees.LinearValue) = -b + a
+Base.:-(a::ConstraintTrees.LinearValue, b::Expression) = a - ParameterLinearValue(b)
 
-Base.:*(a::Symbolics.Num, b::ConstraintTrees.LinearValue) = b * a
-Base.:*(a::ConstraintTrees.LinearValue, b::Symbolics.Num) =
+Base.:*(a::Expression, b::ConstraintTrees.LinearValue) = b * a
+Base.:*(a::ConstraintTrees.LinearValue, b::Expression) =
     ParameterLinearValue(a.idxs, b .* a.weights)
 
-Base.:/(a::ConstraintTrees.LinearValue, b::Symbolics.Num) =
+Base.:/(a::ConstraintTrees.LinearValue, b::Expression) =
     ParameterLinearValue(a.idxs, a.weights ./ b)
 
 # LinearValue and ParameterLinearValues
@@ -44,19 +44,19 @@ Base.:-(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) =
 # Promote QuadraticValue to ParameterQuadraticValue if it interacts with a parameter
 
 # Nums and QuadraticValues
-Base.:+(a::Symbolics.Num, b::ConstraintTrees.QuadraticValue) = b + a
-Base.:+(a::ConstraintTrees.QuadraticValue, b::Symbolics.Num) =
+Base.:+(a::Expression, b::ConstraintTrees.QuadraticValue) = b + a
+Base.:+(a::ConstraintTrees.QuadraticValue, b::Expression) =
     a + ParameterQuadraticValue(b)
 
-Base.:-(a::Symbolics.Num, b::ConstraintTrees.QuadraticValue) = -b + a
-Base.:-(a::ConstraintTrees.QuadraticValue, b::Symbolics.Num) =
+Base.:-(a::Expression, b::ConstraintTrees.QuadraticValue) = -b + a
+Base.:-(a::ConstraintTrees.QuadraticValue, b::Expression) =
     a - ParameterQuadraticValue(b)
 
-Base.:*(a::Symbolics.Num, b::ConstraintTrees.QuadraticValue) = b * a
-Base.:*(a::ConstraintTrees.QuadraticValue, b::Symbolics.Num) =
+Base.:*(a::Expression, b::ConstraintTrees.QuadraticValue) = b * a
+Base.:*(a::ConstraintTrees.QuadraticValue, b::Expression) =
     ParameterQuadraticValue(a.idxs, b .* a.weights)
 
-Base.:/(a::ConstraintTrees.QuadraticValue, b::Symbolics.Num) =
+Base.:/(a::ConstraintTrees.QuadraticValue, b::Expression) =
     ParameterQuadraticValue(a.idxs, a.weights ./ b)
 
 # QuadraticValues and ParameterQuadraticValues

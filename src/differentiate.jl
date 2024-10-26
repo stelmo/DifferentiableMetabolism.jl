@@ -54,27 +54,15 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Differentiate a model `m` with respect to `parameters` which take on values
-`parameter_values` in the optimal solution with respect to the `objective`. The
-primal variables `x_vals`, and the dual variable values `eq_dual_vals` and
-`ineq_dual_vals` need to be supplied. 
-
-Internally, primal variables with value `abs(x) ≤ primal_zero_tol` are removed
-from the computation, and their sensitivities are not calculated.  
+Prepare a model `m` with `objective` for differentiation with respect to `parameters`.
 """
-function differentiate(
+function differentiate_prepare_kkt(
     m::ConstraintTrees.ConstraintTree,
     objective::ConstraintTrees.Value,
-    x_vals::Vector{Float64},
-    eq_dual_vals::Vector{Float64},
-    ineq_dual_vals::Vector{Float64},
-    parameter_values::Dict{Symbolics.Num,Float64},
-    parameters::Vector{Symbolics.Num}; # might not diff wrt all params
-    scale = false, # scale sensitivities
+    parameters::Vector{Symbol}; # might not diff wrt all params
 )
     # create symbolic values of the primal and dual variables
-    Symbolics.@variables x[1:ConstraintTrees.var_count(m)]
-    xs = collect(x) # to make overloads in DiffMet work correctly
+    xs = FastDifferentiation.make_variables(:x, ConstraintTrees.var_count(m))
 
     # objective
     f = ConstraintTrees.substitute(objective, xs)
@@ -91,7 +79,8 @@ function differentiate(
     G = [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in ineqs]
 
     # creaty symbolic variables for the duals, but only those that are required
-    Symbolics.@variables eq_duals[1:length(H)] ineq_duals[1:length(G)]
+    eq_duals = FastDifferentiation.make_variables(:eq_duals, length(H))
+    ineq_duals = FastDifferentiation.make_variables(:ineq_duals, length(G))
 
     #=
     Do all the manipulations manually. This is much faster than using the
@@ -104,24 +93,24 @@ function differentiate(
     ]
 
     Note, make sure all the lazy operations are expanded to avoid running into bugs:
-    https://github.com/JuliaSymbolics/Symbolics.jl/issues/518
-    https://github.com/JuliaSymbolics/Symbolics.jl/issues/498
+    https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/518
+    https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/498
     =#
-    eq1 = Symbolics.sparsejacobian([f], xs)'
+    eq1 = FastDifferentiation.jacobian([f], xs)[1,:]
 
-    Is, Js, Vs = SparseArrays.findnz(Symbolics.sparsejacobian(H, xs))
-    eq2 = zeros(Symbolics.Num, size(eq1, 1))
+    Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparse_jacobian(H, xs))
+    eq2 = zeros(Expression, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq2[i] += v * eq_duals[j]
     end
 
-    Is, Js, Vs = SparseArrays.findnz(Symbolics.sparsejacobian(G, xs))
-    eq3 = zeros(Symbolics.Num, size(eq1, 1))
+    Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparse_jacobian(G, xs))
+    eq3 = zeros(Expression, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq3[i] += v * ineq_duals[j]
     end
 
-    eq4 = zeros(Symbolics.Num, size(ineq_duals, 1))
+    eq4 = zeros(Expression, size(ineq_duals, 1))
     for i in eachindex(G) # transpose
         eq4[i] += G[i] * ineq_duals[i]
     end
@@ -132,18 +121,18 @@ function differentiate(
         eq4
     ]
 
-    A = Symbolics.sparsejacobian(kkt_eqns[:], [xs; eq_duals; ineq_duals])
-    B = Symbolics.sparsejacobian(kkt_eqns[:], parameters)
+    A = FastDifferentiation.sparse_jacobian(kkt_eqns, [xs; eq_duals; ineq_duals])
+    B = FastDifferentiation.sparse_jacobian(kkt_eqns, FastDifferentiation.Node.(parameters))
 
     # symbolic values at the optimal solution incl parameters
     syms_to_vals = merge(
-        Dict(zip([xs; eq_duals; ineq_duals], [x_vals; eq_dual_vals; ineq_dual_vals])),
+        Dict(zip((x.node_value for x in [xs; eq_duals; ineq_duals]), [x_vals; eq_dual_vals; ineq_dual_vals])),
         parameter_values,
     )
 
     # substitute in values
     Is, Js, Vs = SparseArrays.findnz(A)
-    vs = float.(Symbolics.value.(fast_subst.(Vs, Ref(syms_to_vals))))
+    vs = float.(substitute.(Vs, Ref(k -> syms_to_vals[k])))
     a = SparseArrays.sparse(Is, Js, vs, size(A)...)
     indep_rows = findall_indeps_qr(a) # find independent rows, prevent singularity issues with \
     a_indep = a[indep_rows, :]
@@ -155,7 +144,7 @@ function differentiate(
     =#
 
     Is, Js, Vs = SparseArrays.findnz(B)
-    vs = float.(Symbolics.value.(fast_subst.(Vs, Ref(syms_to_vals))))
+    vs = float.(substitute.(Vs, Ref(k -> syms_to_vals[k])))
     b = Array(SparseArrays.sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
     b_indep = b[indep_rows, :]
 
@@ -163,13 +152,13 @@ function differentiate(
 
     # get primal variable sensitivities only
     if scale
-        [parameter_values[parameters[j]] * c[i,j] / x_vals[i] for i in 1:length(xs), j in axes(c,2)], variable_order(m)
+        ([parameter_values[p] for p=parameters]' .* c ./ x_vals)
     else
-        c[1:length(xs), :], variable_order(m)
+        c
     end
 end
 
-export differentiate
+export differentiate_solution
 
 """
 $(TYPEDSIGNATURES)

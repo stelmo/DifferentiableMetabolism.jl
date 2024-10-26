@@ -8,17 +8,19 @@ AbstractFBCModels = "5a4f3dfa-1789-40f8-8221-69268c29937c"
 COBREXA = "babc4406-5200-4a30-9033-bf5ae714c842"
 ConstraintTrees = "5515826b-29c3-47a5-8849-8513ac836620"
 DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+FastDifferentiation = "eb9bf01b-bf85-4b60-bf87-ee5de06c00be"
+HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
+JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+JSONFBCModels = "475c1105-d6ed-49c1-9b32-c11adca6d3e8"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
-Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 
 [compat]
 COBREXA = "2"
 ConstraintTrees = "1"
 DocStringExtensions = "0.9"
 JuMP = "1"
-Symbolics = "6"
 julia = "1"
 
 [extras]
@@ -29,9 +31,8 @@ Clarabel = "61c947e1-3e6d-4ee4-985a-eec8c727bd6e"
 ConstraintTrees = "5515826b-29c3-47a5-8849-8513ac836620"
 Downloads = "f43a241f-c20a-4ad4-852c-f6b1247861c6"
 JSONFBCModels = "475c1105-d6ed-49c1-9b32-c11adca6d3e8"
-Symbolics = "0c5d862f-8b57-4792-8d23-62f2024744c7"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 Tulip = "6dd1b50a-3aae-11e9-10b5-ef983d2400fa"
 
 [targets]
-test = ["Test", "COBREXA", "Tulip", "Clarabel", "AbstractFBCModels", "Symbolics", "ConstraintTrees", "JSONFBCModels", "CairoMakie", "Downloads"]
+test = ["Test", "COBREXA", "Tulip", "Clarabel", "AbstractFBCModels", "ConstraintTrees", "JSONFBCModels", "CairoMakie", "Downloads"]
