@@ -65,11 +65,11 @@ m *=
 
 # substitute params into model
 parameter_substitutions = Dict(
-    r2bound => 4.0,
-    m3bound => 0.1, # lose some mass here
-    p[1] => 1.0,
-    p[2] => 1.0,
-    p[3] => 4.0,
+    :r2bound => 4.0,
+    :m3bound => 0.1, # lose some mass here
+    :p1 => 1.0,
+    :p2 => 1.0,
+    :p3 => 4.0,
 )
 
 m_noparams, _, _, _ = optimized_constraints_with_parameters(
@@ -110,7 +110,7 @@ m.objective = ConstraintTrees.Constraint(
 
 m *= :objective_bound^ConstraintTrees.Constraint(value = m.fluxes.r6.value, bound = 2.0)
 
-parameter_substitutions = merge(parameter_substitutions, Dict(zip(q, fill(1.0, 6))))
+parameter_substitutions = merge(parameter_substitutions, Dict(v.node_value => 1.0 for v in q))
 
 m_noparams, _, _, _ = optimized_constraints_with_parameters(
     m,

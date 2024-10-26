@@ -62,7 +62,7 @@ gene_product_molar_masses = Dict("g1" => 20.0, "g2" => 10.0)
 
 @variables capacitylimitation
 
-true_parameter_values = Dict(capacitylimitation => 50.0, r3 => 2.0, r4 => 3.0)
+true_parameter_values = Dict(:capacitylimitation => 50.0, :r3 => 2.0, :r4 => 3.0)
 
 km = build_kinetic_model(
     model;
@@ -103,7 +103,7 @@ km *=
         bound = nothing,
     )
 
-estimated_parameters = Dict(capacitylimitation => 50.0, r3 => 5.0, r4 => 1.0) # initial values
+estimated_parameters = Dict(:capacitylimitation => 50.0, :r3 => 5.0, :r4 => 1.0) # initial values
 η = 0.1 # learning rate
 
 losses = Float64[]
@@ -147,8 +147,8 @@ for k = 1:150
     dL_dx = x - measured # derivative of loss function with respect to optimization variables
     dL_dkcats = sens[measured_idxs, :]' * dL_dx # derivative of loss function with respect to parameters
 
-    estimated_parameters[r3] -= η * dL_dkcats[1]
-    estimated_parameters[r4] -= η * dL_dkcats[2]
+    estimated_parameters[:r3] -= η * dL_dkcats[1]
+    estimated_parameters[:r4] -= η * dL_dkcats[2]
 end
 
 lines(losses; axis = (xlabel = "Iterations", ylabel = "L2 loss"))
@@ -160,7 +160,7 @@ estimated_parameters
 
 true_parameter_values
 
-@test abs(estimated_parameters[r3] - true_parameter_values[r3]) <= 0.1 #src
-@test abs(estimated_parameters[r4] - true_parameter_values[r4]) <= 0.1 #src
-@test abs(estimated_parameters[r4] - true_parameter_values[r4]) <= 0.1 #src
+@test abs(estimated_parameters[:r3] - true_parameter_values[:r3]) <= 0.1 #src
+@test abs(estimated_parameters[:r4] - true_parameter_values[:r4]) <= 0.1 #src
+@test abs(estimated_parameters[:r4] - true_parameter_values[:r4]) <= 0.1 #src
 @test all(losses[2:end] .<= losses[1:end-1]) #src
