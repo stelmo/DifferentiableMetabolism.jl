@@ -109,6 +109,12 @@ parameters = [r3, r4] # will differentiate against these two parameters
 
 losses = Float64[]
 
+kmKKT, vids = differentiate_prepare_kkt(
+    km,
+    km.loss.value,
+    parameters,
+)
+
 for k = 1:150
 
     sol2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
@@ -122,14 +128,13 @@ for k = 1:150
 
     push!(losses, sol2.loss)
 
-    sens, vids = differentiate(
-        km,
-        km.loss.value,
+    sens, vids = differentiate_solution(
+        kmKKT,
         x_vals,
         eq_dual_vals,
         ineq_dual_vals,
         estimated_parameters,
-        parameters;
+        parameters,
     )
     measured_idxs = [1, 3, 11, 12]
 

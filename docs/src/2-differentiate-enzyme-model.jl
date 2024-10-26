@@ -170,9 +170,14 @@ pruned_kcats = [
 
 parameters = [capacitylimitation; kcats]
 
-sens, vids = differentiate(
+diff_model, vids = differentiate_prepare_kkt(
     pkm,
     pkm.objective.value,
+    parameters
+)
+
+sens = differentiate_solution(
+    diff_model,
     x_vals,
     eq_dual_vals,
     ineq_dual_vals,
