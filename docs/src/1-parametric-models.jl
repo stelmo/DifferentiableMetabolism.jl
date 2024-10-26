@@ -85,7 +85,7 @@ m_noparams.fluxes
 # ## Change the parameters and re-solve
 
 # substitute params into model
-parameter_substitutions[m3bound] = 0.0
+parameter_substitutions[:m3bound] = 0.0
 
 m_noparams, _, _, _ = optimized_constraints_with_parameters(
     m,
