@@ -16,7 +16,7 @@
 
 using DifferentiableMetabolism
 using AbstractFBCModels
-using Symbolics
+using FastDifferentiation
 using ConstraintTrees
 using COBREXA
 using Clarabel
@@ -39,7 +39,7 @@ model.reactions["r2"].lower_bound = -1000.0
 
 # ![simple_model](./assets/simple_model_pruned.svg)
 
-kcats = Symbolics.@variables r3 r4
+parameters = @variables r3 r4
 
 reaction_isozymes = Dict(
     "r3" => Dict(
@@ -60,7 +60,7 @@ reaction_isozymes = Dict(
 
 gene_product_molar_masses = Dict("g1" => 20.0, "g2" => 10.0)
 
-Symbolics.@variables capacitylimitation
+@variables capacitylimitation
 
 true_parameter_values = Dict(capacitylimitation => 50.0, r3 => 2.0, r4 => 3.0)
 
@@ -104,7 +104,6 @@ km *=
     )
 
 estimated_parameters = Dict(capacitylimitation => 50.0, r3 => 5.0, r4 => 1.0) # initial values
-parameters = [r3, r4] # will differentiate against these two parameters
 η = 0.1 # learning rate
 
 losses = Float64[]

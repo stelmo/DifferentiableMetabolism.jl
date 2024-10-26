@@ -16,7 +16,7 @@
 
 using DifferentiableMetabolism
 
-using Symbolics
+using FastDifferentiation
 using ConstraintTrees
 using COBREXA
 using Tulip
@@ -46,7 +46,7 @@ base_model.fluxes
 # ## Add parameters to the model
 
 # Make bound of r2 and mass balance of m3 parameters
-Symbolics.@variables r2bound m3bound
+@variables r2bound m3bound
 
 m.fluxes.r2 =
     ConstraintTrees.Constraint(m.fluxes.r2.value, -2 * ParameterBetween(r2bound, 0))
@@ -55,7 +55,7 @@ m.flux_stoichiometry.m3 =
     ConstraintTrees.Constraint(m.flux_stoichiometry.m3.value, ParameterEqualTo(m3bound) / 2)
 
 # # add parametric constraints
-Symbolics.@variables p[1:4]
+p = make_variables(:p, 4)
 
 m *=
     :linparam^ConstraintTrees.Constraint(
@@ -99,7 +99,7 @@ m_noparams.fluxes
 
 # ## Quadratic parameters also work
 
-Symbolics.@variables q[1:6]
+q = make_variables(:q, 6)
 
 m.objective = ConstraintTrees.Constraint(
     value = sum(

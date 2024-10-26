@@ -16,13 +16,13 @@
 
 using DifferentiableMetabolism
 using AbstractFBCModels
-using Symbolics
 using ConstraintTrees
 using COBREXA
 using Tulip
 using JSONFBCModels
 import Downloads: download
 using CairoMakie
+using FastDifferentiation
 
 !isfile("e_coli_core.json") &&
     download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
@@ -38,7 +38,7 @@ model.reactions[glc_idx]["lower_bound"] = -1000.0
 pfl_idx = first(indexin(["PFL"], rids))
 model.reactions[pfl_idx]["upper_bound"] = 0.0
 
-kcats = vcat([Symbolics.@variables $x for x in Symbol.(keys(ecoli_core_reaction_kcats))]...)
+kcats = FastDifferentiation.Node.(Symbol.(keys(ecoli_core_reaction_kcats)))
 
 rid_kcat = Dict(zip(keys(ecoli_core_reaction_kcats), kcats))
 
@@ -69,7 +69,7 @@ end
 
 gene_product_molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_masses)
 
-Symbolics.@variables capacitylimitation
+@variables capacitylimitation
 parameter_values[capacitylimitation] = 50.0 # mg enzyme/gDW
 
 km = build_kinetic_model(
