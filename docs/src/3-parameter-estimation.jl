@@ -104,14 +104,14 @@ km *=
     )
 
 estimated_parameters = Dict(:capacitylimitation => 50.0, :r3 => 5.0, :r4 => 1.0) # initial values
-η = 1 # learning rate
+η = 0.1 # learning rate
 
 losses = Float64[]
 
 kmKKT, vids = differentiate_prepare_kkt(
     km,
     km.loss.value,
-    [:capacitylimitation, :r3, :r4],
+    [:r3, :r4, :capacitylimitation],
 )
 
 for k = 1:150
@@ -133,9 +133,8 @@ for k = 1:150
         eq_dual_vals,
         ineq_dual_vals,
         estimated_parameters,
-        scale = true
     )
-    measured_idxs = [1, 3, 11, 12]
+    measured_idxs = [1, 3, 11, 12] # TODO 11 and 12 seem flipped
 
     x = [
         sol2.fluxes.r1,
