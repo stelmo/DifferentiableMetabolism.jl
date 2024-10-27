@@ -39,7 +39,7 @@ model.reactions["r2"].lower_bound = -1000.0
 
 # ![simple_model](./assets/simple_model_pruned.svg)
 
-parameters = @variables r3 r4
+@variables r3 r4
 
 reaction_isozymes = Dict(
     "r3" => Dict(
@@ -104,14 +104,14 @@ km *=
     )
 
 estimated_parameters = Dict(:capacitylimitation => 50.0, :r3 => 5.0, :r4 => 1.0) # initial values
-η = 0.1 # learning rate
+η = 1 # learning rate
 
 losses = Float64[]
 
 kmKKT, vids = differentiate_prepare_kkt(
     km,
     km.loss.value,
-    parameters,
+    [:capacitylimitation, :r3, :r4],
 )
 
 for k = 1:150
@@ -127,12 +127,13 @@ for k = 1:150
 
     push!(losses, sol2.loss)
 
-    sens, vids = differentiate_solution(
+    sens = differentiate_solution(
         kmKKT,
         x_vals,
         eq_dual_vals,
         ineq_dual_vals,
         estimated_parameters,
+        scale = true
     )
     measured_idxs = [1, 3, 11, 12]
 
@@ -160,6 +161,5 @@ estimated_parameters
 true_parameter_values
 
 @test abs(estimated_parameters[:r3] - true_parameter_values[:r3]) <= 0.1 #src
-@test abs(estimated_parameters[:r4] - true_parameter_values[:r4]) <= 0.1 #src
 @test abs(estimated_parameters[:r4] - true_parameter_values[:r4]) <= 0.1 #src
 @test all(losses[2:end] .<= losses[1:end-1]) #src
