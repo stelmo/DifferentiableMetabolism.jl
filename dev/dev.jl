@@ -100,6 +100,5 @@ sens = differentiate_solution(
     eq_dual_vals,
     ineq_dual_vals,
     parameter_values,
-    parameters;
     scale=true, # unitless sensitivities
 );
