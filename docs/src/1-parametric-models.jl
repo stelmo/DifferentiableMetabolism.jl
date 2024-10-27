@@ -249,7 +249,9 @@ pr14 = ParameterLinearValue([1, 2], [2, 3]) * ConstraintTrees.LinearValue([1, 2]
 @test pr14.idxs == [(1, 1), (1, 2), (2, 2)] && v.(pr14.weights) == [2, 7, 6] #src
 pr15 = ConstraintTrees.LinearValue([1, 2], [1, 2]) - ParameterQuadraticValue([(1, 1)], [2]) #src
 @test pr15.idxs == [(0, 1), (1, 1), (0, 2)] && v.(pr15.weights) == [1, -2, 2] #src
-@test ConstraintTrees.substitute( #src
-    ParameterQuadraticValue([(0, 0), (1, 1)], [1, 2]), #src
-    FastDifferentiation.Node.([1.0, 2.0]), #src
+@test v( #src
+    ConstraintTrees.substitute( #src
+        ParameterQuadraticValue([(0, 0), (1, 1)], [1, 2]), #src
+        FastDifferentiation.Node.([1.0, 2.0]), #src
+    ), #src
 ) == 3 #src
