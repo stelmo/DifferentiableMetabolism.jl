@@ -164,14 +164,14 @@ sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
 
 parameters = [:capacitylimitation; kcats]
 
-diff_model, vids = differentiate_prepare_kkt(
+pkm_kkt, vids = differentiate_prepare_kkt(
     pkm,
     pkm.objective.value,
     parameters
 )
 
 sens = differentiate_solution(
-    diff_model,
+    pkm_kkt,
     x_vals,
     eq_dual_vals,
     ineq_dual_vals,
