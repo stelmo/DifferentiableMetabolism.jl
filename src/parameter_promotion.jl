@@ -18,7 +18,7 @@ limitations under the License.
 
 # Promote LinearValue to ParameterLinearValue if it interacts with a parameter
 
-# Nums and LinearValues
+# Expressions and LinearValues
 Base.:+(a::Expression, b::ConstraintTrees.LinearValue) = b + a
 Base.:+(a::ConstraintTrees.LinearValue, b::Expression) = a + ParameterLinearValue(b)
 
@@ -43,7 +43,7 @@ Base.:-(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) =
 
 # Promote QuadraticValue to ParameterQuadraticValue if it interacts with a parameter
 
-# Nums and QuadraticValues
+# Expressions and QuadraticValues
 Base.:+(a::Expression, b::ConstraintTrees.QuadraticValue) = b + a
 Base.:+(a::ConstraintTrees.QuadraticValue, b::Expression) =
     a + ParameterQuadraticValue(b)
