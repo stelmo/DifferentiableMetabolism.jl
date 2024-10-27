@@ -136,8 +136,8 @@ function differentiate_solution(
     x_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
-    parameter_values::Dict{Symbolics.Num,Float64},
-    parameters::Vector{Symbolics.Num}; # might not diff wrt all params
+    parameter_values::Dict{Symbol,Float64},
+    parameters::Vector{Symbol}; # might not diff wrt all params
     scale = false, # scale sensitivities
 )
 
