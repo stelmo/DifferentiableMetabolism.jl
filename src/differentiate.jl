@@ -51,6 +51,8 @@ function findall_indeps_qr(A)
     t.pcol[1:max_lin_indep_columns] # undo permumation
 end
 
+export differentiate_prepare_kkt
+
 """
 $(TYPEDSIGNATURES)
 
