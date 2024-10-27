@@ -251,5 +251,5 @@ pr15 = ConstraintTrees.LinearValue([1, 2], [1, 2]) - ParameterQuadraticValue([(1
 @test pr15.idxs == [(0, 1), (1, 1), (0, 2)] && v.(pr15.weights) == [1, -2, 2] #src
 @test ConstraintTrees.substitute( #src
     ParameterQuadraticValue([(0, 0), (1, 1)], [1, 2]), #src
-    [1, 2], #src
+    FastDifferentiation.Node.([1.0, 2.0]), #src
 ) == 3 #src
