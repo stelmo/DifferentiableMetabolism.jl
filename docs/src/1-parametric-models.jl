@@ -122,7 +122,7 @@ m_noparams, _, _, _ = optimized_constraints_with_parameters(
 )
 m_noparams.fluxes
 
-v(x) = substitute(x, _ -> throw("no subst!")) #src
+v(x) = DifferentiableMetabolism.substitute(x, _ -> throw("no subst!")) #src
 @test isapprox(m_noparams.objective, 11.0; atol = TEST_TOLERANCE) #src
 pb = ParameterBetween(1, 2.0) #src
 @test v((-pb).lower) == -1 && v((-pb).upper) == -2 #src
