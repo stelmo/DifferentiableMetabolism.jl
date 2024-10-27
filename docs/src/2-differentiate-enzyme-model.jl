@@ -39,7 +39,7 @@ pfl_idx = first(indexin(["PFL"], rids))
 model.reactions[pfl_idx]["upper_bound"] = 0.0
 
 rid_kcat = Dict(k => FastDifferentiation.Node(Symbol(k)) for (k,_) in ecoli_core_reaction_kcats)
-kcats = collect(values(rid_kcat))
+kcats = Symbol.(keys(ecoli_core_reaction_kcats))
 
 parameter_values = Dict{Symbol, Float64}()
 
@@ -162,7 +162,7 @@ sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
 ) #src
 
 
-parameters = [capacitylimitation; kcats]
+parameters = [:capacitylimitation; kcats]
 
 diff_model, vids = differentiate_prepare_kkt(
     pkm,
@@ -176,7 +176,6 @@ sens = differentiate_solution(
     eq_dual_vals,
     ineq_dual_vals,
     parameter_values,
-    parameters;
     scale = true, # unitless sensitivities
 )
 

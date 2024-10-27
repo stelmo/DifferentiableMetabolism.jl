@@ -126,18 +126,17 @@ function differentiate_prepare_kkt(
     A = FastDifferentiation.sparse_jacobian(kkt_eqns, [xs; eq_duals; ineq_duals])
     B = FastDifferentiation.sparse_jacobian(kkt_eqns, FastDifferentiation.Node.(parameters))
 
-    return (A, B, xs, eq_duals, ineq_duals), variable_order(m)
+    return (A, B, xs, eq_duals, ineq_duals, parameters), variable_order(m)
 end
 
 export differentiate_prepare_kkt
 
 function differentiate_solution(
-    (A, B, xs, eq_duals, ineq_duals),
+    (A, B, xs, eq_duals, ineq_duals, parameters),
     x_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
     parameter_values::Dict{Symbol,Float64},
-    parameters::Vector{Symbol}; # might not diff wrt all params
     scale = false, # scale sensitivities
 )
 

@@ -133,7 +133,6 @@ for k = 1:150
         eq_dual_vals,
         ineq_dual_vals,
         estimated_parameters,
-        parameters,
     )
     measured_idxs = [1, 3, 11, 12]
 
