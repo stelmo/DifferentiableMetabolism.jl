@@ -123,7 +123,7 @@ flux_zero_tol = 1e-6 # these bounds make a real difference!
 gene_zero_tol = 1e-6
 
 pruned_reaction_isozymes =
-    prune_reaction_isozymes(reaction_isozymes, ec_solution, gene_zero_tol)
+    prune_reaction_isozymes(reaction_isozymes, ec_solution, flux_zero_tol)
 
 pruned_gene_product_molar_masses =
     prune_gene_product_molar_masses(gene_product_molar_masses, ec_solution, gene_zero_tol)
