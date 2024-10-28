@@ -1,4 +1,3 @@
-/docs/build/
 
 # ignore vscode
 ./vscode
@@ -12,9 +11,7 @@
 /docs/build
 Manifest.toml
 
-dev/Alloascoidea_hylecoeti.json
-dev/Alloascoidea_hylecoeti_isozymes.json
-dev/Alloascoidea_hylecoeti_molar_mass.json
-
-
 *.json
+
+# vim
+.*.swp
