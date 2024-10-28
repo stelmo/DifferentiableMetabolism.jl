@@ -228,3 +228,27 @@ f, a, hm = heatmap(
 )
 Colorbar(f[1, 2], hm)
 f
+
+# Looking at sensitivities in the original model structure:
+
+struct Scalarize{T}
+    x::T
+end
+
+Base.:+(a, b::Scalarize) = Scalarize(a .+ b.x)
+Base.:+(a::Scalarize, b) = Scalarize(a.x .+ b)
+Base.:+(a::Scalarize, b::Scalarize) = Scalarize(a.x .+ b.x)
+Base.:*(a, b::Scalarize) = Scalarize(a .* b.x)
+Base.:*(a::Scalarize, b) = Scalarize(a.x .* b)
+Base.:*(a::Scalarize, b::Scalarize) = Scalarize(a.x .* b.x)
+
+unscalarize(x::Scalarize) = x.x
+
+pkmv = DifferentiableMetabolism.substitute(pkm, x -> parameter_values[x])
+
+import SparseArrays
+import ConstraintTrees as C
+
+sensitivity_tree = C.map(C.value, :parameters ^ C.variables(keys=parameters), C.LinearValue) * C.map(C.substitute_values(pkmv, Scalarize.(collect.(eachrow(sens)))), C.LinearValue) do x
+    C.LinearValue(SparseArrays.sparse(unscalarize(x)))
+end
