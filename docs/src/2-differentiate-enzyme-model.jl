@@ -249,6 +249,10 @@ pkmv = DifferentiableMetabolism.substitute(pkm, x -> parameter_values[x])
 import SparseArrays
 import ConstraintTrees as C
 
-sensitivity_tree = C.map(C.value, :parameters ^ C.variables(keys=parameters), C.LinearValue) * C.map(C.substitute_values(pkmv, Scalarize.(collect.(eachrow(sens)))), C.LinearValue) do x
-    C.LinearValue(SparseArrays.sparse(unscalarize(x)))
-end
+sensitivity_tree =
+    C.map(C.value, :parameters^C.variables(keys = parameters), C.LinearValue) * C.map(
+        C.substitute_values(pkmv, Scalarize.(collect.(eachrow(sens)))),
+        C.LinearValue,
+    ) do x
+        C.LinearValue(SparseArrays.sparse(unscalarize(x)))
+    end
