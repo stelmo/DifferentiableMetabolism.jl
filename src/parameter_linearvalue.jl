@@ -37,7 +37,7 @@ $(TYPEDFIELDS)
     weights::Vector{Expression}
 end
 
-# convert all weights to Nums
+# convert all weights to Expressions
 ParameterLinearValue(idxs::Vector{Int}, weights::Vector{Union{Int,Float64}}) =
     ParameterLinearValue(idxs, convert.(Expression, weights))
 

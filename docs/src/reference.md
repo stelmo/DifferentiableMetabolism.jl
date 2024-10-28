@@ -76,9 +76,9 @@ Modules = [DifferentiableMetabolism]
 Pages = ["src/get_constraints.jl"]
 ```
 
-### Symbolics extensions
+### Expression evaluation utilities
 
 ```@autodocs
 Modules = [DifferentiableMetabolism]
-Pages = ["src/symbolics.jl"]
+Pages = ["src/substitute.jl"]
 ```

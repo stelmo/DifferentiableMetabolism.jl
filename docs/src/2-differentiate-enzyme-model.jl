@@ -16,13 +16,13 @@
 
 using DifferentiableMetabolism
 using AbstractFBCModels
-using Symbolics
 using ConstraintTrees
 using COBREXA
 using Tulip
 using JSONFBCModels
 import Downloads: download
 using CairoMakie
+using FastDifferentiation
 
 !isfile("e_coli_core.json") &&
     download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
@@ -38,12 +38,10 @@ model.reactions[glc_idx]["lower_bound"] = -1000.0
 pfl_idx = first(indexin(["PFL"], rids))
 model.reactions[pfl_idx]["upper_bound"] = 0.0
 
-kcats = vcat([Symbolics.@variables $x for x in Symbol.(keys(ecoli_core_reaction_kcats))]...)
+rid_kcat = Dict(k => FastDifferentiation.Node(Symbol(k)) for (k,_) in ecoli_core_reaction_kcats)
+kcats = Symbol.(keys(ecoli_core_reaction_kcats))
 
-rid_kcat = Dict(zip(keys(ecoli_core_reaction_kcats), kcats))
-
-parameter_values =
-    Dict(kid => ecoli_core_reaction_kcats[rid] * 3.6 for (rid, kid) in rid_kcat) # change unit to k/h
+parameter_values = Dict{Symbol, Float64}()
 
 reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
 float_reaction_isozymes = Dict{String,Dict{String,COBREXA.Isozyme}}() #src
@@ -52,25 +50,29 @@ for rid in AbstractFBCModels.reactions(model)
     isnothing(grrs) && continue # skip if no grr available
     haskey(ecoli_core_reaction_kcats, rid) || continue # skip if no kcat data available
     for (i, grr) in enumerate(grrs)
+
+        kcat = ecoli_core_reaction_kcats[rid] * 3.6 # change unit to k/h
+        parameter_values[Symbol(rid)] = kcat
+
         d = get!(reaction_isozymes, rid, Dict{String,ParameterIsozyme}())
-        d2 = get!(float_reaction_isozymes, rid, Dict{String,COBREXA.Isozyme}()) #src
-        d["isozyme_"*string(i)] = ParameterIsozyme(
+        d["isozyme_$i"] = ParameterIsozyme(
             gene_product_stoichiometry = Dict(grr .=> fill(1.0, size(grr))), # assume subunit stoichiometry of 1 for all isozymes
             kcat_forward = rid_kcat[rid],
             kcat_reverse = rid_kcat[rid],
         )
-        d2["isozyme_"*string(i)] = COBREXA.Isozyme( #src
+        d2 = get!(float_reaction_isozymes, rid, Dict{String,COBREXA.Isozyme}()) #src
+        d2["isozyme_$i"] = COBREXA.Isozyme( #src
             gene_product_stoichiometry = Dict(grr .=> fill(1.0, size(grr))), #src
-            kcat_forward = ecoli_core_reaction_kcats[rid] * 3.6, #src
-            kcat_reverse = ecoli_core_reaction_kcats[rid] * 3.6, #src
+            kcat_forward = kcat, #src
+            kcat_reverse = kcat, #src
         ) #src
     end
 end
 
 gene_product_molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_masses)
 
-Symbolics.@variables capacitylimitation
-parameter_values[capacitylimitation] = 50.0 # mg enzyme/gDW
+@variables capacitylimitation
+parameter_values[:capacitylimitation] = 50.0 # mg enzyme/gDW
 
 km = build_kinetic_model(
     model;
@@ -100,15 +102,15 @@ ec_solution_cobrexa = enzyme_constrained_flux_balance_analysis( #src
 @test isapprox(ec_solution.objective, ec_solution_cobrexa.objective; atol = TEST_TOLERANCE) #src
 
 # This solution contains many inactive reactions
-sort(abs.(collect(values(ec_solution.fluxes))))
+sort(collect(ec_solution.fluxes), by=ComposedFunction(abs, last))
 
-@test any(abs.(collect(values(ec_solution.fluxes))) .≈ 0) #src
+@test any(values(ec_solution.fluxes) .≈ 0) #src
 
 # And also many inactive gene products. 
 
-sort(abs.(collect(values(ec_solution.gene_product_amounts))))
+sort(collect(ec_solution.gene_product_amounts), by=last)
 
-@test any(round.(abs.(collect(values(ec_solution.gene_product_amounts))); digits = 8) .≈ 0) #src
+@test any(isapprox.(values(ec_solution.gene_product_amounts), 0, atol=1e-8)) #src
 
 # With theory, you can show that this introduces flux variability into the
 # solution, making it non-unique, and consequently non-differentiable. To fix
@@ -121,7 +123,7 @@ flux_zero_tol = 1e-6 # these bounds make a real difference!
 gene_zero_tol = 1e-6
 
 pruned_reaction_isozymes =
-    prune_reaction_isozymes(reaction_isozymes, ec_solution, gene_zero_tol)
+    prune_reaction_isozymes(reaction_isozymes, ec_solution, flux_zero_tol)
 
 pruned_gene_product_molar_masses =
     prune_gene_product_molar_masses(gene_product_molar_masses, ec_solution, gene_zero_tol)
@@ -147,7 +149,7 @@ ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_
 ec_solution2
 
 # no zero fluxes
-sort(abs.(collect(values(ec_solution2.fluxes))))
+sort(collect(ec_solution.fluxes), by=ComposedFunction(abs, last))
 
 # no zero genes
 sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
@@ -159,25 +161,21 @@ sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
     k in intersect(keys(ec_solution.fluxes), keys(ec_solution2.fluxes)) #src
 ) #src
 
-# prune the kcats, leaving only those that are actually used
 
-pruned_kcats = [
-    begin
-        x = first(values(v))
-        isnothing(x.kcat_forward) ? x.kcat_reverse : x.kcat_forward
-    end for v in values(pruned_reaction_isozymes)
-]
+parameters = [:capacitylimitation; kcats]
 
-parameters = [capacitylimitation; kcats]
-
-sens, vids = differentiate(
+pkm_kkt, vids = differentiate_prepare_kkt(
     pkm,
     pkm.objective.value,
+    parameters
+)
+
+sens = differentiate_solution(
+    pkm_kkt,
     x_vals,
     eq_dual_vals,
     ineq_dual_vals,
     parameter_values,
-    parameters;
     scale = true, # unitless sensitivities
 )
 

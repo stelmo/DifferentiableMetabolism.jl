@@ -51,6 +51,8 @@ function findall_indeps_qr(A)
     t.pcol[1:max_lin_indep_columns] # undo permumation
 end
 
+export differentiate_prepare_kkt
+
 """
 $(TYPEDSIGNATURES)
 
@@ -124,6 +126,20 @@ function differentiate_prepare_kkt(
     A = FastDifferentiation.sparse_jacobian(kkt_eqns, [xs; eq_duals; ineq_duals])
     B = FastDifferentiation.sparse_jacobian(kkt_eqns, FastDifferentiation.Node.(parameters))
 
+    return (A, B, xs, eq_duals, ineq_duals, parameters), variable_order(m)
+end
+
+export differentiate_prepare_kkt
+
+function differentiate_solution(
+    (A, B, xs, eq_duals, ineq_duals, parameters),
+    x_vals::Vector{Float64},
+    eq_dual_vals::Vector{Float64},
+    ineq_dual_vals::Vector{Float64},
+    parameter_values::Dict{Symbol,Float64};
+    scale = false, # scale sensitivities
+)
+
     # symbolic values at the optimal solution incl parameters
     syms_to_vals = merge(
         Dict(zip((x.node_value for x in [xs; eq_duals; ineq_duals]), [x_vals; eq_dual_vals; ineq_dual_vals])),
@@ -152,9 +168,9 @@ function differentiate_prepare_kkt(
 
     # get primal variable sensitivities only
     if scale
-        ([parameter_values[p] for p=parameters]' .* c ./ x_vals)
+        ([parameter_values[p] for p in parameters]' .* c[1:length(xs), :] ./ x_vals)
     else
-        c
+        c[1:length(xs),:]
     end
 end
 
