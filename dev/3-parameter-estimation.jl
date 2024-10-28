@@ -16,7 +16,7 @@
 
 using DifferentiableMetabolism
 using AbstractFBCModels
-using Symbolics
+using FastDifferentiation
 using ConstraintTrees
 using COBREXA
 using Clarabel
@@ -39,7 +39,7 @@ model.reactions["r2"].lower_bound = -1000.0
 
 # ![simple_model](./assets/simple_model_pruned.svg)
 
-kcats = Symbolics.@variables r3 r4
+@variables r3 r4
 
 reaction_isozymes = Dict(
     "r3" => Dict(
@@ -60,9 +60,9 @@ reaction_isozymes = Dict(
 
 gene_product_molar_masses = Dict("g1" => 20.0, "g2" => 10.0)
 
-Symbolics.@variables capacitylimitation
+@variables capacitylimitation
 
-true_parameter_values = Dict(capacitylimitation => 50.0, r3 => 2.0, r4 => 3.0)
+true_parameter_values = Dict(:capacitylimitation => 50.0, :r3 => 2.0, :r4 => 3.0)
 
 km = build_kinetic_model(
     model;
@@ -103,11 +103,16 @@ km *=
         bound = nothing,
     )
 
-estimated_parameters = Dict(capacitylimitation => 50.0, r3 => 5.0, r4 => 1.0) # initial values
-parameters = [r3, r4] # will differentiate against these two parameters
+estimated_parameters = Dict(:capacitylimitation => 50.0, :r3 => 5.0, :r4 => 1.0) # initial values
 η = 0.1 # learning rate
 
 losses = Float64[]
+
+kmKKT, vids = differentiate_prepare_kkt(
+    km,
+    km.loss.value,
+    [:r3, :r4, :capacitylimitation],
+)
 
 for k = 1:150
 
@@ -122,16 +127,14 @@ for k = 1:150
 
     push!(losses, sol2.loss)
 
-    sens, vids = differentiate(
-        km,
-        km.loss.value,
+    sens = differentiate_solution(
+        kmKKT,
         x_vals,
         eq_dual_vals,
         ineq_dual_vals,
         estimated_parameters,
-        parameters;
     )
-    measured_idxs = [1, 3, 11, 12]
+    measured_idxs = [1, 3, 12, 11]
 
     x = [
         sol2.fluxes.r1,
@@ -143,8 +146,8 @@ for k = 1:150
     dL_dx = x - measured # derivative of loss function with respect to optimization variables
     dL_dkcats = sens[measured_idxs, :]' * dL_dx # derivative of loss function with respect to parameters
 
-    estimated_parameters[r3] -= η * dL_dkcats[1]
-    estimated_parameters[r4] -= η * dL_dkcats[2]
+    estimated_parameters[:r3] -= η * dL_dkcats[1]
+    estimated_parameters[:r4] -= η * dL_dkcats[2]
 end
 
 lines(losses; axis = (xlabel = "Iterations", ylabel = "L2 loss"))
@@ -156,7 +159,6 @@ estimated_parameters
 
 true_parameter_values
 
-@test abs(estimated_parameters[r3] - true_parameter_values[r3]) <= 0.1 #src
-@test abs(estimated_parameters[r4] - true_parameter_values[r4]) <= 0.1 #src
-@test abs(estimated_parameters[r4] - true_parameter_values[r4]) <= 0.1 #src
+@test abs(estimated_parameters[:r3] - true_parameter_values[:r3]) <= 0.1 #src
+@test abs(estimated_parameters[:r4] - true_parameter_values[:r4]) <= 0.1 #src
 @test all(losses[2:end] .<= losses[1:end-1]) #src

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Parametric constraint-based metabolic models · DifferentiableMetabolism.jl</title><meta name="title" content="Parametric constraint-based metabolic models · DifferentiableMetabolism.jl"/><meta property="og:title" content="Parametric constraint-based metabolic models · DifferentiableMetabolism.jl"/><meta property="twitter:title" content="Parametric constraint-based metabolic models · DifferentiableMetabolism.jl"/><meta name="description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="twitter:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/1-parametric-models/"/><meta property="twitter:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/1-parametric-models/"/><link rel="canonical" href="https://stelmo.github.io/DifferentiableMetabolism.jl/1-parametric-models/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DifferentiableMetabolism.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">README</a></li><li class="is-active"><a class="tocitem" href>Parametric constraint-based metabolic models</a><ul class="internal"><li><a class="tocitem" href="#Load-and-solve-a-simple-model"><span>Load and solve a simple model</span></a></li><li><a class="tocitem" href="#Add-parameters-to-the-model"><span>Add parameters to the model</span></a></li><li class="toplevel"><a class="tocitem" href="#add-parametric-constraints"><span>add parametric constraints</span></a></li><li><a class="tocitem" href="#Change-the-parameters-and-re-solve"><span>Change the parameters and re-solve</span></a></li><li><a class="tocitem" href="#Quadratic-parameters-also-work"><span>Quadratic parameters also work</span></a></li></ul></li><li><a class="tocitem" href="../2-differentiate-enzyme-model/">Differentiating enzyme constrained metabolic models</a></li><li><a class="tocitem" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data</a></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Parametric constraint-based metabolic models</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Parametric constraint-based metabolic models</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl/blob/master/docs/src/1-parametric-models.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Parametric-constraint-based-metabolic-models"><a class="docs-heading-anchor" href="#Parametric-constraint-based-metabolic-models">Parametric constraint-based metabolic models</a><a id="Parametric-constraint-based-metabolic-models-1"></a><a class="docs-heading-anchor-permalink" href="#Parametric-constraint-based-metabolic-models" title="Permalink"></a></h1><pre><code class="language-julia hljs">using DifferentiableMetabolism
 
-using Symbolics
+using FastDifferentiation
 using ConstraintTrees
 using COBREXA
 using Tulip
@@ -23,13 +23,13 @@ base_model.fluxes</code></pre><pre class="documenter-example-output"><code class
   :r3 =&gt; 1.97554
   :r4 =&gt; 1.97554
   :r5 =&gt; -0.97554
-  :r6 =&gt; 1.0</code></pre><h2 id="Add-parameters-to-the-model"><a class="docs-heading-anchor" href="#Add-parameters-to-the-model">Add parameters to the model</a><a id="Add-parameters-to-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Add-parameters-to-the-model" title="Permalink"></a></h2><p>Make bound of r2 and mass balance of m3 parameters</p><pre><code class="language-julia hljs">Symbolics.@variables r2bound m3bound
+  :r6 =&gt; 1.0</code></pre><h2 id="Add-parameters-to-the-model"><a class="docs-heading-anchor" href="#Add-parameters-to-the-model">Add parameters to the model</a><a id="Add-parameters-to-the-model-1"></a><a class="docs-heading-anchor-permalink" href="#Add-parameters-to-the-model" title="Permalink"></a></h2><p>Make bound of r2 and mass balance of m3 parameters</p><pre><code class="language-julia hljs">@variables r2bound m3bound
 
 m.fluxes.r2 =
     ConstraintTrees.Constraint(m.fluxes.r2.value, -2 * ParameterBetween(r2bound, 0))
 
 m.flux_stoichiometry.m3 =
-    ConstraintTrees.Constraint(m.flux_stoichiometry.m3.value, ParameterEqualTo(m3bound) / 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Constraint(ConstraintTrees.LinearValue([3, 4], [1.0, -1.0]), ParameterEqualTo(0.5m3bound))</code></pre><h1 id="add-parametric-constraints"><a class="docs-heading-anchor" href="#add-parametric-constraints">add parametric constraints</a><a id="add-parametric-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#add-parametric-constraints" title="Permalink"></a></h1><pre><code class="language-julia hljs">Symbolics.@variables p[1:4]
+    ConstraintTrees.Constraint(m.flux_stoichiometry.m3.value, ParameterEqualTo(m3bound) / 2)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Constraint(ConstraintTrees.LinearValue([3, 4], [1.0, -1.0]), ParameterEqualTo((0.5 * m3bound)))</code></pre><h1 id="add-parametric-constraints"><a class="docs-heading-anchor" href="#add-parametric-constraints">add parametric constraints</a><a id="add-parametric-constraints-1"></a><a class="docs-heading-anchor-permalink" href="#add-parametric-constraints" title="Permalink"></a></h1><pre><code class="language-julia hljs">p = make_variables(:p, 4)
 
 m *=
     :linparam^ConstraintTrees.Constraint(
@@ -39,13 +39,13 @@ m *=
   :coupling           =&gt; ConstraintTrees.Tree{ConstraintTrees.Constraint}(#= 0 elements =#)
   :flux_stoichiometry =&gt; ConstraintTrees.Tree{ConstraintTrees.Constraint}(#= 4 elements =#)
   :fluxes             =&gt; ConstraintTrees.Tree{ConstraintTrees.Constraint}(#= 6 elements =#)
-  :linparam           =&gt; ConstraintTrees.Constraint(ParameterLinearValue(#= ... =#), ParameterBetween(-p[3], 0))
+  :linparam           =&gt; ConstraintTrees.Constraint(ParameterLinearValue(#= ... =#), ParameterBetween(-(p3), 0))
   :objective          =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ... =#))</code></pre><p>substitute params into model</p><pre><code class="language-julia hljs">parameter_substitutions = Dict(
-    r2bound =&gt; 4.0,
-    m3bound =&gt; 0.1, # lose some mass here
-    p[1] =&gt; 1.0,
-    p[2] =&gt; 1.0,
-    p[3] =&gt; 4.0,
+    :r2bound =&gt; 4.0,
+    :m3bound =&gt; 0.1, # lose some mass here
+    :p1 =&gt; 1.0,
+    :p2 =&gt; 1.0,
+    :p3 =&gt; 4.0,
 )
 
 m_noparams, _, _, _ = optimized_constraints_with_parameters(
@@ -60,7 +60,7 @@ m_noparams.fluxes</code></pre><pre class="documenter-example-output"><code class
   :r3 =&gt; 0.05
   :r4 =&gt; 4.16342e-11
   :r5 =&gt; 3.9
-  :r6 =&gt; 3.9</code></pre><h2 id="Change-the-parameters-and-re-solve"><a class="docs-heading-anchor" href="#Change-the-parameters-and-re-solve">Change the parameters and re-solve</a><a id="Change-the-parameters-and-re-solve-1"></a><a class="docs-heading-anchor-permalink" href="#Change-the-parameters-and-re-solve" title="Permalink"></a></h2><p>substitute params into model</p><pre><code class="language-julia hljs">parameter_substitutions[m3bound] = 0.0
+  :r6 =&gt; 3.9</code></pre><h2 id="Change-the-parameters-and-re-solve"><a class="docs-heading-anchor" href="#Change-the-parameters-and-re-solve">Change the parameters and re-solve</a><a id="Change-the-parameters-and-re-solve-1"></a><a class="docs-heading-anchor-permalink" href="#Change-the-parameters-and-re-solve" title="Permalink"></a></h2><p>substitute params into model</p><pre><code class="language-julia hljs">parameter_substitutions[:m3bound] = 0.0
 
 m_noparams, _, _, _ = optimized_constraints_with_parameters(
     m,
@@ -74,7 +74,7 @@ m_noparams.fluxes</code></pre><pre class="documenter-example-output"><code class
   :r3 =&gt; 6.43725e-10
   :r4 =&gt; 6.45009e-10
   :r5 =&gt; 4.0
-  :r6 =&gt; 4.0</code></pre><h2 id="Quadratic-parameters-also-work"><a class="docs-heading-anchor" href="#Quadratic-parameters-also-work">Quadratic parameters also work</a><a id="Quadratic-parameters-also-work-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-parameters-also-work" title="Permalink"></a></h2><pre><code class="language-julia hljs">Symbolics.@variables q[1:6]
+  :r6 =&gt; 4.0</code></pre><h2 id="Quadratic-parameters-also-work"><a class="docs-heading-anchor" href="#Quadratic-parameters-also-work">Quadratic parameters also work</a><a id="Quadratic-parameters-also-work-1"></a><a class="docs-heading-anchor-permalink" href="#Quadratic-parameters-also-work" title="Permalink"></a></h2><pre><code class="language-julia hljs">q = make_variables(:q, 6)
 
 m.objective = ConstraintTrees.Constraint(
     value = sum(
@@ -85,7 +85,8 @@ m.objective = ConstraintTrees.Constraint(
 
 m *= :objective_bound^ConstraintTrees.Constraint(value = m.fluxes.r6.value, bound = 2.0)
 
-parameter_substitutions = merge(parameter_substitutions, Dict(zip(q, fill(1.0, 6))))
+parameter_substitutions =
+    merge(parameter_substitutions, Dict(v.node_value =&gt; 1.0 for v in q))
 
 m_noparams, _, _, _ = optimized_constraints_with_parameters(
     m,
@@ -94,6 +95,10 @@ m_noparams, _, _, _ = optimized_constraints_with_parameters(
     optimizer = Clarabel.Optimizer,
     sense = Minimal,
 )
-m_noparams.fluxes
-
-pqv17 = ParameterLinearValue([1, 2], [2, 1]) * ParameterLinearValue([2], [1]) #src</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ParameterQuadraticValue([(1, 2), (2, 2)], Symbolics.Num[2, 1])</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« README</a><a class="docs-footer-nextpage" href="../2-differentiate-enzyme-model/">Differentiating enzyme constrained metabolic models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Thursday 24 October 2024 17:31">Thursday 24 October 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+m_noparams.fluxes</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Tree{Float64} with 6 elements:
+  :r1 =&gt; -0.5
+  :r2 =&gt; -2.0
+  :r3 =&gt; 0.5
+  :r4 =&gt; 0.5
+  :r5 =&gt; 1.5
+  :r6 =&gt; 2.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« README</a><a class="docs-footer-nextpage" href="../2-differentiate-enzyme-model/">Differentiating enzyme constrained metabolic models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.7.0 on <span class="colophon-date" title="Monday 28 October 2024 13:27">Monday 28 October 2024</span>. Using Julia version 1.10.5.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
