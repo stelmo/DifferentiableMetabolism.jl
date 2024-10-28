@@ -164,7 +164,7 @@ plv15 = 1.0 + ParameterLinearValue(0) #src
 @test plv15.idxs == [0] && v.(plv15.weights) == [1] #src
 pqv1 = ParameterQuadraticValue([(1, 1)], [1]) #src
 pqv2 = ParameterQuadraticValue(ConstraintTrees.QuadraticValue([(1, 1)], [1])) #src
-@test pqv2.idxs == [(1, 1)] && v.(pqv2.weights) == 1 #src
+@test pqv2.idxs == [(1, 1)] && v.(pqv2.weights) == [1] #src
 pqv3 = ParameterQuadraticValue(0) #src
 @test isempty(pqv3.idxs) && isempty(pqv3.weights) #src
 pqv4 = ParameterQuadraticValue(ParameterLinearValue([1], [1])) #src
