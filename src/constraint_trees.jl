@@ -28,18 +28,18 @@ ConstraintTrees.var_count(x::ParameterQuadraticValue) =
     end
 
 # substitute in the variables as symbolic numbers - useful to construct the KKT function
-ConstraintTrees.substitute(x::ParameterLinearValue, y::Vector{Expression}) =
+ConstraintTrees.substitute(x::ParameterLinearValue, y) =
     ConstraintTrees.sum(
         (idx == 0 ? x.weights[i] : x.weights[i] * y[idx] for (i, idx) in enumerate(x.idxs)),
-        init = Expression(0.0),
+        init = zero(eltype(y)),
     )
 
-ConstraintTrees.substitute(x::ParameterQuadraticValue, y::Vector{Expression}) =
+ConstraintTrees.substitute(x::ParameterQuadraticValue, y) =
     ConstraintTrees.sum(
         (
             let (idx1, idx2) = x.idxs[i]
                 (idx1 == 0 ? 1.0 : y[idx1]) * (idx2 == 0 ? 1.0 : y[idx2]) * w
             end for (i, w) in enumerate(x.weights)
         ),
-        init = Expression(0.0),
+        init = zero(eltype(y)),
     )
