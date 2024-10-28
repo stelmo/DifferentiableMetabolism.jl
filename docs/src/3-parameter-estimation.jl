@@ -134,7 +134,7 @@ for k = 1:150
         ineq_dual_vals,
         estimated_parameters,
     )
-    measured_idxs = [1, 3, 11, 12] # TODO 11 and 12 seem flipped
+    measured_idxs = [1, 3, 12, 11]
 
     x = [
         sol2.fluxes.r1,

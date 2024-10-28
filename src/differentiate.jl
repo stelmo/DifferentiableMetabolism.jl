@@ -123,7 +123,7 @@ function differentiate_prepare_kkt(
         eq4
     ]
 
-    A = FastDifferentiation.sparse_jacobian(kkt_eqns, xs)
+    A = FastDifferentiation.sparse_jacobian(kkt_eqns, [xs; eq_duals; ineq_duals])
     B = FastDifferentiation.sparse_jacobian(kkt_eqns, FastDifferentiation.Node.(parameters))
 
     return (A, B, xs, eq_duals, ineq_duals, parameters), variable_order(m)
@@ -168,9 +168,9 @@ function differentiate_solution(
 
     # get primal variable sensitivities only
     if scale
-        ([parameter_values[p] for p in parameters]' .* c ./ x_vals)
+        ([parameter_values[p] for p in parameters]' .* c[1:length(xs), :] ./ x_vals)
     else
-        c
+        c[1:length(xs),:]
     end
 end
 
