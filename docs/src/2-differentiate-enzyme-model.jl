@@ -38,10 +38,11 @@ model.reactions[glc_idx]["lower_bound"] = -1000.0
 pfl_idx = first(indexin(["PFL"], rids))
 model.reactions[pfl_idx]["upper_bound"] = 0.0
 
-rid_kcat = Dict(k => FastDifferentiation.Node(Symbol(k)) for (k,_) in ecoli_core_reaction_kcats)
+rid_kcat =
+    Dict(k => FastDifferentiation.Node(Symbol(k)) for (k, _) in ecoli_core_reaction_kcats)
 kcats = Symbol.(keys(ecoli_core_reaction_kcats))
 
-parameter_values = Dict{Symbol, Float64}()
+parameter_values = Dict{Symbol,Float64}()
 
 reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
 float_reaction_isozymes = Dict{String,Dict{String,COBREXA.Isozyme}}() #src
@@ -102,15 +103,15 @@ ec_solution_cobrexa = enzyme_constrained_flux_balance_analysis( #src
 @test isapprox(ec_solution.objective, ec_solution_cobrexa.objective; atol = TEST_TOLERANCE) #src
 
 # This solution contains many inactive reactions
-sort(collect(ec_solution.fluxes), by=ComposedFunction(abs, last))
+sort(collect(ec_solution.fluxes), by = ComposedFunction(abs, last))
 
 @test any(values(ec_solution.fluxes) .≈ 0) #src
 
 # And also many inactive gene products. 
 
-sort(collect(ec_solution.gene_product_amounts), by=last)
+sort(collect(ec_solution.gene_product_amounts), by = last)
 
-@test any(isapprox.(values(ec_solution.gene_product_amounts), 0, atol=1e-8)) #src
+@test any(isapprox.(values(ec_solution.gene_product_amounts), 0, atol = 1e-8)) #src
 
 # With theory, you can show that this introduces flux variability into the
 # solution, making it non-unique, and consequently non-differentiable. To fix
@@ -149,7 +150,7 @@ ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_
 ec_solution2
 
 # no zero fluxes
-sort(collect(ec_solution.fluxes), by=ComposedFunction(abs, last))
+sort(collect(ec_solution.fluxes), by = ComposedFunction(abs, last))
 
 # no zero genes
 sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
@@ -164,11 +165,7 @@ sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
 
 parameters = [:capacitylimitation; kcats]
 
-pkm_kkt, vids = differentiate_prepare_kkt(
-    pkm,
-    pkm.objective.value,
-    parameters
-)
+pkm_kkt, vids = differentiate_prepare_kkt(pkm, pkm.objective.value, parameters)
 
 sens = differentiate_solution(
     pkm_kkt,
