@@ -243,13 +243,14 @@ unscalarize(x::Scalarize) = x.x
 
 pkmv = DifferentiableMetabolism.substitute(pkm, x -> parameter_values[x])
 
-import SparseArrays
 import ConstraintTrees as C
+import LinearAlgebra
 
 sensitivity_tree =
-    C.map(C.value, :parameters^C.variables(keys = parameters), C.LinearValue) * C.map(
+    :parameters^C.Tree{Vector{Float64}}(
+        parameters .=> collect.(eachrow(float.(LinearAlgebra.I(length(parameters))))),
+    ) * C.map(
+        unscalarize,
         C.substitute_values(pkmv, Scalarize.(collect.(eachrow(sens)))),
-        C.LinearValue,
-    ) do x
-        C.LinearValue(SparseArrays.sparse(unscalarize(x)))
-    end
+        Vector{Float64},
+    )
