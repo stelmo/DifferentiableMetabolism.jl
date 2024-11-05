@@ -45,4 +45,4 @@ ConstraintTrees.substitute(x::ParameterQuadraticValue, y) =
     )
 
 ConstraintTrees.incr_var_idxs(x::ParameterLinearValue, incr::Int) =
-    LinearValue(idxs = incr_var_idx.(x.idxs, incr), weights = x.weights)
+    ParameterLinearValue(idxs = ConstraintTrees.incr_var_idx.(x.idxs, incr), weights = x.weights)
