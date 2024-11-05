@@ -57,7 +57,7 @@ function build_kinetic_model(
     gene_product_molar_mass(gid) = get(gene_product_molar_masses, String(gid), 0.0)
 
     # allocate all variables and build the system
-    constraints = COBREXA.flux_balance_constraints(model;interface,interface_name)
+    constraints = COBREXA.flux_balance_constraints(model; interface, interface_name)
 
     reqf = [
         (k, COBREXA.positive_bound_contribution(v.bound)) for
