@@ -44,11 +44,5 @@ ConstraintTrees.substitute(x::ParameterQuadraticValue, y) =
         init = zero(eltype(y)),
     )
 
-"""
-$(TYPEDSIGNATURES)
-
-Offset all variable indexes in a [`LinearValue`](@ref) by the given increment.
-Copied from ConstraintTrees
-"""
-incr_var_idxs(x::ParameterLinearValue, incr::Int) =
+ConstraintTrees.incr_var_idxs(x::ParameterLinearValue, incr::Int) =
     LinearValue(idxs = incr_var_idx.(x.idxs, incr), weights = x.weights)
