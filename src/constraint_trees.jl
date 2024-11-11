@@ -51,3 +51,11 @@ ConstraintTrees.incr_var_idxs(x::ParameterQuadraticValue, incr::Int) = Parameter
     idxs = broadcast(ii -> ConstraintTrees.incr_var_idx.(ii, incr), x.idxs),
     weights = x.weights,
 )
+
+ConstraintTrees.collect_variables!(x::ParameterLinearValue, out) =
+    for idx in x.idxs
+        push!(out, idx)
+    end
+
+ConstraintTrees.renumber_variables(x::ParameterLinearValue, mapping) =
+    ParameterLinearValue(idxs = [mapping[idx] for idx in x.idxs], weights = x.weights)
