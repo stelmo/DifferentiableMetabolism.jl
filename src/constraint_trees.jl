@@ -57,5 +57,15 @@ ConstraintTrees.collect_variables!(x::ParameterLinearValue, out) =
         push!(out, idx)
     end
 
+ConstraintTrees.collect_variables!(x::ParameterQuadraticValue, out) =
+    for (idx, idy) in x.idxs
+        push!(out, idx, idy)
+    end
+
 ConstraintTrees.renumber_variables(x::ParameterLinearValue, mapping) =
     ParameterLinearValue(idxs = [mapping[idx] for idx in x.idxs], weights = x.weights)
+
+ConstraintTrees.renumber_variables(x::ParameterLinearValue, mapping) = ParameterLinearValue(
+    idxs = [(mapping[idx], mapping[idy]) for (idx, idy) in x.idxs],
+    weights = x.weights,
+)
