@@ -43,3 +43,11 @@ ConstraintTrees.substitute(x::ParameterQuadraticValue, y) =
         ),
         init = zero(eltype(y)),
     )
+
+ConstraintTrees.incr_var_idxs(x::ParameterLinearValue, incr::Int) =
+    ParameterLinearValue(idxs = ConstraintTrees.incr_var_idx.(x.idxs, incr), weights = x.weights)
+
+ConstraintTrees.incr_var_idxs(x::ParameterQuadraticValue, incr::Int) = ParameterQuadraticValue(
+    idxs = broadcast(ii -> ConstraintTrees.incr_var_idx.(ii, incr), x.idxs),
+    weights = x.weights,
+)

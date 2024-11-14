@@ -30,6 +30,8 @@ function build_kinetic_model(
     },
     gene_product_molar_masses::Dict{String,Float64},
     capacity::Union{Vector{Tuple{String,Vector{String},R}},R},
+    interface = nothing,
+    interface_name = :interface,
 ) where {R<:Real}
     function isozyme_forward_ids(rid)
         haskey(reaction_isozymes, String(rid)) || return nothing
@@ -55,7 +57,7 @@ function build_kinetic_model(
     gene_product_molar_mass(gid) = get(gene_product_molar_masses, String(gid), 0.0)
 
     # allocate all variables and build the system
-    constraints = COBREXA.flux_balance_constraints(model)
+    constraints = COBREXA.flux_balance_constraints(model; interface, interface_name)
 
     reqf = [
         (k, COBREXA.positive_bound_contribution(v.bound)) for
