@@ -10,7 +10,7 @@ following LP:
     maximise     ∑xᵢ 
     subject to   Dx = 1
 where D is the cost matrix associated to each EFM in each enzyme pool.   
-We then differentiate Lagrangian of this LP to calculate the differential of x by θ.
+We then differentiate Lagrangian of this LP to calculate the differential of x by parameters.
 
 """
 # # cost matrix of the EFMs
@@ -35,15 +35,15 @@ following LP:
     maximise     ∑xᵢ 
     subject to   Dx = 1
 where D is the cost matrix associated to each EFM in each enzyme pool.   
-We then differentiate Lagrangian of this LP to calculate the differential of x by θ.
+We then differentiate Lagrangian of this LP to calculate the differential of x by parameters.
 
 Variables:
 - 'D_matrix': the matrix of cost vectors, and must be inputted as a function of the parameters 
-- 'θ': vector of the model parameters
+- 'parameters': vector of the model parameters
 """
 function differentiate_efm(
     EFMs::Vector{Dict{String,Float64}},
-    θ::Vector{Symbol},
+    parameters::Vector{Symbol},
     rid_pid,
     parameter_values,
     rid_gcounts,
@@ -51,8 +51,8 @@ function differentiate_efm(
     gene_product_molar_masses::Dict{String,Float64},
     optimizer
 )
-    θ = FastDifferentiation.make_variables(:params, length(parameters))
-    D(θ) = cost_matrix(
+    parameters = FastDifferentiation.make_variables(:params, length(parameters))
+    D(parameters) = cost_matrix(
         EFMs,
         rid_pid,
         parameter_values,
@@ -60,10 +60,10 @@ function differentiate_efm(
         capacity,
         gene_product_molar_masses,
     )
-    n_vars = size(D(θ), 2)
+    n_vars = size(D(parameters), 2)
     efm_opt = JuMP.Model(optimizer)
     JuMP.@variable(efm_opt, z[1:n_vars])
-    JuMP.@constraint(efm_opt, eq, float.(D(θ)) * z == [1; 1])
+    JuMP.@constraint(efm_opt, eq, float.(D(parameters)) * z == [1; 1])
     JuMP.@objective(efm_opt, Max, sum(z))
     JuMP.optimize!(efm_opt)
 
@@ -73,19 +73,19 @@ function differentiate_efm(
 
 
     # define L, the gradient of the Lagrangian 
-    L(x, ν, θ) = [
-        ones(n_vars) + D(θ)' * ν
-        D(θ) * x - ones(n_vars)
+    L(x, ν, parameters) = [
+        ones(n_vars) + D(parameters)' * ν
+        D(parameters) * x - ones(n_vars)
     ]
     # differentiate L wrt x,ν, the variables
-    dL_vars(x, ν, θ) = [
-        SparseArrays.spzeros(n_vars, n_vars) D(θ)'
-        D(θ) SparseArrays.spzeros(n_vars, n_vars)
+    dL_vars(x, ν, parameters) = [
+        SparseArrays.spzeros(n_vars, n_vars) D(parameters)'
+        D(parameters) SparseArrays.spzeros(n_vars, n_vars)
     ]
-    # differentiate L wrt θ
-    dL_params(x, ν, θ) = FastDifferentiation.jacobian(L(x, ν, θ), θ)
+    # differentiate L wrt parameters
+    dL_params(x, ν, parameters) = FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
     # solve for d_vars/d_params 
-    dx = -Array(dL_vars(x, ν, θ)) \ dL_params(x, ν, θ)
+    dx = -Array(dL_vars(x, ν, parameters)) \ dL_params(x, ν, parameters)
 
     # note: dx[[3,4],:] gives the derivatives of the dual variables ν 
     return dx[[1, 2], :]
@@ -105,7 +105,7 @@ Cost is calculated as ∑w(i)V(j)/kcat, where the variables are:
 
 Inputted function variables are:
 - 'efms': list of the fluxes through the EFMs, each given as a dictionary of reaction_id => [flux efm1, flux efm2, ...]
-- 'θ': parameters of the LP, the turnover numbers 
+- 'parameters': parameters of the LP, the turnover numbers 
 """
 function cost_matrix(
     EFMs::Vector{Dict{String,Float64}},
