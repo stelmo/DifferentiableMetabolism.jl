@@ -65,7 +65,7 @@ function differentiate_efm(
     JuMP.@variable(efm_opt, z[1:n_vars])
     JuMP.@constraint(efm_opt, eq, float.(D(θ)) * z == [1; 1])
     JuMP.@objective(efm_opt, Max, sum(z))
-    optimize!(efm_opt)
+    JuMP.optimize!(efm_opt)
 
     x = value.(efm_opt[:z])
     ν = dual.(efm_opt[:eq])
