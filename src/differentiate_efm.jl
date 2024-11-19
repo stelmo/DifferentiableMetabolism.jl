@@ -44,7 +44,9 @@ Variables:
 function differentiate_efm(
     EFMs::Vector{Dict{String,Float64}},
     θ::Vector{Symbol},
-    reaction_parameter_isozymes::Dict{String,Dict{String,ParameterIsozyme}},
+    rid_pid,
+    parameter_values,
+    rid_gcounts,
     capacity::Vector{Tuple{String,Vector{String},Float64}},
     gene_product_molar_masses::Dict{String,Float64},
     optimizer
@@ -52,7 +54,9 @@ function differentiate_efm(
 
     D(θ) = cost_matrix(
         EFMs,
-        reaction_parameter_isozymes,
+        rid_pid,
+        parameter_values,
+        rid_gcounts,
         capacity,
         gene_product_molar_masses,
     )
