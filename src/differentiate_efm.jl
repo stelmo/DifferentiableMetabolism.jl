@@ -13,16 +13,16 @@ where D is the cost matrix associated to each EFM in each enzyme pool.
 We then differentiate Lagrangian of this LP to calculate the differential of x by θ.
 
 """
-# cost matrix of the EFMs
-parameters = 1
-w_jk = molar_mass(gene_j)/pool_k
-V_ij = flux_j_in_efm_i
-kcat_j = kcat(reaction_j)
-d_ik = sum()
+# # cost matrix of the EFMs
+# parameters = 1
+# w_jk = molar_mass(gene_j)/pool_k
+# V_ij = flux_j_in_efm_i
+# kcat_j = kcat(reaction_j)
+# d_ik = sum()
 
 
-f = sum(lambda)
-g = D*lambda - ones(size(D,1))
+# f = sum(lambda)
+# g = D*lambda - ones(size(D,1))
 
 
 """
@@ -46,36 +46,46 @@ function differentiate_efm(
     θ,
     optimizer
 )
-    n_vars = size(calc_D(θ,EFMs),2)
+
+    D(θ) = cost_matrix(
+        EFMs,
+        reaction_parameter_isozymes,
+        capacity,
+        gene_product_molar_masses,
+    )
+    n_vars = size(D(θ), 2)
     efm_opt = JuMP.Model(optimizer)
-    @variable(efm_opt, z[1:n_vars])
-    @constraint(efm_opt, eq, float.(calc_D(θ,EFMs))*z ==[1 ; 1])
-    @objective(efm_opt, Max, sum(z))
+    JuMP.@variable(efm_opt, z[1:n_vars])
+    JuMP.@constraint(efm_opt, eq, float.(D(θ)) * z == [1; 1])
+    JuMP.@objective(efm_opt, Max, sum(z))
     optimize!(efm_opt)
 
-    x = value.(efm_opt[:z]) 
+    x = value.(efm_opt[:z])
     ν = dual.(efm_opt[:eq])
 
+
+
     # define L, the gradient of the Lagrangian 
-    L(x,ν,θ) = [
-        ones(n_vars) + calc_D(θ,EFMs)'*ν
-        calc_D(θ,EFMs)*x - ones(n_vars)
+    L(x, ν, θ) = [
+        ones(n_vars) + D(θ)' * ν
+        D(θ) * x - ones(n_vars)
     ]
     # differentiate L wrt x,ν, the variables
-    dL_vars(x,ν,θ) = [
-        spzeros(n_vars,n_vars) calc_D(θ,EFMs)'
-        calc_D(θ,EFMs)   spzeros(n_vars,n_vars)
-    ] 
+    dL_vars(x, ν, θ) = [
+        spzeros(n_vars, n_vars) D(θ)'
+        D(θ) spzeros(n_vars, n_vars)
+    ]
     # differentiate L wrt θ
-    dL_params(x,ν,θ) = ForwardDiff.jacobian(θ -> L(x, ν, θ), θ)
+    dL_params(x, ν, θ) = ForwardDiff.jacobian(θ -> L(x, ν, θ), θ)
     # solve for d_vars/d_params 
-    dx = -Array(dL_vars(x,ν,θ))\dL_params(x,ν,θ)
-    
+    dx = -Array(dL_vars(x, ν, θ)) \ dL_params(x, ν, θ)
+
     # note: dx[[3,4],:] gives the derivatives of the dual variables ν 
-    return dx[[1,2],:]
+    return dx[[1, 2], :]
 end
 
 export differentiate_efm
+
 """
 $(TYPEDSIGNATURES)
 
@@ -92,24 +102,35 @@ Inputted function variables are:
 """
 function cost_matrix(
     EFMs::Vector{Dict{String,Float64}},
-    θ,
-    gene_product_mass_group,
-    gene_product_mass_group_bound,
-    gene_product_molar_mass,
-    rid_enzyme,
+    reaction_parameter_isozymes::Dict{String,Dict{String,ParameterIsozyme}},
+    capacity::Vector{Tuple{String,Vector{String},Float64}},
+    gene_product_molar_masses::Dict{String,Float64},
 )
-    D = Matrix{Real}(undef,length(gene_product_mass_group_bound),length(EFMs))
-    for (i,(enzyme_group,enzyme_bound)) in enumerate(gene_product_mass_group_bound)
-        for (j,efm) in enumerate(EFMs)
-            D[i,j] = 0
-            for (k,rid) in enumerate(collect(keys(rid_enzyme)))
-                !any(((g,c),) -> gene_product_mass_group[g] == enzyme_group, rid_enzyme[rid].gene_product_count) && continue 
+    parameter_values = Dict{Symbol,Float64}()
+    for (r, iso) in reaction_parameter_isozymes
+        for (k, v) in iso
+            parameter_values[Symbol(v.kcat_forward)] = reaction_isozymes[r][k].kcat_forward
+        end
+    end
+    rid_gcounts = Dict(rid => [v.gene_product_stoichiometry for (k, v) in d][1] for (rid, d) in reaction_parameter_isozymes)
+    rid_pid = Dict(rid => [Symbol(iso.kcat_forward) for (k, iso) in v][1] for (rid, v) in reaction_parameter_isozymes)
 
-                D[i,j] += sum(
+    D = Matrix{Real}(undef, length(capacity), length(EFMs))
+    for (i, (enzyme_group, enzymes, enzyme_bound)) in enumerate(capacity)
+        for (j, efm) in enumerate(EFMs)
+            D[i, j] = 0
+            for (rid, gcount) in rid_gcounts
+                pid = rid_pid[rid]
+
+                # if genes not in pool i, skip 
+                all(((g, c),) -> g ∉ enzymes, gcount) && continue
+
+                # otherwise, add the cost of this enzyme to the ith pool from the jth efm
+                D[i, j] += sum(
                     [
-                        efm[rid] * gene_product_molar_mass[g] * c / (enzyme_bound * θ[k])
-                        for (g,c) in rid_enzyme[rid].gene_product_count if gene_product_mass_group[g] == enzyme_group
-                    ]
+                    efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * parameter_values[pid])
+                    for (g, c) in gcount if g ∈ enzymes
+                ]
                 )
             end
         end
