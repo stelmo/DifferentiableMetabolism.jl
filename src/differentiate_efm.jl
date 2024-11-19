@@ -67,8 +67,8 @@ function differentiate_efm(
     JuMP.@objective(efm_opt, Max, sum(z))
     JuMP.optimize!(efm_opt)
 
-    x = value.(efm_opt[:z])
-    ν = dual.(efm_opt[:eq])
+    x = JuMP.value.(efm_opt[:z])
+    ν = JuMP.dual.(efm_opt[:eq])
 
 
 
@@ -79,8 +79,8 @@ function differentiate_efm(
     ]
     # differentiate L wrt x,ν, the variables
     dL_vars(x, ν, θ) = [
-        spzeros(n_vars, n_vars) D(θ)'
-        D(θ) spzeros(n_vars, n_vars)
+        SparseArrays.spzeros(n_vars, n_vars) D(θ)'
+        D(θ) SparseArrays.spzeros(n_vars, n_vars)
     ]
     # differentiate L wrt θ
     dL_params(x, ν, θ) = FastDifferentiation.jacobian(θ -> L(x, ν, θ), θ)
