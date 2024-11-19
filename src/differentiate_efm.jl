@@ -94,6 +94,8 @@ function differentiate_efm(
     # differentiate L wrt parameters
     dL_params(x, ν, parameters) = FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
     # solve for d_vars/d_params 
+
+    ### TODO now i need to sub in parameters??
     dx = -Array(dl_vars) \ dL_params(x, ν, parameters)
 
     # note: dx[[3,4],:] gives the derivatives of the dual variables ν 
