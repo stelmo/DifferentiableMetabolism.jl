@@ -43,7 +43,7 @@ Variables:
 """
 function differentiate_efm(
     EFMs::Vector{Dict{String,Float64}},
-    parameters::Vector{Symbol},
+    parameters,
     rid_pid,
     parameter_values,
     rid_gcounts,
@@ -51,41 +51,50 @@ function differentiate_efm(
     gene_product_molar_masses::Dict{String,Float64},
     optimizer
 )
-    parameters = FastDifferentiation.make_variables(:params, length(parameters))
-    D(parameters) = cost_matrix(
+    D_eval = cost_matrix(
         EFMs,
         rid_pid,
-        parameter_values,
         rid_gcounts,
         capacity,
-        gene_product_molar_masses,
+        gene_product_molar_masses;
+        evaluate = true,
+        parameter_values
     )
-    n_vars = size(D(parameters), 2)
+    n_vars = size(D_eval, 2)
+
     efm_opt = JuMP.Model(optimizer)
     JuMP.@variable(efm_opt, z[1:n_vars])
-    JuMP.@constraint(efm_opt, eq, float.(D(parameters)) * z == [1; 1])
+    JuMP.@constraint(efm_opt, eq, D_eval * z == [1; 1])
+    
+
     JuMP.@objective(efm_opt, Max, sum(z))
     JuMP.optimize!(efm_opt)
 
     x = JuMP.value.(efm_opt[:z])
     ν = JuMP.dual.(efm_opt[:eq])
-
-
+    D = cost_matrix(
+        EFMs,
+        rid_pid,
+        rid_gcounts,
+        capacity,
+        gene_product_molar_masses,
+    )
 
     # define L, the gradient of the Lagrangian 
     L(x, ν, parameters) = [
-        ones(n_vars) + D(parameters)' * ν
-        D(parameters) * x - ones(n_vars)
+        ones(n_vars) + D' * ν
+        D * x - ones(n_vars)
     ]
     # differentiate L wrt x,ν, the variables
-    dL_vars(x, ν, parameters) = [
-        SparseArrays.spzeros(n_vars, n_vars) D(parameters)'
-        D(parameters) SparseArrays.spzeros(n_vars, n_vars)
+    dl_vars = [
+        SparseArrays.spzeros(n_vars, n_vars) D_eval'
+        D_eval SparseArrays.spzeros(n_vars, n_vars)
     ]
+
     # differentiate L wrt parameters
     dL_params(x, ν, parameters) = FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
     # solve for d_vars/d_params 
-    dx = -Array(dL_vars(x, ν, parameters)) \ dL_params(x, ν, parameters)
+    dx = -Array(dl_vars) \ dL_params(x, ν, parameters)
 
     # note: dx[[3,4],:] gives the derivatives of the dual variables ν 
     return dx[[1, 2], :]
@@ -107,13 +116,15 @@ Inputted function variables are:
 - 'efms': list of the fluxes through the EFMs, each given as a dictionary of reaction_id => [flux efm1, flux efm2, ...]
 - 'parameters': parameters of the LP, the turnover numbers 
 """
+
 function cost_matrix(
     EFMs::Vector{Dict{String,Float64}},
     rid_pid,
-    parameter_values,
     rid_gcounts,
     capacity::Vector{Tuple{String,Vector{String},Float64}},
-    gene_product_molar_masses::Dict{String,Float64},
+    gene_product_molar_masses::Dict{String,Float64};
+    evaluate=false,
+    parameter_values=nothing
 )
     D = Matrix{Real}(undef, length(capacity), length(EFMs))
     for (i, (enzyme_group, enzymes, enzyme_bound)) in enumerate(capacity)
@@ -126,12 +137,21 @@ function cost_matrix(
                 all(((g, c),) -> g ∉ enzymes, gcount) && continue
 
                 # otherwise, add the cost of this enzyme to the ith pool from the jth efm
-                D[i, j] += sum(
-                    [
-                    efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * parameter_values[pid])
-                    for (g, c) in gcount if g ∈ enzymes
-                ]
-                )
+                if !evaluate
+                    D[i, j] += sum(
+                        [
+                        efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * pid)
+                        for (g, c) in gcount if g ∈ enzymes
+                    ]
+                    )
+                else
+                    D[i, j] += Float64(sum(
+                        [
+                        efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * parameter_values[Symbol(pid)])
+                        for (g, c) in gcount if g ∈ enzymes
+                    ]
+                    ))
+                end
             end
         end
     end
