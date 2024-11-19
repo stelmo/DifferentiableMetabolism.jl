@@ -51,7 +51,7 @@ function differentiate_efm(
     gene_product_molar_masses::Dict{String,Float64},
     optimizer
 )
-
+    θ = FastDifferentiation.make_variables(:params, length(parameters))
     D(θ) = cost_matrix(
         EFMs,
         rid_pid,
