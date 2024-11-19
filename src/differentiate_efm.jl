@@ -83,7 +83,7 @@ function differentiate_efm(
         D(θ) SparseArrays.spzeros(n_vars, n_vars)
     ]
     # differentiate L wrt θ
-    dL_params(x, ν, θ) = FastDifferentiation.jacobian(θ -> L(x, ν, θ), θ)
+    dL_params(x, ν, θ) = FastDifferentiation.jacobian(L(x, ν, θ), θ)
     # solve for d_vars/d_params 
     dx = -Array(dL_vars(x, ν, θ)) \ dL_params(x, ν, θ)
 
