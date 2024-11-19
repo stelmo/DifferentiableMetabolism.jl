@@ -42,7 +42,7 @@ Variables:
 - 'θ': vector of the model parameters
 """
 function differentiate_efm(
-    EFMs::Vector{Dict{String, Float64}},
+    EFMs::Vector{Dict{String,Float64}},
     θ::Vector{Symbol},
     reaction_parameter_isozymes::Dict{String,Dict{String,ParameterIsozyme}},
     capacity::Vector{Tuple{String,Vector{String},Float64}},
@@ -105,19 +105,12 @@ Inputted function variables are:
 """
 function cost_matrix(
     EFMs::Vector{Dict{String,Float64}},
-    reaction_parameter_isozymes::Dict{String,Dict{String,ParameterIsozyme}},
+    rid_pid,
+    parameter_values,
+    rid_gcounts,
     capacity::Vector{Tuple{String,Vector{String},Float64}},
     gene_product_molar_masses::Dict{String,Float64},
 )
-    parameter_values = Dict{Symbol,Float64}()
-    for (r, iso) in reaction_parameter_isozymes
-        for (k, v) in iso
-            parameter_values[Symbol(v.kcat_forward)] = reaction_isozymes[r][k].kcat_forward
-        end
-    end
-    rid_gcounts = Dict(rid => [v.gene_product_stoichiometry for (k, v) in d][1] for (rid, d) in reaction_parameter_isozymes)
-    rid_pid = Dict(rid => [Symbol(iso.kcat_forward) for (k, iso) in v][1] for (rid, v) in reaction_parameter_isozymes)
-
     D = Matrix{Real}(undef, length(capacity), length(EFMs))
     for (i, (enzyme_group, enzymes, enzyme_bound)) in enumerate(capacity)
         for (j, efm) in enumerate(EFMs)
