@@ -42,8 +42,11 @@ Variables:
 - 'θ': vector of the model parameters
 """
 function differentiate_efm(
-    EFMs,
-    θ,
+    EFMs::Vector{Dict{String, Float64}},
+    θ::Vector{Symbol},
+    reaction_parameter_isozymes::Dict{String,Dict{String,ParameterIsozyme}},
+    capacity::Vector{Tuple{String,Vector{String},Float64}},
+    gene_product_molar_masses::Dict{String,Float64},
     optimizer
 )
 
@@ -76,7 +79,7 @@ function differentiate_efm(
         D(θ) spzeros(n_vars, n_vars)
     ]
     # differentiate L wrt θ
-    dL_params(x, ν, θ) = ForwardDiff.jacobian(θ -> L(x, ν, θ), θ)
+    dL_params(x, ν, θ) = FastDifferentiation.jacobian(θ -> L(x, ν, θ), θ)
     # solve for d_vars/d_params 
     dx = -Array(dL_vars(x, ν, θ)) \ dL_params(x, ν, θ)
 
