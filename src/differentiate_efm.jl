@@ -97,7 +97,8 @@ function differentiate_efm(
     dL_params(x, ν, parameters) = FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
     # substitute parameter values: 
     dL_params_eval = FastDifferentiation.make_function(dL_params(x, ν, parameters), parameters)
-
+    param_vals = float.(collect(values(parameter_values)))
+    
     dx = -Array(dl_vars) \ dL_params_eval(param_vals)
 
     # note: dx[[3,4],:] gives the derivatives of the dual variables ν 
