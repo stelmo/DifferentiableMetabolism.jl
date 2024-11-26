@@ -128,7 +128,7 @@ function cost_matrix(
     evaluate=false,
     parameter_values=nothing
 )
-    D = Matrix{Real}(undef, length(capacity), length(EFMs))
+    D = Matrix{Float64}(undef, length(capacity), length(EFMs))
     for (i, (enzyme_group, enzymes, enzyme_bound)) in enumerate(capacity)
         for (j, efm) in enumerate(EFMs)
             D[i, j] = 0
