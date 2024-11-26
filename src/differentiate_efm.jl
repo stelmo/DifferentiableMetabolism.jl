@@ -51,7 +51,7 @@ function differentiate_efm(
     gene_product_molar_masses::Dict{String,Float64},
     optimizer
 )
-    D_eval = cost_matrix(
+    D_eval = float.(cost_matrix(
         EFMs,
         rid_pid,
         rid_gcounts,
@@ -59,7 +59,7 @@ function differentiate_efm(
         gene_product_molar_masses;
         evaluate = true,
         parameter_values
-    )
+    ))
     n_vars = size(D_eval, 2)
 
     efm_opt = JuMP.Model(optimizer)
@@ -72,13 +72,13 @@ function differentiate_efm(
 
     x = JuMP.value.(efm_opt[:z])
     ν = JuMP.dual.(efm_opt[:eq])
-    D = cost_matrix(
+    D = FastDifferentiation.Node.(cost_matrix(
         EFMs,
         rid_pid,
         rid_gcounts,
         capacity,
         gene_product_molar_masses,
-    )
+    ))
 
     # define L, the gradient of the Lagrangian 
     L(x, ν, parameters) = [
