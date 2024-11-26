@@ -57,7 +57,7 @@ function differentiate_efm(
         rid_gcounts,
         capacity,
         gene_product_molar_masses;
-        evaluate = true,
+        evaluate=true,
         parameter_values
     ))
     n_vars = size(D_eval, 2)
@@ -65,20 +65,22 @@ function differentiate_efm(
     efm_opt = JuMP.Model(optimizer)
     JuMP.@variable(efm_opt, z[1:n_vars])
     JuMP.@constraint(efm_opt, eq, D_eval * z == [1; 1])
-    
+
 
     JuMP.@objective(efm_opt, Max, sum(z))
     JuMP.optimize!(efm_opt)
 
     x = JuMP.value.(efm_opt[:z])
     ν = JuMP.dual.(efm_opt[:eq])
-    D = FastDifferentiation.Node.(cost_matrix(
-        EFMs,
-        rid_pid,
-        rid_gcounts,
-        capacity,
-        gene_product_molar_masses,
-    ))
+    D = FastDifferentiation.Node.(
+        cost_matrix(
+            EFMs,
+            rid_pid,
+            rid_gcounts,
+            capacity,
+            gene_product_molar_masses,
+        )
+    )
 
     # define L, the gradient of the Lagrangian 
     L(x, ν, parameters) = [
@@ -87,16 +89,16 @@ function differentiate_efm(
     ]
     # differentiate L wrt x,ν, the variables
     dl_vars = [
-        SparseArrays.spzeros(n_vars, n_vars) D_eval'
-        D_eval SparseArrays.spzeros(n_vars, n_vars)
+        SparseArrays.spzeros(n_vars, n_vars) D'
+        D SparseArrays.spzeros(n_vars, n_vars)
     ]
 
     # differentiate L wrt parameters
     dL_params(x, ν, parameters) = FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
-    # solve for d_vars/d_params 
+    # substitute parameter values: 
+    dL_params_eval = make_function(dL_params(x, ν, parameters), parameters)
 
-    ### TODO now i need to sub in parameters??
-    dx = -Array(dl_vars) \ dL_params(x, ν, parameters)
+    dx = -Array(dl_vars) \ dL_params_eval(param_vals)
 
     # note: dx[[3,4],:] gives the derivatives of the dual variables ν 
     return dx[[1, 2], :]
