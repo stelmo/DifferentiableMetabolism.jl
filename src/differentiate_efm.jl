@@ -89,8 +89,8 @@ function differentiate_efm(
     ]
     # differentiate L wrt x,ν, the variables
     dl_vars = [
-        SparseArrays.spzeros(n_vars, n_vars) D'
-        D SparseArrays.spzeros(n_vars, n_vars)
+        SparseArrays.spzeros(n_vars, n_vars) D_eval'
+        D_eval SparseArrays.spzeros(n_vars, n_vars)
     ]
 
     # differentiate L wrt parameters
