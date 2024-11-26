@@ -96,7 +96,7 @@ function differentiate_efm(
     # differentiate L wrt parameters
     dL_params(x, ν, parameters) = FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
     # substitute parameter values: 
-    dL_params_eval = make_function(dL_params(x, ν, parameters), parameters)
+    dL_params_eval = FastDifferentiation.make_function(dL_params(x, ν, parameters), parameters)
 
     dx = -Array(dl_vars) \ dL_params_eval(param_vals)
 
