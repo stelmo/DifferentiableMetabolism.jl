@@ -44,6 +44,7 @@ include("substitute.jl")
 include("get_constraints.jl")
 include("solver.jl")
 include("differentiate.jl")
+include("differentiate_efm.jl")
 include("kinetic_model.jl")
 include("prune.jl")
 
