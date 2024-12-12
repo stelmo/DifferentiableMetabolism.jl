@@ -67,7 +67,7 @@ ec_solution, _, _, _ = optimized_constraints_with_parameters(
 
 ec_solution.fluxes
 
-ec_solution_cobrexa = enzyme_constrained_flux_balance_analysis( #src
+ec_solution_fba = enzyme_constrained_flux_balance_analysis( #src
     model; #src
     reaction_isozymes = float_reaction_isozymes, #src
     gene_product_molar_masses, #src
@@ -75,7 +75,7 @@ ec_solution_cobrexa = enzyme_constrained_flux_balance_analysis( #src
     optimizer = Tulip.Optimizer, #src
 ) #src
 
-@test isapprox(ec_solution.objective, ec_solution_cobrexa.objective; atol = TEST_TOLERANCE) #src
+@test isapprox(ec_solution.objective, ec_solution_fba.objective; atol = TEST_TOLERANCE) #src
 
 @test any(isapprox.(values(ec_solution.gene_product_amounts), 0, atol=1e-8)) #src
 
