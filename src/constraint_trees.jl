@@ -31,7 +31,7 @@ ConstraintTrees.var_count(x::ParameterQuadraticValue) =
 ConstraintTrees.substitute(x::ParameterLinearValue, y) =
     ConstraintTrees.sum(
         (idx == 0 ? x.weights[i] : x.weights[i] * y[idx] for (i, idx) in enumerate(x.idxs)),
-        init = zero(eltype(y)),
+        init=zero(eltype(y)),
     )
 
 ConstraintTrees.substitute(x::ParameterQuadraticValue, y) =
@@ -41,15 +41,15 @@ ConstraintTrees.substitute(x::ParameterQuadraticValue, y) =
                 (idx1 == 0 ? 1.0 : y[idx1]) * (idx2 == 0 ? 1.0 : y[idx2]) * w
             end for (i, w) in enumerate(x.weights)
         ),
-        init = zero(eltype(y)),
+        init=zero(eltype(y)),
     )
 
 ConstraintTrees.incr_var_idxs(x::ParameterLinearValue, incr::Int) =
-    ParameterLinearValue(idxs = ConstraintTrees.incr_var_idx.(x.idxs, incr), weights = x.weights)
+    ParameterLinearValue(idxs=ConstraintTrees.incr_var_idx.(x.idxs, incr), weights=x.weights)
 
 ConstraintTrees.incr_var_idxs(x::ParameterQuadraticValue, incr::Int) = ParameterQuadraticValue(
-    idxs = broadcast(ii -> ConstraintTrees.incr_var_idx.(ii, incr), x.idxs),
-    weights = x.weights,
+    idxs=broadcast(ii -> ConstraintTrees.incr_var_idx.(ii, incr), x.idxs),
+    weights=x.weights,
 )
 
 ConstraintTrees.collect_variables!(x::ParameterLinearValue, out) =
@@ -63,10 +63,9 @@ ConstraintTrees.collect_variables!(x::ParameterQuadraticValue, out) =
     end
 
 ConstraintTrees.renumber_variables(x::ParameterLinearValue, mapping) =
-    ParameterLinearValue(idxs = [mapping[idx] for idx in x.idxs], weights = x.weights)
+    ParameterLinearValue(idxs=[mapping[idx] for idx in x.idxs], weights=x.weights)
 
-ConstraintTrees.renumber_variables(x::ParameterQuadraticValue, mapping) = 
-    ParameterLinearValue(
-    idxs = [(mapping[idx], mapping[idy]) for (idx, idy) in x.idxs],
-    weights = x.weights,
+ConstraintTrees.renumber_variables(x::ParameterQuadraticValue, mapping) = ParameterQuadraticValue(
+    idxs=[(mapping[idx], mapping[idy]) for (idx, idy) in x.idxs],
+    weights=x.weights,
 )
