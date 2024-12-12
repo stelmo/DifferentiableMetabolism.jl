@@ -12,6 +12,7 @@ using COBREXA
 using Tulip 
 using ConstraintTrees
 using LinearAlgebra
+using CairoMakie
 
 # ## Build a simple enzyme constrained model
 
@@ -49,7 +50,6 @@ for rid in AbstractFBCModels.reactions(model)
     end
 end
 
-
 km = build_kinetic_model(
     model;
     reaction_isozymes,
@@ -85,45 +85,14 @@ ec_solution_fba = enzyme_constrained_flux_balance_analysis( #src
 
 # ## Calculate EFMs of the optimal solution 
 
-# We need to input the stoichiometric matrix `N`, and a nullspace `K`, into 
-# ElementaryFluxModes.jl
+# We need to input the stoichiometric matrix `N` into ElementaryFluxModes.jl
 
 N = AbstractFBCModels.stoichiometry(model)
 
-K = rational_nullspace(Matrix(N))[1]
+# Calculate a flux matrix of the EFMs, the size of which is (n,k), for n reactions 
+# and k EFMs
 
-# Permute the rows of `K` to be in the form `[I;K*]`
-
-order = Int64[]
-rows_done = 1
-for (i, row) in enumerate(eachrow(K))
-    global rows_done
-    rows_done > size(K, 2) && break
-    if row == Matrix(I(size(K, 2)))[rows_done, :]
-        push!(order, i)
-        rows_done += 1
-    end
-end
-append!(order, [i for i = 1:size(K, 1) if i ∉ order])
-K = K[order, :]
-
-# The reaction order of `N` must match that of `K`
-N = N[:, order]
-
-# Run the double description algorithm 
-
-R = DDBinary(N, K)
-E = Matrix(undef, size(R, 1), size(R, 2))
-for (i, r) in enumerate(eachcol(R))
-    non_zero = findall(x -> x != 0, r)
-    flux_ns = rational_nullspace(Matrix(N[:, non_zero]); tol = 1e-14)[1]
-    mode = zeros(size(R, 1))
-    for (j, x) in zip(non_zero, flux_ns)
-        mode[j] = abs(x) < 1e-14 ? 0 : x
-    end
-    E[:, i] = mode
-end
-E = E[invperm(order), :] # put the entries into original reaction order
+E = get_efms(Matrix(N))
 
 # Make a dictionary out of the EFM result 
 
@@ -136,10 +105,14 @@ EFMs = [
 # ## Differentiate the EFMs 
 
 # We have calculated the EFMs, and now wish to differentiate their weightings 
-# with respect to the model parameters.
+# with respect to the model parameters
 
 parameters = FastDifferentiation.Node.(collect(keys(parameter_values)))
 p_vals = collect(values(parameter_values))
 rid_pid = Dict(rid => [iso.kcat_forward for (k, iso) in v][1] for (rid, v) in reaction_isozymes)
 rid_gcounts = Dict(rid => [v.gene_product_stoichiometry for (k, v) in d][1] for (rid, d) in reaction_isozymes)
 sens_efm = differentiate_efm(EFMs, parameters, rid_pid, parameter_values, rid_gcounts, capacity, gene_product_molar_masses, Tulip.Optimizer)
+
+# The optimal solution, **v**, can be written as λ₁**EFM₁**+λ₂**EFM₂**=**v**
+# so that the λ give us the weightings. `sens_efm` gives the sensitivity of 
+# these λ to the model parameters.
