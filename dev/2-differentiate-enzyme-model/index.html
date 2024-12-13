@@ -19,10 +19,11 @@ glc_idx = first(indexin([&quot;EX_glc__D_e&quot;], rids))
 model.reactions[glc_idx][&quot;lower_bound&quot;] = -1000.0</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-1000.0</code></pre><p>constrain PFL to zero</p><pre><code class="language-julia hljs">pfl_idx = first(indexin([&quot;PFL&quot;], rids))
 model.reactions[pfl_idx][&quot;upper_bound&quot;] = 0.0
 
-rid_kcat = Dict(k =&gt; FastDifferentiation.Node(Symbol(k)) for (k,_) in ecoli_core_reaction_kcats)
+rid_kcat =
+    Dict(k =&gt; FastDifferentiation.Node(Symbol(k)) for (k, _) in ecoli_core_reaction_kcats)
 kcats = Symbol.(keys(ecoli_core_reaction_kcats))
 
-parameter_values = Dict{Symbol, Float64}()
+parameter_values = Dict{Symbol,Float64}()
 
 reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
 for rid in AbstractFBCModels.reactions(model)
@@ -76,7 +77,7 @@ ec_solution</code></pre><pre class="documenter-example-output"><code class="nohi
   :isozyme_flux_reverse_balance =&gt; ConstraintTrees.Tree{Float64}(#= 32 elements =#)
   :isozyme_forward_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 60 elements =#)
   :isozyme_reverse_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 32 elements =#)
-  :objective                    =&gt; 0.750518</code></pre><p>This solution contains many inactive reactions</p><pre><code class="language-julia hljs">sort(collect(ec_solution.fluxes), by=ComposedFunction(abs, last))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">95-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
+  :objective                    =&gt; 0.750518</code></pre><p>This solution contains many inactive reactions</p><pre><code class="language-julia hljs">sort(collect(ec_solution.fluxes), by = ComposedFunction(abs, last))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">95-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
     :EX_fru_e =&gt; 0.0
     :EX_fum_e =&gt; 0.0
  :EX_gln__L_e =&gt; 0.0
@@ -96,7 +97,7 @@ ec_solution</code></pre><pre class="documenter-example-output"><code class="nohi
       :NADH16 =&gt; 64.6666449207555
        :CYTBD =&gt; 64.66664492281971
     :SUCCt2_2 =&gt; 101.83896464908304
-      :SUCCt3 =&gt; 101.83896465010721</code></pre><p>And also many inactive gene products.</p><pre><code class="language-julia hljs">sort(collect(ec_solution.gene_product_amounts), by=last)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">124-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
+      :SUCCt3 =&gt; 101.83896465010721</code></pre><p>And also many inactive gene products.</p><pre><code class="language-julia hljs">sort(collect(ec_solution.gene_product_amounts), by = last)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">124-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
  :b0809 =&gt; 8.141678306020198e-17
  :b0810 =&gt; 8.141678306020198e-17
  :b0811 =&gt; 8.141678306020198e-17
@@ -151,7 +152,7 @@ ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_
   :isozyme_flux_reverse_balance =&gt; ConstraintTrees.Tree{Float64}(#= 5 elements =#)
   :isozyme_forward_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 26 elements =#)
   :isozyme_reverse_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 5 elements =#)
-  :objective                    =&gt; 0.750518</code></pre><p>no zero fluxes</p><pre><code class="language-julia hljs">sort(collect(ec_solution.fluxes), by=ComposedFunction(abs, last))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">95-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
+  :objective                    =&gt; 0.750518</code></pre><p>no zero fluxes</p><pre><code class="language-julia hljs">sort(collect(ec_solution.fluxes), by = ComposedFunction(abs, last))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">95-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
     :EX_fru_e =&gt; 0.0
     :EX_fum_e =&gt; 0.0
  :EX_gln__L_e =&gt; 0.0
@@ -178,11 +179,7 @@ ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_
 
 parameters = [:capacitylimitation; kcats]
 
-pkm_kkt, vids = differentiate_prepare_kkt(
-    pkm,
-    pkm.objective.value,
-    parameters
-)
+pkm_kkt, vids = differentiate_prepare_kkt(pkm, pkm.objective.value, parameters)
 
 sens = differentiate_solution(
     pkm_kkt,
@@ -258,4 +255,4 @@ f</code></pre><img src="8f0d068b.png" alt="Example block output"/><p>Isozyme sen
     ),
 )
 Colorbar(f[1, 2], hm)
-f</code></pre><img src="e7b708ce.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Friday 13 December 2024 13:32">Friday 13 December 2024</span>. Using Julia version 1.10.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+f</code></pre><img src="e7b708ce.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Friday 13 December 2024 13:56">Friday 13 December 2024</span>. Using Julia version 1.10.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
