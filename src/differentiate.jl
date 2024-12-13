@@ -98,7 +98,7 @@ function differentiate_prepare_kkt(
     https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/518
     https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/498
     =#
-    eq1 = FastDifferentiation.jacobian([f], xs)[1,:]
+    eq1 = FastDifferentiation.jacobian([f], xs)[1, :]
 
     Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparse_jacobian(H, xs))
     eq2 = zeros(Expression, size(eq1, 1))
@@ -142,7 +142,12 @@ function differentiate_solution(
 
     # symbolic values at the optimal solution incl parameters
     syms_to_vals = merge(
-        Dict(zip((x.node_value for x in [xs; eq_duals; ineq_duals]), [x_vals; eq_dual_vals; ineq_dual_vals])),
+        Dict(
+            zip(
+                (x.node_value for x in [xs; eq_duals; ineq_duals]),
+                [x_vals; eq_dual_vals; ineq_dual_vals],
+            ),
+        ),
         parameter_values,
     )
 
@@ -170,7 +175,7 @@ function differentiate_solution(
     if scale
         ([parameter_values[p] for p in parameters]' .* c[1:length(xs), :] ./ x_vals)
     else
-        c[1:length(xs),:]
+        c[1:length(xs), :]
     end
 end
 

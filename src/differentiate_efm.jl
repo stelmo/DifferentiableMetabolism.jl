@@ -22,17 +22,20 @@ function differentiate_efm(
     rid_gcounts,
     capacity::Vector{Tuple{String,Vector{String},Float64}},
     gene_product_molar_masses::Dict{String,Float64},
-    optimizer
+    optimizer,
 )
-    D_eval = float.(cost_matrix(
-        EFMs,
-        rid_pid,
-        rid_gcounts,
-        capacity,
-        gene_product_molar_masses;
-        evaluate=true,
-        parameter_values
-    ))
+    D_eval =
+        float.(
+            cost_matrix(
+                EFMs,
+                rid_pid,
+                rid_gcounts,
+                capacity,
+                gene_product_molar_masses;
+                evaluate = true,
+                parameter_values,
+            )
+        )
     n_vars = size(D_eval, 2)
 
     efm_opt = JuMP.Model(optimizer)
@@ -45,15 +48,10 @@ function differentiate_efm(
 
     x = JuMP.value.(efm_opt[:z])
     ν = JuMP.dual.(efm_opt[:eq])
-    D = FastDifferentiation.Node.(
-        cost_matrix(
-            EFMs,
-            rid_pid,
-            rid_gcounts,
-            capacity,
-            gene_product_molar_masses,
+    D =
+        FastDifferentiation.Node.(
+            cost_matrix(EFMs, rid_pid, rid_gcounts, capacity, gene_product_molar_masses)
         )
-    )
 
     # define L, the gradient of the Lagrangian 
     L(x, ν, parameters) = [
@@ -67,11 +65,13 @@ function differentiate_efm(
     ]
 
     # differentiate L wrt parameters
-    dL_params(x, ν, parameters) = FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
+    dL_params(x, ν, parameters) =
+        FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
     # substitute parameter values: 
-    dL_params_eval = FastDifferentiation.make_function(dL_params(x, ν, parameters), parameters)
+    dL_params_eval =
+        FastDifferentiation.make_function(dL_params(x, ν, parameters), parameters)
     param_vals = float.(collect(values(parameter_values)))
-    
+
     dx = -Array(dl_vars) \ dL_params_eval(param_vals)
 
     # note: dx[[3,4],:] gives the derivatives of the dual variables ν 
@@ -101,8 +101,8 @@ function cost_matrix(
     rid_gcounts,
     capacity::Vector{Tuple{String,Vector{String},Float64}},
     gene_product_molar_masses::Dict{String,Float64};
-    evaluate=false,
-    parameter_values=nothing
+    evaluate = false,
+    parameter_values = nothing,
 )
     D = Matrix(undef, length(capacity), length(EFMs))
     for (i, (enzyme_group, enzymes, enzyme_bound)) in enumerate(capacity)
@@ -116,19 +116,17 @@ function cost_matrix(
 
                 # otherwise, add the cost of this enzyme to the ith pool from the jth efm
                 if !evaluate
-                    D[i, j] += sum(
-                        [
-                        efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * pid)
-                        for (g, c) in gcount if g ∈ enzymes
-                    ]
-                    )
+                    D[i, j] += sum([
+                        efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * pid) for (g, c) in gcount if g ∈ enzymes
+                    ])
                 else
-                    D[i, j] += Float64(sum(
-                        [
-                        efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * parameter_values[Symbol(pid)])
-                        for (g, c) in gcount if g ∈ enzymes
-                    ]
-                    ))
+                    D[i, j] += Float64(
+                        sum([
+                            efm[rid] * gene_product_molar_masses[g] * c /
+                            (enzyme_bound * parameter_values[Symbol(pid)]) for
+                            (g, c) in gcount if g ∈ enzymes
+                        ]),
+                    )
                 end
             end
         end

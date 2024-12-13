@@ -108,11 +108,7 @@ estimated_parameters = Dict(:capacitylimitation => 50.0, :r3 => 5.0, :r4 => 1.0)
 
 losses = Float64[]
 
-kmKKT, vids = differentiate_prepare_kkt(
-    km,
-    km.loss.value,
-    [:r3, :r4, :capacitylimitation],
-)
+kmKKT, vids = differentiate_prepare_kkt(km, km.loss.value, [:r3, :r4, :capacitylimitation])
 
 for k = 1:150
 

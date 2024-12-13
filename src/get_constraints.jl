@@ -34,9 +34,8 @@ Return all the equality constraints of `m` as a tuple `({Parameter}LinearValue,
 value)` representing `{P}LV == value` for each entry.
 """
 function equality_constraints(m::ConstraintTrees.ConstraintTree)
-    sink = Vector{
-        Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Expression},
-    }()
+    sink =
+        Vector{Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Expression}}()
     get_equality_constraints(m, sink)
     sink
 end
