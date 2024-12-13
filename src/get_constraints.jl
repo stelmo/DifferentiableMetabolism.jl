@@ -65,7 +65,7 @@ $(TYPEDSIGNATURES)
 
 Return all the inequality constraints of `m` as a tuple of bounds converted to
 the form `({Parameter}LinearValue, upper)` representing `{P}LV ≤ upper` for each
-entry. 
+entry.
 """
 function inequality_constraints(m::ConstraintTrees.ConstraintTree)
     sink = Vector{

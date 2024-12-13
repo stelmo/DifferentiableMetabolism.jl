@@ -22,9 +22,9 @@ $(TYPEDSIGNATURES)
 TODO
 """
 function findall_indeps_qr(A)
-    #= 
+    #=
     Filter out linearly dependent constraints using QR decomposition. Since the
-    problem solved, assume there are no contradictory constraints. 
+    problem solved, assume there are no contradictory constraints.
 
     See: https://math.stackexchange.com/questions/748500/how-to-find-linearly-independent-columns-in-a-matrix
 
@@ -88,7 +88,7 @@ function differentiate_prepare_kkt(
     Do all the manipulations manually. This is much faster than using the
     builtin functions.
 
-    kkt_eqns = [ 
+    kkt_eqns = [
         ∇ₓfᵀ - ∇ₓHᵀ ν  - ∇ₓGᵀ λ # negatives because of KKT formulation in JuMP
         H
         G .* ineq_duals
@@ -161,7 +161,7 @@ function differentiate_solution(
     #=
     If a is rectangular (more equations than variables), then the above should
     be sufficient, because the equations should not be in conflict (in an ideal
-    world). 
+    world).
     =#
 
     Is, Js, Vs = SparseArrays.findnz(B)

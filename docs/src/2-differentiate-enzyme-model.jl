@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and      #src
 # limitations under the License.                                           #src
 
-# # Differentiating enzyme constrained metabolic models 
+# # Differentiating enzyme constrained metabolic models
 
 using DifferentiableMetabolism
 using AbstractFBCModels
@@ -107,7 +107,7 @@ sort(collect(ec_solution.fluxes), by = ComposedFunction(abs, last))
 
 @test any(values(ec_solution.fluxes) .≈ 0) #src
 
-# And also many inactive gene products. 
+# And also many inactive gene products.
 
 sort(collect(ec_solution.gene_product_amounts), by = last)
 
@@ -210,7 +210,7 @@ f
 # the formulation of the kinetic model. It inherits its structure from COBREXA,
 # where the gene products are derived variables. If you want the sensitivities
 # of the gene products themselves, you just need to multiply the isozyme
-# sensitivity with the subunit stoichiometry of the relevant gene products. 
+# sensitivity with the subunit stoichiometry of the relevant gene products.
 
 f, a, hm = heatmap(
     sens[iso_idxs, param_idxs]';
