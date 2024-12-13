@@ -22,9 +22,9 @@ $(TYPEDSIGNATURES)
 TODO
 """
 function findall_indeps_qr(A)
-    #= 
+    #=
     Filter out linearly dependent constraints using QR decomposition. Since the
-    problem solved, assume there are no contradictory constraints. 
+    problem solved, assume there are no contradictory constraints.
 
     See: https://math.stackexchange.com/questions/748500/how-to-find-linearly-independent-columns-in-a-matrix
 
@@ -88,7 +88,7 @@ function differentiate_prepare_kkt(
     Do all the manipulations manually. This is much faster than using the
     builtin functions.
 
-    kkt_eqns = [ 
+    kkt_eqns = [
         ∇ₓfᵀ - ∇ₓHᵀ ν  - ∇ₓGᵀ λ # negatives because of KKT formulation in JuMP
         H
         G .* ineq_duals
@@ -98,7 +98,7 @@ function differentiate_prepare_kkt(
     https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/518
     https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/498
     =#
-    eq1 = FastDifferentiation.jacobian([f], xs)[1,:]
+    eq1 = FastDifferentiation.jacobian([f], xs)[1, :]
 
     Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparse_jacobian(H, xs))
     eq2 = zeros(Expression, size(eq1, 1))
@@ -142,7 +142,12 @@ function differentiate_solution(
 
     # symbolic values at the optimal solution incl parameters
     syms_to_vals = merge(
-        Dict(zip((x.node_value for x in [xs; eq_duals; ineq_duals]), [x_vals; eq_dual_vals; ineq_dual_vals])),
+        Dict(
+            zip(
+                (x.node_value for x in [xs; eq_duals; ineq_duals]),
+                [x_vals; eq_dual_vals; ineq_dual_vals],
+            ),
+        ),
         parameter_values,
     )
 
@@ -156,7 +161,7 @@ function differentiate_solution(
     #=
     If a is rectangular (more equations than variables), then the above should
     be sufficient, because the equations should not be in conflict (in an ideal
-    world). 
+    world).
     =#
 
     Is, Js, Vs = SparseArrays.findnz(B)
@@ -170,7 +175,7 @@ function differentiate_solution(
     if scale
         ([parameter_values[p] for p in parameters]' .* c[1:length(xs), :] ./ x_vals)
     else
-        c[1:length(xs),:]
+        c[1:length(xs), :]
     end
 end
 

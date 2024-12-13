@@ -60,7 +60,7 @@ Modules = [DifferentiableMetabolism]
 Pages = ["src/differentiate.jl"]
 ```
 
-## EFM Differentiation 
+## EFM Differentiation
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/differentiate_efm.jl"]

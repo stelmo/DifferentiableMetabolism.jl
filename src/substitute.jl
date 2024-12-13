@@ -36,22 +36,13 @@ Converts all the ParameterXXX types to their XXX types normally found in
 ConstraintTrees.
 =#
 substitute(x::ParameterLinearValue, lookup) =
-    ConstraintTrees.LinearValue(
-        x.idxs,
-        substitute.(x.weights, Ref(lookup)),
-    )
+    ConstraintTrees.LinearValue(x.idxs, substitute.(x.weights, Ref(lookup)))
 
 substitute(x::ParameterQuadraticValue, lookup) =
-    ConstraintTrees.QuadraticValue(
-        x.idxs,
-        substitute.(x.weights, Ref(lookup)),
-    )
+    ConstraintTrees.QuadraticValue(x.idxs, substitute.(x.weights, Ref(lookup)))
 
 substitute(x::ParameterBetween, lookup) =
-    ConstraintTrees.Between(
-        substitute(x.lower, lookup),
-        substitute(x.upper, lookup),
-    )
+    ConstraintTrees.Between(substitute(x.lower, lookup), substitute(x.upper, lookup))
 
 substitute(x::ParameterEqualTo, lookup) =
     ConstraintTrees.EqualTo(substitute(x.equal_to, lookup))
@@ -64,11 +55,10 @@ substitute(x::ConstraintTrees.LinearValue, lookup) = x
 
 substitute(x::Nothing, lookup) = nothing
 
-substitute(x::ConstraintTrees.Constraint, lookup) =
-    ConstraintTrees.Constraint(
-        substitute(ConstraintTrees.value(x), lookup),
-        substitute(ConstraintTrees.bound(x), lookup),
-    )
+substitute(x::ConstraintTrees.Constraint, lookup) = ConstraintTrees.Constraint(
+    substitute(ConstraintTrees.value(x), lookup),
+    substitute(ConstraintTrees.bound(x), lookup),
+)
 
 substitute(x::ConstraintTrees.ConstraintTree, lookup) =
     ConstraintTrees.map(c -> substitute(c, lookup), x, ConstraintTrees.Constraint)

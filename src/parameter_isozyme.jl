@@ -21,7 +21,7 @@ $(TYPEDEF)
 
 A parameterized isozyme struct which includes parameters in the `kcat_forward`,
 and the `kcat_backward`. If the reaction does not have a turnover
-number,`nothing` can be used. 
+number,`nothing` can be used.
 
 # Fields
 $(TYPEDFIELDS)

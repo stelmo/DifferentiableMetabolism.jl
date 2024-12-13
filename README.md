@@ -6,14 +6,14 @@
 
 This package extends [COBREXA.jl](https://github.com/LCSB-BioCore/COBREXA.jl)
 with the ability to differentiate an optimal solution of a constraint-based
-metabolic model with respect to parameters. 
+metabolic model with respect to parameters.
 
 Note, only non-degenerate (unique) solutions can be differentiated for the
 derivatives to have a concrete interpretation. You need to ensure that your
 solution is non-degenerate, otherwise you will only compute sub-gradients.
 Builtin functionality (pruning) can help with this.
 
-To use this package, [download and install Julia](https://julialang.org/downloads/), and add 
+To use this package, [download and install Julia](https://julialang.org/downloads/), and add
 the following packages using the built in package manager:
 ```julia
 ] add COBREXA, DifferentiableMetabolism

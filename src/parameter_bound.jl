@@ -22,7 +22,7 @@ $(TYPEDEF)
 Representation of an "interval" bound where the lower and upper bound values are
 parameters. Since `Expression` is a subtype of `Real`, the bounds could also
 be any real number, but they are converted by the constructors to
-`Expression`s. 
+`Expression`s.
 
 # Fields
 $(TYPEDFIELDS)

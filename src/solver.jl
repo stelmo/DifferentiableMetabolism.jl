@@ -95,12 +95,12 @@ export optimization_model_with_parameters
 $(TYPEDSIGNATURES)
 
 Solve a model, `m`, by forwarding arguments to
-[`optimization_model_with_parameters`](@ref). 
+[`optimization_model_with_parameters`](@ref).
 
 Optionally, set optimizer attributes with `modifications`. If the model does not
 solve successfully return `nothing`. Otherwise, return a tuple of the solution
 tree, and vectors containing the values of the primal variables, the equality
-constraint dual variables. 
+constraint dual variables.
 
 These duals are ordered according to the constraint output of calling
 [`equality_constraints`](@ref) and [`inequality_constraints`](@ref)

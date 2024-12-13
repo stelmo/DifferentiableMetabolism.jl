@@ -45,12 +45,10 @@ Base.:-(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) =
 
 # Expressions and QuadraticValues
 Base.:+(a::Expression, b::ConstraintTrees.QuadraticValue) = b + a
-Base.:+(a::ConstraintTrees.QuadraticValue, b::Expression) =
-    a + ParameterQuadraticValue(b)
+Base.:+(a::ConstraintTrees.QuadraticValue, b::Expression) = a + ParameterQuadraticValue(b)
 
 Base.:-(a::Expression, b::ConstraintTrees.QuadraticValue) = -b + a
-Base.:-(a::ConstraintTrees.QuadraticValue, b::Expression) =
-    a - ParameterQuadraticValue(b)
+Base.:-(a::ConstraintTrees.QuadraticValue, b::Expression) = a - ParameterQuadraticValue(b)
 
 Base.:*(a::Expression, b::ConstraintTrees.QuadraticValue) = b * a
 Base.:*(a::ConstraintTrees.QuadraticValue, b::Expression) =

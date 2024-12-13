@@ -1,17 +1,17 @@
 """
 $(TYPEDSIGNATURES)
 
-Differentiate the usage of EFMs with respect to changes in the model parameters using implicit 
+Differentiate the usage of EFMs with respect to changes in the model parameters using implicit
 differentiation of the Lagrangian.
-Calculating the proportion of each EFM used in the optimal solution can be turned into the 
+Calculating the proportion of each EFM used in the optimal solution can be turned into the
 following LP:
-    maximise     ∑xᵢ 
+    maximise     ∑xᵢ
     subject to   Dx = 1
-where D is the cost matrix associated to each EFM in each enzyme pool.   
+where D is the cost matrix associated to each EFM in each enzyme pool.
 We then differentiate Lagrangian of this LP to calculate the differential of x by parameters.
 
 Variables:
-- 'D_matrix': the matrix of cost vectors, and must be inputted as a function of the parameters 
+- 'D_matrix': the matrix of cost vectors, and must be inputted as a function of the parameters
 - 'parameters': vector of the model parameters
 """
 function differentiate_efm(
@@ -22,17 +22,20 @@ function differentiate_efm(
     rid_gcounts,
     capacity::Vector{Tuple{String,Vector{String},Float64}},
     gene_product_molar_masses::Dict{String,Float64},
-    optimizer
+    optimizer,
 )
-    D_eval = float.(cost_matrix(
-        EFMs,
-        rid_pid,
-        rid_gcounts,
-        capacity,
-        gene_product_molar_masses;
-        evaluate=true,
-        parameter_values
-    ))
+    D_eval =
+        float.(
+            cost_matrix(
+                EFMs,
+                rid_pid,
+                rid_gcounts,
+                capacity,
+                gene_product_molar_masses;
+                evaluate = true,
+                parameter_values,
+            )
+        )
     n_vars = size(D_eval, 2)
 
     efm_opt = JuMP.Model(optimizer)
@@ -45,17 +48,12 @@ function differentiate_efm(
 
     x = JuMP.value.(efm_opt[:z])
     ν = JuMP.dual.(efm_opt[:eq])
-    D = FastDifferentiation.Node.(
-        cost_matrix(
-            EFMs,
-            rid_pid,
-            rid_gcounts,
-            capacity,
-            gene_product_molar_masses,
+    D =
+        FastDifferentiation.Node.(
+            cost_matrix(EFMs, rid_pid, rid_gcounts, capacity, gene_product_molar_masses)
         )
-    )
 
-    # define L, the gradient of the Lagrangian 
+    # define L, the gradient of the Lagrangian
     L(x, ν, parameters) = [
         ones(n_vars) + D' * ν
         D * x - ones(n_vars)
@@ -67,14 +65,16 @@ function differentiate_efm(
     ]
 
     # differentiate L wrt parameters
-    dL_params(x, ν, parameters) = FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
-    # substitute parameter values: 
-    dL_params_eval = FastDifferentiation.make_function(dL_params(x, ν, parameters), parameters)
+    dL_params(x, ν, parameters) =
+        FastDifferentiation.jacobian(L(x, ν, parameters), parameters)
+    # substitute parameter values:
+    dL_params_eval =
+        FastDifferentiation.make_function(dL_params(x, ν, parameters), parameters)
     param_vals = float.(collect(values(parameter_values)))
-    
+
     dx = -Array(dl_vars) \ dL_params_eval(param_vals)
 
-    # note: dx[[3,4],:] gives the derivatives of the dual variables ν 
+    # note: dx[[3,4],:] gives the derivatives of the dual variables ν
     return dx[[1, 2], :]
 end
 
@@ -87,12 +87,12 @@ Calculate a matrix of the cost vectors of each EFM to each constraint.
 Entry (i,j) gives the total cost in constraint i to produce one unit objective flux through EFM j.
 Cost is calculated as ∑w(i)V(j)/kcat, where the variables are:
 - 'w(i)': fraction of the ith enzyme pool that one mole of the enzyme uses up
-- 'V(j)': flux through the reaction in EFM j 
+- 'V(j)': flux through the reaction in EFM j
 - 'kcat': turnover number of the enzyme.
 
 Inputted function variables are:
 - 'efms': list of the fluxes through the EFMs, each given as a dictionary of reaction_id => [flux efm1, flux efm2, ...]
-- 'parameters': parameters of the LP, the turnover numbers 
+- 'parameters': parameters of the LP, the turnover numbers
 """
 
 function cost_matrix(
@@ -101,8 +101,8 @@ function cost_matrix(
     rid_gcounts,
     capacity::Vector{Tuple{String,Vector{String},Float64}},
     gene_product_molar_masses::Dict{String,Float64};
-    evaluate=false,
-    parameter_values=nothing
+    evaluate = false,
+    parameter_values = nothing,
 )
     D = Matrix(undef, length(capacity), length(EFMs))
     for (i, (enzyme_group, enzymes, enzyme_bound)) in enumerate(capacity)
@@ -111,24 +111,22 @@ function cost_matrix(
             for (rid, gcount) in rid_gcounts
                 pid = rid_pid[rid]
 
-                # if genes not in pool i, skip 
+                # if genes not in pool i, skip
                 all(((g, c),) -> g ∉ enzymes, gcount) && continue
 
                 # otherwise, add the cost of this enzyme to the ith pool from the jth efm
                 if !evaluate
-                    D[i, j] += sum(
-                        [
-                        efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * pid)
-                        for (g, c) in gcount if g ∈ enzymes
-                    ]
-                    )
+                    D[i, j] += sum([
+                        efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * pid) for (g, c) in gcount if g ∈ enzymes
+                    ])
                 else
-                    D[i, j] += Float64(sum(
-                        [
-                        efm[rid] * gene_product_molar_masses[g] * c / (enzyme_bound * parameter_values[Symbol(pid)])
-                        for (g, c) in gcount if g ∈ enzymes
-                    ]
-                    ))
+                    D[i, j] += Float64(
+                        sum([
+                            efm[rid] * gene_product_molar_masses[g] * c /
+                            (enzyme_bound * parameter_values[Symbol(pid)]) for
+                            (g, c) in gcount if g ∈ enzymes
+                        ]),
+                    )
                 end
             end
         end
