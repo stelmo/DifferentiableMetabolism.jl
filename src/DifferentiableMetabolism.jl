@@ -23,6 +23,7 @@ import AbstractFBCModels
 import COBREXA
 import JuMP
 import ConstraintTrees
+import ConstraintTrees: LinearValue, LinearValueT, QuadraticValue, QuadraticValueT, Between, BetweenT, EqualTo, EqualToT
 import LinearAlgebra
 import SparseArrays
 import FastDifferentiation
@@ -30,22 +31,16 @@ import FastDifferentiation
 const Expression = FastDifferentiation.Node
 
 # Define new parameter-based types
-include("parameter_bound.jl")
-include("parameter_isozyme.jl")
-include("parameter_linearvalue.jl")
-include("parameter_quadraticvalue.jl")
 include("parameter_promotion.jl")
 
 # ConstraintTrees and Expression handling utils
-include("constraint_trees.jl")
 include("substitute.jl")
 
 # the juice
 include("get_constraints.jl")
 include("solver.jl")
-include("differentiate.jl")
-include("differentiate_efm.jl")
-include("kinetic_model.jl")
-include("prune.jl")
+# include("differentiate.jl")
+# include("differentiate_efm.jl")
+# include("prune.jl")
 
 end

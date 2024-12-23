@@ -71,19 +71,19 @@ function optimization_model_with_parameters(
     JuMP.@objective(
         model,
         sense,
-        ConstraintTrees.substitute(substitute(objective, k -> parameters[k]), x)
+        ConstraintTrees.substitute(DifferentiableMetabolism.substitute(objective, k -> parameters[k]), x)
     )
 
-    eqs = equality_constraints(m)
-    ineqs = inequality_constraints(m)
+    eqs = DifferentiableMetabolism.equality_constraints(m)
+    ineqs = DifferentiableMetabolism.inequality_constraints(m)
     # variables with nothing bounds are implicitly handeled by the solver
 
     # E * x = d
-    E, d = constraint_matrix_vector(eqs, m, parameters)
+    E, d = DifferentiableMetabolism.constraint_matrix_vector(eqs, m, parameters)
     JuMP.@constraint(model, eqcons, E * x .== d)
 
     # M * x ≤ h
-    M, h = constraint_matrix_vector(ineqs, m, parameters)
+    M, h = DifferentiableMetabolism.constraint_matrix_vector(ineqs, m, parameters)
     JuMP.@constraint(model, ineqcons, M * x .<= h)
 
     return model

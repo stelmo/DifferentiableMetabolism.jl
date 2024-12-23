@@ -34,8 +34,7 @@ Return all the equality constraints of `m` as a tuple `({Parameter}LinearValue,
 value)` representing `{P}LV == value` for each entry.
 """
 function equality_constraints(m::ConstraintTrees.ConstraintTree)
-    sink =
-        Vector{Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Expression}}()
+    sink = Vector{Tuple{Union{LinearValueT{Expression},LinearValue},Expression}}()
     get_equality_constraints(m, sink)
     sink
 end
@@ -55,7 +54,7 @@ $(TYPEDSIGNATURES)
 TODO
 """
 function get_equality_constraints(c::ConstraintTrees.Constraint, sink)
-    if c.bound isa ConstraintTrees.EqualTo || c.bound isa ParameterEqualTo
+    if c.bound isa ConstraintTrees.EqualToT
         push!(sink, (ConstraintTrees.value(c), Expression(c.bound.equal_to)))
     end
 end
@@ -70,7 +69,7 @@ entry.
 function inequality_constraints(m::ConstraintTrees.ConstraintTree)
     sink = Vector{
         Tuple{
-            Union{ParameterLinearValue,ConstraintTrees.LinearValue},
+            Union{LinearValueT{Expression},LinearValue},
             Expression,
             Expression,
         },
@@ -102,7 +101,7 @@ $(TYPEDSIGNATURES)
 TODO
 """
 function get_inequality_constraints(c::ConstraintTrees.Constraint, sink)
-    if c.bound isa ConstraintTrees.Between || c.bound isa ParameterBetween
+    if c.bound isa ConstraintTrees.BetweenT
         push!(
             sink,
             (
