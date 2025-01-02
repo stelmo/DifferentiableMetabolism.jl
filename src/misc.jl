@@ -16,32 +16,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-module DifferentiableMetabolism
+# this doesn't really fit in anywhere
 
-using DocStringExtensions
+C.drop_zeros(x::LinearValueP) = LinearValueP(idxs = x.idxs[F.value.(x.weights) .!= 0], weights = x.weights[F.value.(x.weights) .!= 0])
 
-import AbstractFBCModels as A
-import COBREXA as X
-import JuMP as J
-import ConstraintTrees as C
-import LinearAlgebra as LA
-import SparseArrays as SA
-import FastDifferentiation as F
+C.drop_zeros(x::QuadraticValueP) =QuadraticValueT(idxs = x.idxs[F.value.(x.weights) .!= 0], weights = x.weights[F.value.(x.weights) .!= 0])
 
-const Ex = F.Node
-const LinearValueP = C.LinearValueT{Ex}
-const QuadraticValueP = C.QuadraticValueT{Ex}
-const BetweenP = C.BetweenT{Ex}
-const EqualToP = C.EqualToT{Ex}
-
-include("parameter_promotion.jl")
-include("substitute.jl")
-include("get_constraints.jl")
-include("solver.jl")
-include("differentiate.jl")
-include("prune.jl")
-include("misc.jl")
-include("frontend.jl")
-include("public_api.jl")
-
-end
+Base.isreal(x::Symbol) = false

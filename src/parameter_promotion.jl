@@ -79,3 +79,10 @@ Base.:-(a::QuadraticValueP, b::C.LinearValue) = a - C.LinearValueT(b.idxs, Ex.(b
 # LinearValue * LinearValueP
 Base.:*(a::LinearValueP, b::C.LinearValue) = b * a
 Base.:*(a::C.LinearValue, b::LinearValueP) = C.LinearValueT(a.idxs, Ex.(a.weights)) * b
+
+# downcast
+LinearValueP(x::Float64) = C.LinearValue(x)
+LinearValueP(x::Int64) = C.LinearValue(x)
+QuadraticValueP(x::Float64) = C.QuadraticValue(x)
+QuadraticValueP(x::Int64) = C.QuadraticValue(x)
+
