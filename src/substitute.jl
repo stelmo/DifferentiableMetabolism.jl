@@ -32,15 +32,15 @@ substitute(x, cs, lookup) = x(substitute.(cs, Ref(lookup))...)
 Extend the substitute function to convert parameters to numbers.
 =#
 substitute(x::LinearValueP, lookup) =
-    LinearValue(x.idxs, substitute.(x.weights, Ref(lookup)))
+    C.LinearValue(x.idxs, substitute.(x.weights, Ref(lookup)))
 
 substitute(x::QuadraticValueP, lookup) =
-    QuadraticValue(x.idxs, substitute.(x.weights, Ref(lookup)))
+    C.QuadraticValue(x.idxs, substitute.(x.weights, Ref(lookup)))
 
 substitute(x::BetweenP, lookup) =
-    Between(substitute(x.lower, lookup), substitute(x.upper, lookup))
+    C.Between(substitute(x.lower, lookup), substitute(x.upper, lookup))
 
-substitute(x::EqualToP, lookup) = EqualTo(substitute(x.equal_to, lookup))
+substitute(x::EqualToP, lookup) = C.EqualTo(substitute(x.equal_to, lookup))
 
 substitute(x::C.Between, lookup) = x
 

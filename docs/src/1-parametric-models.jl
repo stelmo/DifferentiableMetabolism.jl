@@ -19,7 +19,7 @@
 import DifferentiableMetabolism as D
 import FastDifferentiation as F
 const Ex = F.Node
-import ConstraintTrees as C
+import C as C
 import COBREXA as X
 import Tulip as T
 import Clarabel as Q
@@ -39,8 +39,7 @@ model
 m = X.flux_balance_constraints(model)
 
 # Solve normally
-base_model =
-    X.optimized_values(m; optimizer = Tulip.Optimizer, objective = m.objective.value)
+base_model = X.optimized_values(m; optimizer = T.Optimizer, objective = m.objective.value)
 base_model.fluxes
 
 @test isapprox(base_model.objective, 1.0; atol = TEST_TOLERANCE) #src
@@ -48,23 +47,28 @@ base_model.fluxes
 # ## Add parameters to the model
 
 # Make bound of r2 and mass balance of m3 parameters
-@variables r2bound m3bound
+F.@variables r2bound m3bound
 
-m.fluxes.r2 = ConstraintTrees.Constraint(m.fluxes.r2.value, BetweenT(-2 * r2bound, Ex(0)))
+m.fluxes.r2 = C.Constraint(m.fluxes.r2.value, C.BetweenT(-2 * r2bound, Ex(0)))
 
-m.flux_stoichiometry.m3 =
-    ConstraintTrees.Constraint(m.flux_stoichiometry.m3.value, EqualToT(m3bound) / 2)
+m.flux_stoichiometry.m3 = C.Constraint(m.flux_stoichiometry.m3.value, C.EqualToT(m3bound) / 2)
+
+#md # !!! tip "Use the generalized bounds from ConstraintTrees"
+#md #     Note, ConstraintTrees.jl exports `Between` and `EqualTo` which are specialized to Float64. To use parameters as shown here, you _must_ use the more general types `BetweenT` and `EqualToT`. Appropriate overloads have been added to simplify type promotion when adding floaty bounds to symbolic bounds. 
 
 # # add parametric constraints
-p = make_variables(:p, 4)
+p = F.make_variables(:p, 4)
 
 m *=
-    :linparam^ConstraintTrees.Constraint(
+    :linparam^C.Constraint(
         value = p[1] * m.fluxes.r1.value + p[2] * m.fluxes.r2.value,
-        bound = BetweenT(-p[3], Ex(0)),
+        bound = C.BetweenT(-p[3], Ex(0)),
     )
 
-# substitute params into model
+#md # !!! tip "Use the generalized value types from ConstraintTrees"
+#md #     Note, ConstraintTrees.jl exports `LinearValue` and `QuadraticValue` which are specialized to Float64. To use parameters as shown here, you _must_ use the more general types `LinearValueT` and `QuadraticValueT`. Appropriate overloads have been added to simplify type construction and promotion (as used above). But note that `m.linparam.value` is a `ConstraintTrees.LinearValueT{FastDifferentiation.Node}`. 
+
+# substitute params into model to yield a "normal" constraint tree model
 parameter_substitutions = Dict(
     :r2bound => 4.0,
     :m3bound => 0.1, # lose some mass here
@@ -73,65 +77,61 @@ parameter_substitutions = Dict(
     :p3 => 4.0,
 )
 
-m_substituted = DifferentiableMetabolism.substitute(m, k -> parameter_substitutions[k])
+m_substituted = D.substitute(m, k -> parameter_substitutions[k])
 
-optimized_values(m_substituted, objective = m.objective.value, optimizer = Tulip.Optimizer)
+# this can be solve like any constraint tree
+m_normal = X.optimized_values(m_substituted, objective = m.objective.value, optimizer = T.Optimizer)
 
-m_noparams, _, _, _ = optimized_constraints_with_parameters(
-    m_substituted,
-    parameter_substitutions;
-    objective = m.objective.value,
-    optimizer = Tulip.Optimizer,
-)
-
-# alternatively, solve directly
-m_noparams, _, _, _ = optimized_constraints_with_parameters(
+# alternatively, a convenience function can take care of the substitutions for you
+m_noparams = D.optimized_constraints_with_parameters(
     m,
     parameter_substitutions;
     objective = m.objective.value,
-    optimizer = Tulip.Optimizer,
+    optimizer = T.Optimizer,
 )
-m_noparams.fluxes
 
-@test isapprox(m_noparams.objective, 3.899999999938411; atol = TEST_TOLERANCE) #src
+@test isapprox(m_noparams.tree.objective, 3.899999999938411; atol = TEST_TOLERANCE) #src
 
 # ## Change the parameters and re-solve
 
 # substitute params into model
 parameter_substitutions[:m3bound] = 0.0
 
-m_noparams, _, _, _ = optimized_constraints_with_parameters(
+m_noparams2 = D.optimized_constraints_with_parameters(
     m,
     parameter_substitutions;
     objective = m.objective.value,
-    optimizer = Tulip.Optimizer,
+    optimizer = T.Optimizer,
 )
-m_noparams.fluxes
 
-@test isapprox(m_noparams.objective, 4.0; atol = TEST_TOLERANCE) #src
+m_noparams2.tree.fluxes
+
+@test isapprox(m_noparams2.tree.objective, 4.0; atol = TEST_TOLERANCE) #src
 
 # ## Quadratic parameters also work
 
-q = make_variables(:q, 6)
+q = F.make_variables(:q, 6)
 
-m.objective = ConstraintTrees.Constraint(
+m.objective = C.Constraint(
     value = sum(
         rxn.value * rxn.value * qi for (qi, rxn) in zip(collect(q), values(m.fluxes))
     ),
     bound = nothing,
 )
 
-m *= :objective_bound^ConstraintTrees.Constraint(value = m.fluxes.r6.value, bound = 2.0)
+m *= :objective_bound^C.Constraint(value = m.fluxes.r6.value, bound = 2.0)
 
-parameter_substitutions =
-    merge(parameter_substitutions, Dict(v.node_value => 1.0 for v in q))
+parameter_substitutions = merge(parameter_substitutions, Dict(v.node_value => 1.0 for v in q))
 
-m_noparams, _, _, _ = optimized_constraints_with_parameters(
+m_noparams3 = D.optimized_constraints_with_parameters(
     m,
     parameter_substitutions;
     objective = m.objective.value,
-    optimizer = Clarabel.Optimizer,
-    sense = Minimal,
+    optimizer = Q.Optimizer,
+    sense = X.Minimal,
 )
-m_noparams.fluxes
+
+m_noparams3.tree.fluxes
+
+@test isapprox(m_noparams3.tree.objective, 11; atol = TEST_TOLERANCE) #src
 

@@ -29,7 +29,7 @@ function constraint_matrix_vector(eqs, m, parameters)
     Js = Int64[]
     Vs = Float64[]
 
-    parameter_lookup(k) = get(parameters, k, error("Parameter $k not supplied."))
+    parameter_lookup(k) = parameters[k]
 
     for (i, (val, rhs)) in enumerate(eqs)
         rhs = substitute(rhs, parameter_lookup)
@@ -113,10 +113,10 @@ function optimized_constraints_with_parameters(
 
     X.is_solved(om) ?
     (
-        tree = C.substitute_values(substitute(m, k -> parameters[k]), J.value.(om[:x])),
+        tree = C.substitute_values(substitute(model, k -> parameters[k]), J.value.(om[:x])),
         primal_values = J.value.(om[:x]),
-        equality_duals = J.dual.(om[:eqcons]),
-        inequality_duals = J.dual.(om[:ineqcons]),
+        equality_dual_values = J.dual.(om[:eqcons]),
+        inequality_dual_values = J.dual.(om[:ineqcons]),
     ) : nothing
 end
 

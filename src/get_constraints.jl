@@ -35,7 +35,7 @@ Return all the equality constraints of `m` as a tuple `(constraint,
 bound)` representing `constraint == bound` for each entry.
 """
 function equality_constraints(m::C.ConstraintTree)
-    sink = Vector{Tuple{Union{LinearValueP,LinearValue},Ex}}()
+    sink = Vector{Tuple{Union{LinearValueP,C.LinearValue},Ex}}()
     get_equality_constraints(m, sink)
     sink
 end
@@ -68,7 +68,7 @@ the form `(constraint, upper)` representing `constraint ≤ upper` for each
 entry.
 """
 function inequality_constraints(m::C.ConstraintTree)
-    sink = Vector{Tuple{Union{LinearValueP,LinearValue},Ex,Ex}}()
+    sink = Vector{Tuple{Union{LinearValueP,C.LinearValue},Ex,Ex}}()
     get_inequality_constraints(m, sink)
 
     [
