@@ -19,7 +19,7 @@
 import DifferentiableMetabolism as D
 import FastDifferentiation as F
 const Ex = F.Node
-import C as C
+import ConstraintTrees as C
 import COBREXA as X
 import Tulip as T
 import Clarabel as Q
@@ -51,7 +51,8 @@ F.@variables r2bound m3bound
 
 m.fluxes.r2 = C.Constraint(m.fluxes.r2.value, C.BetweenT(-2 * r2bound, Ex(0)))
 
-m.flux_stoichiometry.m3 = C.Constraint(m.flux_stoichiometry.m3.value, C.EqualToT(m3bound) / 2)
+m.flux_stoichiometry.m3 =
+    C.Constraint(m.flux_stoichiometry.m3.value, C.EqualToT(m3bound) / 2)
 
 #md # !!! tip "Use the generalized bounds from ConstraintTrees"
 #md #     Note, ConstraintTrees.jl exports `Between` and `EqualTo` which are specialized to Float64. To use parameters as shown here, you _must_ use the more general types `BetweenT` and `EqualToT`. Appropriate overloads have been added to simplify type promotion when adding floaty bounds to symbolic bounds. 
@@ -80,7 +81,11 @@ parameter_substitutions = Dict(
 m_substituted = D.substitute(m, k -> parameter_substitutions[k])
 
 # this can be solve like any constraint tree
-m_normal = X.optimized_values(m_substituted, objective = m.objective.value, optimizer = T.Optimizer)
+m_normal = X.optimized_values(
+    m_substituted,
+    objective = m.objective.value,
+    optimizer = T.Optimizer,
+)
 
 # alternatively, a convenience function can take care of the substitutions for you
 m_noparams = D.optimized_constraints_with_parameters(
@@ -121,7 +126,8 @@ m.objective = C.Constraint(
 
 m *= :objective_bound^C.Constraint(value = m.fluxes.r6.value, bound = 2.0)
 
-parameter_substitutions = merge(parameter_substitutions, Dict(v.node_value => 1.0 for v in q))
+parameter_substitutions =
+    merge(parameter_substitutions, Dict(v.node_value => 1.0 for v in q))
 
 m_noparams3 = D.optimized_constraints_with_parameters(
     m,

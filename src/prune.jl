@@ -26,11 +26,11 @@ Fluxes and gene product concentrations smaller than `flux_zero_tol`,
 reactions are also removed.
 """
 function prune_model(
-    model,
+    model::A.CanonicalModel.Model,
     solution_fluxes,
     solution_gene_product_amounts,
-    flux_zero_tol,
-    gene_zero_tol,
+    flux_zero_tol::Float64,
+    gene_zero_tol::Float64,
 )
 
     rids = [string(k) for (k, v) in solution_fluxes if abs(v) > flux_zero_tol]
@@ -81,7 +81,7 @@ function prune_reaction_isozymes(
     solution_isozyme_forward_amounts,
     solution_isozyme_reverse_amounts,
     solution_fluxes,
-    gene_zero_tol,
+    gene_zero_tol::Float64,
 )
     active_isozymes = [
         rid => iso_id for iso_amounts in
@@ -129,7 +129,7 @@ prune_gene_product_molar_masses(gene_product_molar_masses, solution.gene_product
 function prune_gene_product_molar_masses(
     gene_product_molar_masses,
     solution_gene_product_amounts,
-    gene_zero_tol,
+    gene_zero_tol::Float64,
 )
     Dict(
         string(k) => gene_product_molar_masses[string(k)] for

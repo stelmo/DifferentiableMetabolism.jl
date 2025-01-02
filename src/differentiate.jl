@@ -126,7 +126,7 @@ function differentiate_prepare_kkt(
     A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
     B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
 
-    return (A, B, primals, eq_duals, ineq_duals, parameters, variable_order(m))
+    return (A, B, primals, eq_duals, ineq_duals, parameters), variable_order(m)
 end
 
 """
@@ -137,7 +137,7 @@ The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are ou
 `parameter_values`
 """
 function differentiate_solution(
-    (A, B, primals, eq_duals, ineq_duals, parameters, var_order),
+    (A, B, primals, eq_duals, ineq_duals, parameters),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
