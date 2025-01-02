@@ -21,7 +21,7 @@ import DifferentiableMetabolism as D
 import FastDifferentiation as F
 const Ex = F.Node
 import ConstraintTrees as C
-import A as A
+import AbstractFBCModels as A
 import JSONFBCModels as JFBC
 import COBREXA as X
 import Tulip as T
