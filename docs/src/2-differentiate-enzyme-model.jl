@@ -1,4 +1,4 @@
-# Copyright (c) 2024, Heinrich-Heine University Duesseldorf                #src
+# ExCopyright (c) 2025, Heinrich-Heine University Duesseldorf                #src
 #                                                                          #src
 # Licensed under the Apache License, Version 2.0 (the "License");          #src
 # you may not use this file except in compliance with the License.         #src
@@ -23,6 +23,7 @@ using JSONFBCModels
 import Downloads: download
 using CairoMakie
 using FastDifferentiation
+const Ex = FastDifferentiation.Node
 
 !isfile("e_coli_core.json") &&
     download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
@@ -40,12 +41,11 @@ model.reactions[pfl_idx]["upper_bound"] = 0.0
 
 rid_kcat =
     Dict(k => FastDifferentiation.Node(Symbol(k)) for (k, _) in ecoli_core_reaction_kcats)
-kcats = Symbol.(keys(ecoli_core_reaction_kcats))
 
 parameter_values = Dict{Symbol,Float64}()
 
-reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
-float_reaction_isozymes = Dict{String,Dict{String,COBREXA.Isozyme}}() #src
+reaction_isozymes = Dict{String,Dict{String,IsozymeT{Ex}}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
+float_reaction_isozymes = Dict{String,Dict{String,Isozyme}}() # src
 for rid in AbstractFBCModels.reactions(model)
     grrs = AbstractFBCModels.reaction_gene_association_dnf(model, rid)
     isnothing(grrs) && continue # skip if no grr available
@@ -55,18 +55,19 @@ for rid in AbstractFBCModels.reactions(model)
         kcat = ecoli_core_reaction_kcats[rid] * 3.6 # change unit to k/h
         parameter_values[Symbol(rid)] = kcat
 
-        d = get!(reaction_isozymes, rid, Dict{String,ParameterIsozyme}())
-        d["isozyme_$i"] = ParameterIsozyme(
+        d = get!(reaction_isozymes, rid, Dict{String,COBREXA.IsozymeT{Ex}}())
+        d["isozyme_$i"] = IsozymeT{Ex}(
             gene_product_stoichiometry = Dict(grr .=> fill(1.0, size(grr))), # assume subunit stoichiometry of 1 for all isozymes
             kcat_forward = rid_kcat[rid],
             kcat_reverse = rid_kcat[rid],
         )
-        d2 = get!(float_reaction_isozymes, rid, Dict{String,COBREXA.Isozyme}()) #src
-        d2["isozyme_$i"] = COBREXA.Isozyme( #src
-            gene_product_stoichiometry = Dict(grr .=> fill(1.0, size(grr))), #src
-            kcat_forward = kcat, #src
-            kcat_reverse = kcat, #src
-        ) #src
+
+        d2 = get!(float_reaction_isozymes, rid, Dict{String,COBREXA.Isozyme}())
+        d2["isozyme_$i"] = Isozyme(
+            gene_product_stoichiometry = Dict(grr .=> fill(1.0, size(grr))), # assume subunit stoichiometry of 1 for all isozymes
+            kcat_forward = kcat,
+            kcat_reverse = kcat,
+        )
     end
 end
 
@@ -75,7 +76,7 @@ gene_product_molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_ma
 @variables capacitylimitation
 parameter_values[:capacitylimitation] = 50.0 # mg enzyme/gDW
 
-km = build_kinetic_model(
+km = COBREXA.enzyme_constrained_flux_balance_constraints(
     model;
     reaction_isozymes,
     gene_product_molar_masses,
@@ -129,7 +130,7 @@ pruned_reaction_isozymes =
 pruned_gene_product_molar_masses =
     prune_gene_product_molar_masses(gene_product_molar_masses, ec_solution, gene_zero_tol)
 
-pkm = build_kinetic_model(
+pkm = COBREXA.enzyme_constrained_flux_balance_constraints(
     prune_model(model, ec_solution, flux_zero_tol, gene_zero_tol);
     reaction_isozymes = pruned_reaction_isozymes,
     gene_product_molar_masses = pruned_gene_product_molar_masses,
@@ -150,7 +151,7 @@ ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_
 ec_solution2
 
 # no zero fluxes
-sort(collect(ec_solution.fluxes), by = ComposedFunction(abs, last))
+sort(collect(ec_solution2.fluxes), by = ComposedFunction(abs, last))
 
 # no zero genes
 sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
@@ -162,7 +163,7 @@ sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
     k in intersect(keys(ec_solution.fluxes), keys(ec_solution2.fluxes)) #src
 ) #src
 
-
+kcats = Symbol.(keys(pruned_reaction_isozymes))
 parameters = [:capacitylimitation; kcats]
 
 pkm_kkt, vids = differentiate_prepare_kkt(pkm, pkm.objective.value, parameters)

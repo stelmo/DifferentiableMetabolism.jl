@@ -16,31 +16,18 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-module DifferentiableMetabolism
+export differentiate_prepare_kkt
+# public differentiate_prepare_kkt
 
-using DocStringExtensions
+export differentiate_solution
+# public differentiate_solution
 
-import AbstractFBCModels as A
-import COBREXA as X
-import JuMP as J
-import ConstraintTrees as C
-import LinearAlgebra as LA
-import SparseArrays as SA
-import FastDifferentiation as F
+export differentiate_model
+# public differentiate_model
 
-const Ex = F.Node
-const LinearValueP = C.LinearValueT{Ex}
-const QuadraticValueP = C.QuadraticValueT{Ex}
-const BetweenP = C.BetweenT{Ex}
-const EqualToP = C.EqualToT{Ex}
+export optimized_constraints_with_parameters
+# public optimized_constraints_with_parameters
 
-include("parameter_promotion.jl")
-include("substitute.jl")
-include("get_constraints.jl")
-include("solver.jl")
-include("differentiate.jl")
-include("prune.jl")
-include("frontend.jl")
-include("public_api.jl")
+export prune_gene_product_molar_masses
+# public prune_gene_product_molar_masses
 
-end

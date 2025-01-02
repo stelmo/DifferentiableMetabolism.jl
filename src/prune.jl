@@ -1,7 +1,7 @@
 
 #=
-Copyright (c) 2024, Heinrich-Heine University Duesseldorf
-Copyright (c) 2024, University of Luxembourg
+Copyright (c) 2025, Heinrich-Heine University Duesseldorf
+Copyright (c) 2025, University of Luxembourg
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,30 +16,32 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
+
 """
 $(TYPEDSIGNATURES)
 
-Prune away reactions, metabolites, and genes from a `model` using `ec_solution`,
-which is the result of an enzyme constrained kinetic simulation. Fluxes and gene
-product concentrations smaller than `flux_zero_tol`, `gene_zero_tol` are
-removed. Metabolites that do not take part in the remaining reactions are also
-removed.
+Prune away reactions, metabolites, and genes from a `model` using `solution`.
+Fluxes and gene product concentrations smaller than `flux_zero_tol`,
+`gene_zero_tol` are removed. Metabolites that do not take part in the remaining
+reactions are also removed.
 """
-function prune_model(model, ec_solution, flux_zero_tol, gene_zero_tol)
+function prune_model(
+    model,
+    solution_fluxes,
+    solution_gene_product_amounts,
+    flux_zero_tol,
+    gene_zero_tol,
+)
 
-    rids = [string(k) for (k, v) in ec_solution.fluxes if abs(v) > flux_zero_tol]
-    gids =
-        [string(k) for (k, v) in ec_solution.gene_product_amounts if abs(v) > gene_zero_tol]
-    mids = Set(
-        mid for rid in rids for
-        mid in keys(AbstractFBCModels.reaction_stoichiometry(model, rid))
-    )
+    rids = [string(k) for (k, v) in solution_fluxes if abs(v) > flux_zero_tol]
+    gids = [string(k) for (k, v) in solution_gene_product_amounts if abs(v) > gene_zero_tol]
+    mids = Set(mid for rid in rids for mid in keys(A.reaction_stoichiometry(model, rid)))
 
-    d_rids = setdiff(AbstractFBCModels.reactions(model), rids)
-    d_mids = setdiff(AbstractFBCModels.metabolites(model), mids)
-    d_gids = setdiff(AbstractFBCModels.genes(model), gids)
+    d_rids = setdiff(A.reactions(model), rids)
+    d_mids = setdiff(A.metabolites(model), mids)
+    d_gids = setdiff(A.genes(model), gids)
 
-    pruned = convert(AbstractFBCModels.CanonicalModel.Model, model)
+    pruned = convert(A.CanonicalModel.Model, model)
 
     for rid in d_rids
         delete!(pruned.reactions, rid)
@@ -52,10 +54,10 @@ function prune_model(model, ec_solution, flux_zero_tol, gene_zero_tol)
     end
 
     # set bounds - should all be unidirectional now
-    for rid in [rid for rid in rids if ec_solution.fluxes[Symbol(rid)] > 0]
+    for rid in [rid for rid in rids if solution_fluxes[Symbol(rid)] > 0]
         pruned.reactions[rid].lower_bound = max(pruned.reactions[rid].lower_bound, 0)
     end
-    for rid in [rid for rid in rids if ec_solution.fluxes[Symbol(rid)] < 0]
+    for rid in [rid for rid in rids if solution_fluxes[Symbol(rid)] < 0]
         pruned.reactions[rid].upper_bound = min(0, pruned.reactions[rid].upper_bound)
     end
 
@@ -67,12 +69,23 @@ export prune_model
 """
 $(TYPEDSIGNATURES)
 
-TODO
+Return a freshly allocated dictionary mapping 
+
+# Example
+```
+prune_reaction_isozymes(reaction_isozymes, solution.isozyme_forward_amounts, solution.isozyme_reverse_amounts, solution.fluxes, 1e-6)
+```
 """
-function prune_reaction_isozymes(reaction_isozymes, ec_solution, gene_zero_tol)
+function prune_reaction_isozymes(
+    reaction_isozymes,
+    solution_isozyme_forward_amounts,
+    solution_isozyme_reverse_amounts,
+    solution_fluxes,
+    gene_zero_tol,
+)
     active_isozymes = [
         rid => iso_id for iso_amounts in
-        (ec_solution.isozyme_forward_amounts, ec_solution.isozyme_reverse_amounts) for
+        (solution_isozyme_forward_amounts, solution_isozyme_reverse_amounts) for
         (rid, iso_vals) in iso_amounts for
         (iso_id, iso_val) in iso_vals if iso_val > gene_zero_tol
     ]
@@ -94,7 +107,7 @@ function prune_reaction_isozymes(reaction_isozymes, ec_solution, gene_zero_tol)
         string(rid) => Dict(
             string(iso_id) => remove_unused_kcat(
                 reaction_isozymes[string(rid)][string(iso_id)],
-                ec_solution.fluxes[rid],
+                solution_fluxes[rid],
             ),
         ) for (rid, iso_id) in active_isozymes
     )
@@ -105,17 +118,22 @@ export prune_reaction_isozymes
 """
 $(TYPEDSIGNATURES)
 
-TODO
+Return a freshly allocated dictionary mapping gene products to their molar
+masses based on its presence in `solution`, using a threshold of `gene_zero_tol`.
+
+# Example
+```
+prune_gene_product_molar_masses(gene_product_molar_masses, solution.gene_product_amounts, 1e-6)
+```
 """
 function prune_gene_product_molar_masses(
     gene_product_molar_masses,
-    ec_solution,
+    solution_gene_product_amounts,
     gene_zero_tol,
 )
     Dict(
         string(k) => gene_product_molar_masses[string(k)] for
-        (k, v) in ec_solution.gene_product_amounts if v >= gene_zero_tol
+        (k, v) in solution_gene_product_amounts if v >= gene_zero_tol
     )
 end
 
-export prune_gene_product_molar_masses

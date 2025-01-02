@@ -1,4 +1,4 @@
-# Copyright (c) 2024, Heinrich-Heine University Duesseldorf                #src
+# ExCopyright (c) 2025, Heinrich-Heine University Duesseldorf                #src
 #                                                                          #src
 # Licensed under the Apache License, Version 2.0 (the "License");          #src
 # you may not use this file except in compliance with the License.         #src
@@ -14,14 +14,13 @@
 
 # # Parametric constraint-based metabolic models
 
-using DifferentiableMetabolism
-
-using FastDifferentiation
-const Expression = FastDifferentiation.Node
-using ConstraintTrees
-using COBREXA
-using Tulip
-using Clarabel
+import DifferentiableMetabolism as D
+import FastDifferentiation as F
+const Ex = F.Node
+import ConstraintTrees as C
+import COBREXA as X
+import Tulip as T
+import Clarabel as Q
 
 # ## Load and solve a simple model
 
@@ -35,11 +34,11 @@ include("../../test/simple_model.jl"); #hide
 model
 
 # Build a basic ConstraintTree model without parameters
-m = COBREXA.flux_balance_constraints(model)
+m = X.flux_balance_constraints(model)
 
 # Solve normally
 base_model =
-    COBREXA.optimized_values(m; optimizer = Tulip.Optimizer, objective = m.objective.value)
+    X.optimized_values(m; optimizer = Tulip.Optimizer, objective = m.objective.value)
 base_model.fluxes
 
 @test isapprox(base_model.objective, 1.0; atol = TEST_TOLERANCE) #src
@@ -49,16 +48,18 @@ base_model.fluxes
 # Make bound of r2 and mass balance of m3 parameters
 @variables r2bound m3bound
 
-m.fluxes.r2 = ConstraintTrees.Constraint(m.fluxes.r2.value, BetweenT(-2 * r2bound, Expression(0)))
+m.fluxes.r2 = ConstraintTrees.Constraint(m.fluxes.r2.value, BetweenT(-2 * r2bound, Ex(0)))
 
-m.flux_stoichiometry.m3 = ConstraintTrees.Constraint(m.flux_stoichiometry.m3.value, EqualToT(m3bound) / 2)
+m.flux_stoichiometry.m3 =
+    ConstraintTrees.Constraint(m.flux_stoichiometry.m3.value, EqualToT(m3bound) / 2)
 
 # # add parametric constraints
 p = make_variables(:p, 4)
 
-m *= :linparam^ConstraintTrees.Constraint(
+m *=
+    :linparam^ConstraintTrees.Constraint(
         value = p[1] * m.fluxes.r1.value + p[2] * m.fluxes.r2.value,
-        bound = BetweenT(-p[3], Expression(0)),
+        bound = BetweenT(-p[3], Ex(0)),
     )
 
 # substitute params into model
@@ -72,7 +73,7 @@ parameter_substitutions = Dict(
 
 m_substituted = DifferentiableMetabolism.substitute(m, k -> parameter_substitutions[k])
 
-optimized_values(m_substituted,objective = m.objective.value, optimizer = Tulip.Optimizer,)
+optimized_values(m_substituted, objective = m.objective.value, optimizer = Tulip.Optimizer)
 
 m_noparams, _, _, _ = optimized_constraints_with_parameters(
     m_substituted,

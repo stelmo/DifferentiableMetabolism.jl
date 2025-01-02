@@ -16,31 +16,16 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-module DifferentiableMetabolism
+"""
+$(TYPEDSIGNATURES)
 
-using DocStringExtensions
-
-import AbstractFBCModels as A
-import COBREXA as X
-import JuMP as J
-import ConstraintTrees as C
-import LinearAlgebra as LA
-import SparseArrays as SA
-import FastDifferentiation as F
-
-const Ex = F.Node
-const LinearValueP = C.LinearValueT{Ex}
-const QuadraticValueP = C.QuadraticValueT{Ex}
-const BetweenP = C.BetweenT{Ex}
-const EqualToP = C.EqualToT{Ex}
-
-include("parameter_promotion.jl")
-include("substitute.jl")
-include("get_constraints.jl")
-include("solver.jl")
-include("differentiate.jl")
-include("prune.jl")
-include("frontend.jl")
-include("public_api.jl")
+Differentiate `m` with respect to `parameters`, and substitute in `parameter_values`.
+"""
+function differentiate_model(
+    m::C.ConstraintTree,
+    parameter_values::Dict{Symbol,Float64},
+    parameters::Vector{Symbol},
+)
 
 end
+

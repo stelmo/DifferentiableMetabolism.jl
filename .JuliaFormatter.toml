@@ -1,0 +1,1 @@
+ignore = ["src/public_api.jl"] # temporary workaround to be removed :(

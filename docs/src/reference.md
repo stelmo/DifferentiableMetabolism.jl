@@ -82,7 +82,7 @@ Modules = [DifferentiableMetabolism]
 Pages = ["src/get_constraints.jl"]
 ```
 
-### Expression evaluation utilities
+### Ex evaluation utilities
 
 ```@autodocs
 Modules = [DifferentiableMetabolism]
