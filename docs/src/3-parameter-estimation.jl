@@ -26,7 +26,8 @@ import Tulip as T
 import Clarabel as Q
 import CairoMakie as CM
 
-include("../../test/simple_model.jl") #hide
+# load a small test model
+include("../../test/simple_model.jl");
 
 # prune model
 delete!(model.reactions, "r5")
@@ -46,7 +47,7 @@ F.@variables r3 r4
 reaction_isozymes = Dict(
     "r3" => Dict(
         "isozyme1" => X.IsozymeT(
-            gene_product_stoichiometry = Dict("g1" => 1.0), 
+            gene_product_stoichiometry = Dict("g1" => 1.0),
             kcat_forward = r3,
             kcat_reverse = nothing,
         ),
@@ -95,12 +96,8 @@ km *=
         value = 0.5 * (
             C.squared(km.fluxes.r1.value - measured[1]) +
             C.squared(km.fluxes.r3.value - measured[2]) +
-            C.squared(
-                km.isozyme_forward_amounts.r3.isozyme1.value - measured[3],
-            ) +
-            C.squared(
-                km.isozyme_forward_amounts.r4.isozyme1.value - measured[4],
-            )
+            C.squared(km.isozyme_forward_amounts.r3.isozyme1.value - measured[3]) +
+            C.squared(km.isozyme_forward_amounts.r4.isozyme1.value - measured[4])
         ),
         bound = nothing,
     )
@@ -110,7 +107,8 @@ estimated_parameters = Dict(:capacitylimitation => 50.0, :r3 => 5.0, :r4 => 1.0)
 
 losses = Float64[]
 
-kmKKT, vids = D.differentiate_prepare_kkt(km, km.loss.value, [:r3, :r4, :capacitylimitation])
+kmKKT, vids =
+    D.differentiate_prepare_kkt(km, km.loss.value, [:r3, :r4, :capacitylimitation])
 
 for k = 1:150
 

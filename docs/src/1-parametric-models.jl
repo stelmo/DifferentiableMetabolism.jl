@@ -26,10 +26,8 @@ import Clarabel as Q
 
 # ## Load and solve a simple model
 
-# The code used to construct the model is located in `test/simple_model.jl`, but
-# it is not shown here for brevity. Below is a visualization of the model.
-
-include("../../test/simple_model.jl"); #hide
+# load a small test model
+include("../../test/simple_model.jl");
 
 # ![simple_model](./assets/simple_model.svg)
 
