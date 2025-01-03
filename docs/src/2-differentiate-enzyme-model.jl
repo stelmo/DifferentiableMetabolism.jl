@@ -37,6 +37,10 @@ include("../../test/data_static.jl")
 # Load model, and convert to CanonicalModel for ease of use
 model = convert(A.CanonicalModel.Model, X.load_model("e_coli_core.json"))
 
+for rid in ["ACt2r", "ETOHt2r","PYRt2", "SUCCt3"]
+    model.reactions[rid].gene_association_dnf = [["s0001",]]
+end
+
 # Modify the model a little bit
 model.reactions["EX_glc__D_e"].lower_bound = -1000.0 # capacity bound suffices
 model.reactions["PFL"].upper_bound = 0.0 # aerobic simulation
@@ -273,7 +277,7 @@ f
 
 
 old_atps4r_kcat = parameter_values[:ATPS4r] #src
-parameter_values[:ATPS4r] *= 1.001 #src
+parameter_values[:ATPS4r] *= 1.0001 #src
 kcat_diff = parameter_values[:ATPS4r] - old_atps4r_kcat #src
 fin_diff_sol = D.optimized_constraints_with_parameters( #src
     pkm, #src
@@ -290,5 +294,20 @@ fd_sens = Dict(
 ) #src
 fidxs = findall(x -> x[1] == :fluxes, vids) #src
 fids = last.(vids)[fidxs] #src
-anal_sens = Dict(y => sens[x, 17] for (x, y) in zip(fidxs, fids)) #src
+p_atps4r_idx = findfirst(:ATPS4r .== parameters) #src
+anal_sens = Dict(y => sens[x, p_atps4r_idx] for (x, y) in zip(fidxs, fids)) #src
 @test all(abs(fd_sens[k] - anal_sens[k]) <= TEST_TOLERANCE for k in keys(fd_sens)) #src
+
+# ## Use the built in functions
+
+sens2, vids2, ps2 = D.differentiate_model(
+    ec_model,
+    ec_solution.tree;
+    parameter_values,
+    optimizer = T.Optimizer,
+    zero_tol = 1e-6, # these bounds make a real difference!
+    objective_id = :objective, # must be at top level
+    scale = true,
+)
+
+@test all(sens2 .≈ sens) #src

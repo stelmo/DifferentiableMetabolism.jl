@@ -19,7 +19,13 @@ limitations under the License.
 """
 $(TYPEDSIGNATURES)
 
-Differentiate `m` with respect to `parameters` at solution `sol`, and substitute in `parameter_values`.
+Differentiate `m` with respect to `parameters` at solution `sol`, and substitute
+in `parameter_values`.
+
+# Note
+It is critically important that every reaction in the model has kinetics
+assigned to it (except the biomass and ATPM reactions) for this convenience
+function to work correctly.
 """
 function differentiate_model(
     m::C.ConstraintTree,
@@ -48,6 +54,8 @@ function differentiate_model(
     pm = C.filter_leaves(pm) do leaf
         !isempty(leaf.value.idxs)
     end
+
+    C.variable_count(pm)
     
     parameters = Set{Symbol}()
     C.traverse(pm) do leaf
@@ -61,6 +69,15 @@ function differentiate_model(
             push!(parameters, s)
         end
     end
+
+    # TODO add a presolver here to remove trivial constraints as shown below
+    #=
+    julia> pm.fluxes.ACKr
+    ConstraintTrees.Constraint(ConstraintTrees.LinearValue([1], [1.0]), ConstraintTrees.Between(-1000.0, 1000.0))
+
+    julia> pm.fluxes_reverse.ACKr
+    ConstraintTrees.Constraint(ConstraintTrees.LinearValue([1], [-1.0]), ConstraintTrees.Between(0.0, 1000.0))
+    =#
 
     psol = optimized_constraints_with_parameters(
         pm,
