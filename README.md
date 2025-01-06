@@ -30,15 +30,6 @@ You can test the installation through:
 ```julia
 ] test DifferentiableMetabolism
 ```
-Differentiating your first model is as simple as:
-```julia
-sensitivities, variable_names, parameter_names = differentiate_model(
-    model,
-    solution;
-    parameter_values,
-    optimizer = Tulip.Optimizer,
-)
-```
 For more information, please see the documentation.
 
 This package is maintained and open for extensions. Feel free to discuss changes
