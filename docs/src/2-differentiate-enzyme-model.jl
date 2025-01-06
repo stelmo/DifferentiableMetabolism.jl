@@ -264,7 +264,6 @@ f, a, hm = CM.heatmap(
 CM.Colorbar(f[1, 2], hm)
 f
 
-
 old_atps4r_kcat = parameter_values[:ATPS4r] #src
 parameter_values[:ATPS4r] *= 1.0001 #src
 kcat_diff = parameter_values[:ATPS4r] - old_atps4r_kcat #src
@@ -286,23 +285,3 @@ fids = last.(vids)[fidxs] #src
 p_atps4r_idx = findfirst(:ATPS4r .== parameters) #src
 anal_sens = Dict(y => sens[x, p_atps4r_idx] for (x, y) in zip(fidxs, fids)) #src
 @test all(abs(fd_sens[k] - anal_sens[k]) <= TEST_TOLERANCE for k in keys(fd_sens)) #src
-
-# ## Use the built in functions
-
-sens2, vids2, ps2 = D.differentiate_model(
-    ec_model,
-    ec_solution.tree;
-    parameter_values,
-    optimizer = T.Optimizer,
-    zero_tol = 1e-6, # these bounds make a real difference!
-    objective_id = :objective, # must be at top level
-    scale = true,
-)
-
-@test all(sens2 .≈ sens) #src
-
-open("vids.txt", "w") do io
-    for ln in vids
-    write(io, string(ln), "\n")
-    end
-end

@@ -41,7 +41,7 @@ include("solver.jl")
 include("differentiate.jl")
 include("prune.jl")
 include("misc.jl")
-include("frontend.jl")
+# include("frontend.jl")
 include("public_api.jl")
 
 end

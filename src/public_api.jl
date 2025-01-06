@@ -20,8 +20,6 @@ public differentiate_prepare_kkt
 
 public differentiate_solution
 
-public differentiate_model
-
 public optimized_constraints_with_parameters
 
 public prune_model

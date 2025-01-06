@@ -200,12 +200,11 @@ model. `nothing` bounds are ignored.
 """
 function variable_order(m)
     c = []
-    idxs = Set{Int}()
     ff(p, x::C.ConstraintTree) = nothing
     ff(p, x::C.Constraint) = begin
         if length(x.value.idxs) == 1 && !isnothing(x.bound) #TODO assumes that all variables are bounded somehow!
-            idx = first(x.value.idxs) # only push the first observation of the variable onto the list, prevents issues with trivial constraints
-            idx in idxs || (push!(idxs, idx); push!(c, (idx, p)))
+            idx = first(x.value.idxs)
+            push!(c, (idx, p))
         end
     end
 

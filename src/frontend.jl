@@ -38,11 +38,12 @@ function differentiate_model(
 )
 
     zero_idxs = Set{Int}() # all variables that are close to zero
-    C.zip(m, sol) do x, y
-        if length(x.value.idxs) == 1 && abs(y) <= zero_tol # TODO should have gene and flux specific zeros?
-            push!(zero_idxs, first(x.value.idxs))
+    zero_idxs = []
+    
+    C.itraverse(m) do p, x
+        if length(x.value.idxs) == 1 && abs(foldl(getproperty, p; init=sol)) <= zero_tol # TODO should have gene and flux specific zeros?
+            push!(zero_idxs, (p, first(x.value.idxs)))
         end
-        x # TODO this feels a bit wasted?
     end
 
     vars = [idx in zero_idxs ? zero(C.LinearValue) : C.variable(; idx).value for idx = 1:C.variable_count(m)]
@@ -55,7 +56,7 @@ function differentiate_model(
         !isempty(leaf.value.idxs)
     end
 
-    C.variable_count(pm)
+    C.variable_count(pm) # TODO delete
     
     parameters = Set{Symbol}()
     C.traverse(pm) do leaf
@@ -101,3 +102,23 @@ function differentiate_model(
 end
 
 export differentiate_model
+
+# ## Use the built in functions
+
+# sens2, vids2, ps2 = D.differentiate_model(
+#     ec_model,
+#     ec_solution.tree;
+#     parameter_values,
+#     optimizer = T.Optimizer,
+#     zero_tol = 1e-6, # these bounds make a real difference!
+#     objective_id = :objective, # must be at top level
+#     scale = true,
+# )
+
+# @test all(sens2 .≈ sens) #src
+
+# open("vids.txt", "w") do io
+#     for ln in vids
+#     write(io, string(ln), "\n")
+#     end
+# end
