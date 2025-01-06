@@ -16,18 +16,12 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-export differentiate_prepare_kkt
-# public differentiate_prepare_kkt
+public differentiate_prepare_kkt
 
-export differentiate_solution
-# public differentiate_solution
+public differentiate_solution
 
-export differentiate_model
-# public differentiate_model
+public differentiate_model
 
-export optimized_constraints_with_parameters
-# public optimized_constraints_with_parameters
+public optimized_constraints_with_parameters
 
-export prune_gene_product_molar_masses
-# public prune_gene_product_molar_masses
-
+public prune_model

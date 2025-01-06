@@ -16,7 +16,6 @@
 
 # # Differentiating enzyme constrained metabolic models
 
-
 import DifferentiableMetabolism as D
 import FastDifferentiation as F
 const Ex = F.Node
@@ -144,32 +143,20 @@ sort(collect(ec_solution.tree.gene_product_amounts), by = last)
 flux_zero_tol = 1e-6 # these bounds make a real difference!
 gene_zero_tol = 1e-6
 
-pruned_reaction_isozymes = D.prune_reaction_isozymes(
-    reaction_isozymes,
-    ec_solution.tree.isozyme_forward_amounts,
-    ec_solution.tree.isozyme_reverse_amounts,
-    ec_solution.tree.fluxes,
-    flux_zero_tol,
-)
-
-@test length(pruned_reaction_isozymes) < length(reaction_isozymes) #src
-
-pruned_gene_product_molar_masses = D.prune_gene_product_molar_masses(
-    gene_product_molar_masses,
-    ec_solution.tree.gene_product_amounts,
-    gene_zero_tol,
-)
-
-@test length(pruned_gene_product_molar_masses) < length(gene_product_molar_masses) #src
-
-pruned_model = D.prune_model(
+pruned_model, pruned_reaction_isozymes = D.prune_model(
     model,
     ec_solution.tree.fluxes,
     ec_solution.tree.gene_product_amounts,
+    reaction_isozymes,
+    ec_solution.tree.isozyme_forward_amounts,
+    ec_solution.tree.isozyme_reverse_amounts,
     flux_zero_tol,
     gene_zero_tol,
-)
+);
 
+pruned_model
+
+@test length(pruned_reaction_isozymes) < length(reaction_isozymes) #src
 @test length(pruned_model.reactions) < length(model.reactions) #src
 @test length(pruned_model.metabolites) < length(model.metabolites) #src
 @test length(pruned_model.genes) < length(model.genes) #src
@@ -177,8 +164,8 @@ pruned_model = D.prune_model(
 pkm = X.enzyme_constrained_flux_balance_constraints( # pruned kinetic model
     pruned_model;
     reaction_isozymes = pruned_reaction_isozymes,
-    gene_product_molar_masses = pruned_gene_product_molar_masses,
-    capacity = capacitylimitation,
+    gene_product_molar_masses,
+    capacity = [("total", A.genes(pruned_model), capacitylimitation),]
 )
 
 pruned_solution = D.optimized_constraints_with_parameters(
@@ -194,7 +181,7 @@ pruned_solution = D.optimized_constraints_with_parameters(
 
 pruned_solution.tree
 
-# no zero fluxes
+# no zero fluxes and all fluxes are made positive!
 sort(collect(pruned_solution.tree.fluxes), by = ComposedFunction(abs, last))
 
 # no zero genes
@@ -206,8 +193,10 @@ sort(abs.(collect(values(pruned_solution.tree.gene_product_amounts))))
     atol = TEST_TOLERANCE,
 ) #src
 
+@test all(values(pruned_solution.tree.fluxes) .> 0.0) #src
+
 @test all( #src
-    abs(ec_solution.tree.fluxes[k] - pruned_solution.tree.fluxes[k]) <= 1e-6 for #src
+    abs(ec_solution.tree.fluxes[k]) - abs(pruned_solution.tree.fluxes[k]) <= 1e-6 for #src
     k in intersect(keys(ec_solution.tree.fluxes), keys(pruned_solution.tree.fluxes)) #src
 ) #src
 
@@ -311,3 +300,9 @@ sens2, vids2, ps2 = D.differentiate_model(
 )
 
 @test all(sens2 .≈ sens) #src
+
+open("vids.txt", "w") do io
+    for ln in vids
+    write(io, string(ln), "\n")
+    end
+end

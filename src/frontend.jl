@@ -100,3 +100,4 @@ function differentiate_model(
     sens, vids, collect(parameters)
 end
 
+export differentiate_model

@@ -129,6 +129,8 @@ function differentiate_prepare_kkt(
     return (A, B, primals, eq_duals, ineq_duals, parameters), variable_order(m)
 end
 
+export differentiate_prepare_kkt
+
 """
 $(TYPEDSIGNATURES)
 
@@ -185,6 +187,8 @@ function differentiate_solution(
         c[1:length(primals), :]
     end
 end
+
+export differentiate_solution
 
 """
 $(TYPEDSIGNATURES)
