@@ -77,7 +77,7 @@ for rid in A.reactions(model)
             gene_product_stoichiometry = Dict(grr .=> fill(1.0, size(grr))), #src
             kcat_forward = kcat, #src
             kcat_reverse = kcat, #src
-        )
+        ) #src
     end
 end
 
