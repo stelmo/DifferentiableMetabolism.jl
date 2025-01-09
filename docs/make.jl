@@ -39,14 +39,7 @@ makedocs(
         ansicolor = true,
         canonical = "https://stelmo.github.io/DifferentiableMetabolism.jl/stable/",
     ),
-    pages = [
-        "README" => "index.md",
-        "Examples" => [
-            "Contents" => "examples.md"
-            example_mds
-        ],
-        "Reference" => "reference.md",
-    ],
+    pages = ["README" => "index.md"; example_mds; "Reference" => "reference.md"],
 )
 
 # clean up examples -- we do not need to deploy all the stuff that was
