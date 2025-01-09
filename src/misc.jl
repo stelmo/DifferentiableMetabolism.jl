@@ -32,4 +32,5 @@ Base.isreal(x::Symbol) = false
 
 C.Constraint(v::T, b::Ex) where {T<:C.Value} = C.Constraint(v, EqualToP(b))
 
-C.Constraint(v::T, b::Tuple{X,Y}) where {T<:C.Value,X<:Ex,Y<:Ex} = C.Constraint(v, BetweenP(b...))
+C.Constraint(v::T, b::Tuple{X,Y}) where {T<:C.Value,X<:Ex,Y<:Ex} =
+    C.Constraint(v, BetweenP(b...))
