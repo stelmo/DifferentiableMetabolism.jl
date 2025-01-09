@@ -1,17 +1,28 @@
 # DifferentiableMetabolism.jl
 
-| Build status | Documentation |
-|:---:|:---:|
-| ![CI status](https://github.com/stelmo/DifferentiableMetabolism.jl/workflows/CI/badge.svg) [![codecov](https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl/branch/master/graph/badge.svg?token=A2ui7exGIH)](https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl) | [![Documentation](https://img.shields.io/badge/documentation-8e44ad)](https://stelmo.github.io/DifferentiableMetabolism.jl/dev) |
+[docs-img-stable]: https://img.shields.io/badge/docs-stable-blue.svg
+[docs-url-stable]: https://stelmo.github.io/DifferentiableMetabolism.jl
+
+[docs-img-dev]: https://img.shields.io/badge/docs-latest-0af.svg
+[docs-url-dev]: https://stelmo.github.io/DifferentiableMetabolism.jl/dev
+
+[ci-img]: https://github.com/stelmo/DifferentiableMetabolism.jl/workflows/CI/badge.svg
+[ci-url]: https://github.com/stelmo/DifferentiableMetabolism.jl/actions/workflows/ci.yml
+
+[cov-img]: https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl/branch/master/graph/badge.svg?token=A2ui7exGIH
+[cov-url]: https://codecov.io/gh/stelmo/DifferentiableMetabolism.jl
+
+[repostatus-url]: https://www.repostatus.org/#active
+[repostatus-img]: https://www.repostatus.org/badges/latest/active.svg
+
+| **Documentation** | **Tests** | **Coverage** | **Project status** |
+|:---:|:---:|:---:|:---:|
+| [![docs-img-stable]][docs-url-stable] [![docs-img-dev]][docs-url-dev] | [![CI status][ci-img]][ci-url] | [![codecov][cov-img]][cov-url] | [![repostatus-img]][repostatus-url] |
+
 
 This package extends [COBREXA.jl](https://github.com/LCSB-BioCore/COBREXA.jl)
 with the ability to differentiate an optimal solution of a constraint-based
 metabolic model with respect to parameters.
-
-Note, only non-degenerate (unique) solutions can be differentiated for the
-derivatives to have a concrete interpretation. You need to ensure that your
-solution is non-degenerate, otherwise you will only compute sub-gradients.
-Builtin functionality (pruning) can help with this.
 
 To use this package, [download and install Julia](https://julialang.org/downloads/), and add
 the following packages using the built in package manager:
@@ -20,7 +31,7 @@ the following packages using the built in package manager:
 ```
 Any optimization solver that is compatible with [JuMP](https://jump.dev/)
 can be used, provided it can solve the optimization problems you are interested
-in (LPs and QPs), and it returns the dual variables through the JuMP interface.
+in (typically, LPs and QPs), and it returns the dual variables through the JuMP interface.
 In the tests we use [Tulip.jl](https://github.com/ds4dm/Tulip.jl) for LPs, and
 [Clarabel.jl](https://github.com/oxfordcontrol/Clarabel.jl) for QPs. Other
 solvers, like Gurobi, work well, but they require a license (usually free for
