@@ -1,49 +1,18 @@
 
 # Reference
 
-## Parameters
-
-### ParameterLinearValue
+### Solver implementation
 
 ```@autodocs
 Modules = [DifferentiableMetabolism]
-Pages = ["src/parameter_linearvalue.jl"]
+Pages = ["src/solver.jl", "src/get_constraints.jl", "src/substitute.jl"]
 ```
 
-### ParameterQuadraticValue
+### Overloads
 
 ```@autodocs
 Modules = [DifferentiableMetabolism]
-Pages = ["src/parameter_quadraticvalue.jl"]
-```
-
-### ParameterBound
-
-```@autodocs
-Modules = [DifferentiableMetabolism]
-Pages = ["src/parameter_bound.jl"]
-```
-
-### ParameterIsozyme
-
-```@autodocs
-Modules = [DifferentiableMetabolism]
-Pages = ["src/parameter_isozyme.jl"]
-```
-## Parameterized models
-
-### Kinetic models
-
-```@autodocs
-Modules = [DifferentiableMetabolism]
-Pages = ["src/kinetic_model.jl"]
-```
-
-### Solving models
-
-```@autodocs
-Modules = [DifferentiableMetabolism]
-Pages = ["src/solver.jl"]
+Pages = ["src/misc.jl", "src/parameter_promotion.jl"]
 ```
 
 ### Pruning models
@@ -53,38 +22,9 @@ Modules = [DifferentiableMetabolism]
 Pages = ["src/prune.jl"]
 ```
 
-## Differentiation
+### Differentiation of pruned models
 
 ```@autodocs
 Modules = [DifferentiableMetabolism]
 Pages = ["src/differentiate.jl"]
-```
-
-## EFM Differentiation
-```@autodocs
-Modules = [DifferentiableMetabolism]
-Pages = ["src/differentiate_efm.jl"]
-```
-
-## Internals
-
-### Constraint tree extensions
-
-```@autodocs
-Modules = [DifferentiableMetabolism]
-Pages = ["src/constraint_trees.jl"]
-```
-
-### Optimization problem builders
-
-```@autodocs
-Modules = [DifferentiableMetabolism]
-Pages = ["src/get_constraints.jl"]
-```
-
-### Expression evaluation utilities
-
-```@autodocs
-Modules = [DifferentiableMetabolism]
-Pages = ["src/substitute.jl"]
 ```

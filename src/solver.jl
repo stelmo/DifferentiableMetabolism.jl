@@ -1,7 +1,7 @@
 
 #=
-Copyright (c) 2024, Heinrich-Heine University Duesseldorf
-Copyright (c) 2024, University of Luxembourg
+Copyright (c) 2025, Heinrich-Heine University Duesseldorf
+Copyright (c) 2025, University of Luxembourg
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -14,9 +14,8 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Changes from copied code are indicated.
 =#
+
 
 """
 $(TYPEDSIGNATURES)
@@ -45,8 +44,7 @@ function constraint_matrix_vector(eqs, m, parameters)
         append!(Js, a.idxs)
         append!(Vs, a.weights)
     end
-    SparseArrays.sparse(Is, Js, Vs, length(eqs), ConstraintTrees.var_count(m)),
-    SparseArrays.sparsevec(Ib, Vb, length(eqs))
+    SA.sparse(Is, Js, Vs, length(eqs), C.var_count(m)), SA.sparsevec(Ib, Vb, length(eqs))
 end
 
 """
@@ -59,76 +57,66 @@ Construct a JuMP model by substituting `parameters` into the model, `m`. Set the
 Converts all inequality constraints to the form `A * x ≤ b`.
 """
 function optimization_model_with_parameters(
-    m::ConstraintTrees.ConstraintTree,
+    m::C.ConstraintTree,
     parameters::Dict{Symbol,Float64};
-    objective::ConstraintTrees.Value,
+    objective::C.Value,
     optimizer,
     sense,
 )
-    model = JuMP.Model(optimizer)
+    model = J.Model(optimizer)
 
-    JuMP.@variable(model, x[1:ConstraintTrees.var_count(m)])
-    JuMP.@objective(
-        model,
-        sense,
-        ConstraintTrees.substitute(substitute(objective, k -> parameters[k]), x)
-    )
+    J.@variable(model, x[1:C.var_count(m)])
+    J.@objective(model, sense, C.substitute(substitute(objective, k -> parameters[k]), x))
 
     eqs = equality_constraints(m)
     ineqs = inequality_constraints(m)
-    # variables with nothing bounds are implicitly handeled by the solver
+    # variables with nothing bounds are implicitly handled by the solver
 
     # E * x = d
     E, d = constraint_matrix_vector(eqs, m, parameters)
-    JuMP.@constraint(model, eqcons, E * x .== d)
+    J.@constraint(model, eqcons, E * x .== d)
 
     # M * x ≤ h
     M, h = constraint_matrix_vector(ineqs, m, parameters)
-    JuMP.@constraint(model, ineqcons, M * x .<= h)
+    J.@constraint(model, ineqcons, M * x .<= h)
 
     return model
 end
 
-export optimization_model_with_parameters
-
 """
 $(TYPEDSIGNATURES)
 
-Solve a model, `m`, by forwarding arguments to
-[`optimization_model_with_parameters`](@ref).
+Solve a `model` using `optimizer` by substituting in `parameters`. Optional
+arguments are the same as in COBREXA.
 
-Optionally, set optimizer attributes with `modifications`. If the model does not
-solve successfully return `nothing`. Otherwise, return a tuple of the solution
-tree, and vectors containing the values of the primal variables, the equality
-constraint dual variables.
+If the model does not solve successfully return `nothing`. Otherwise, return a
+named tuple of the solution tree, and vectors containing the values of the
+primal variables, the dual variables.
 
 These duals are ordered according to the constraint output of calling
 [`equality_constraints`](@ref) and [`inequality_constraints`](@ref)
 respectively.
 """
 function optimized_constraints_with_parameters(
-    m::ConstraintTrees.ConstraintTree,
+    model::C.ConstraintTree,
     parameters::Dict{Symbol,Float64};
-    modifications = [],
-    objective::ConstraintTrees.Value,
     optimizer,
-    sense = COBREXA.Maximal,
+    modifications = [],
+    objective::C.Value,
+    sense = X.Maximal,
 )
-    om = optimization_model_with_parameters(m, parameters; objective, optimizer, sense)
+    om = optimization_model_with_parameters(model, parameters; objective, optimizer, sense)
     for m in modifications
         m(om)
     end
-    JuMP.optimize!(om)
+    J.optimize!(om)
 
-    COBREXA.is_solved(om) ?
+    X.is_solved(om) ?
     (
-        ConstraintTrees.substitute_values(
-            substitute(m, k -> parameters[k]),
-            JuMP.value.(om[:x]),
-        ),
-        JuMP.value.(om[:x]),
-        JuMP.dual.(om[:eqcons]),
-        JuMP.dual.(om[:ineqcons]),
+        tree = C.substitute_values(substitute(model, k -> parameters[k]), J.value.(om[:x])),
+        primal_values = J.value.(om[:x]),
+        equality_dual_values = J.dual.(om[:eqcons]),
+        inequality_dual_values = J.dual.(om[:ineqcons]),
     ) : nothing
 end
 

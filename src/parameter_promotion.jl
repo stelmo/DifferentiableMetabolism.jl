@@ -1,7 +1,7 @@
 
 #=
-Copyright (c) 2024, Heinrich-Heine University Duesseldorf
-Copyright (c) 2024, University of Luxembourg
+Copyright (c) 2025, Heinrich-Heine University Duesseldorf
+Copyright (c) 2025, University of Luxembourg
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,68 +16,72 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
-# Promote LinearValue to ParameterLinearValue if it interacts with a parameter
 
-# Expressions and LinearValues
-Base.:+(a::Expression, b::ConstraintTrees.LinearValue) = b + a
-Base.:+(a::ConstraintTrees.LinearValue, b::Expression) = a + ParameterLinearValue(b)
+C.LinearValueT(x::Ex) =
+    F.is_identically_zero(x) ? LinearValueP(; idxs = Int[], weights = Ex[]) :
+    LinearValueP(; idxs = [0], weights = [x])
+C.QuadraticValueT(x::Ex) =
+    F.is_identically_zero(x) ?
+    QuadraticValueP(; idxs = Vector{Tuple{Int,Int}}(), weights = Ex[]) :
+    QuadraticValueP(; idxs = [(0, 0)], weights = [x])
 
-Base.:-(a::Expression, b::ConstraintTrees.LinearValue) = -b + a
-Base.:-(a::ConstraintTrees.LinearValue, b::Expression) = a - ParameterLinearValue(b)
+## Promotion
 
-Base.:*(a::Expression, b::ConstraintTrees.LinearValue) = b * a
-Base.:*(a::ConstraintTrees.LinearValue, b::Expression) =
-    ParameterLinearValue(a.idxs, b .* a.weights)
+# Exs and LinearValues
+Base.:+(a::Ex, b::C.LinearValue) = b + a
+Base.:+(a::C.LinearValue, b::Ex) = a + C.LinearValueT(b)
 
-Base.:/(a::ConstraintTrees.LinearValue, b::Expression) =
-    ParameterLinearValue(a.idxs, a.weights ./ b)
+Base.:-(a::Ex, b::C.LinearValue) = -b + a
+Base.:-(a::C.LinearValue, b::Ex) = a - C.LinearValueT(b)
 
-# LinearValue and ParameterLinearValues
-Base.:+(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) = b + a
-Base.:+(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) =
-    a + ParameterLinearValue(b)
+Base.:*(a::Ex, b::C.LinearValue) = b * a
+Base.:*(a::C.LinearValue, b::Ex) = C.LinearValueT(a.idxs, b .* a.weights)
 
-Base.:-(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) = -b + a
-Base.:-(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) =
-    a - ParameterLinearValue(b)
+Base.:/(a::C.LinearValue, b::Ex) = C.LinearValueT(a.idxs, a.weights ./ b)
 
-# Promote QuadraticValue to ParameterQuadraticValue if it interacts with a parameter
+# LinearValue and LinearValuePs
+Base.:+(a::C.LinearValue, b::LinearValueP) = b + a
+Base.:+(a::LinearValueP, b::C.LinearValue) = a + C.LinearValueT(b.idxs, Ex.(b.weights))
 
-# Expressions and QuadraticValues
-Base.:+(a::Expression, b::ConstraintTrees.QuadraticValue) = b + a
-Base.:+(a::ConstraintTrees.QuadraticValue, b::Expression) = a + ParameterQuadraticValue(b)
+Base.:-(a::C.LinearValue, b::LinearValueP) = -b + a
+Base.:-(a::LinearValueP, b::C.LinearValue) = a - C.LinearValueT(b.idxs, Ex.(b.weights))
 
-Base.:-(a::Expression, b::ConstraintTrees.QuadraticValue) = -b + a
-Base.:-(a::ConstraintTrees.QuadraticValue, b::Expression) = a - ParameterQuadraticValue(b)
+# # Exs and QuadraticValueTs
+Base.:+(a::Ex, b::C.QuadraticValue) = b + a
+Base.:+(a::C.QuadraticValue, b::Ex) = a + C.QuadraticValueT(b)
 
-Base.:*(a::Expression, b::ConstraintTrees.QuadraticValue) = b * a
-Base.:*(a::ConstraintTrees.QuadraticValue, b::Expression) =
-    ParameterQuadraticValue(a.idxs, b .* a.weights)
+Base.:-(a::Ex, b::C.QuadraticValue) = -b + a
+Base.:-(a::C.QuadraticValue, b::Ex) = a - C.QuadraticValueT(b)
 
-Base.:/(a::ConstraintTrees.QuadraticValue, b::Expression) =
-    ParameterQuadraticValue(a.idxs, a.weights ./ b)
+Base.:*(a::Ex, b::C.QuadraticValue) = b * a
+Base.:*(a::C.QuadraticValue, b::Ex) = C.QuadraticValueT(a.idxs, b .* a.weights)
 
-# QuadraticValues and ParameterQuadraticValues
-Base.:+(a::ConstraintTrees.QuadraticValue, b::ParameterQuadraticValue) = b + a
-Base.:+(a::ParameterQuadraticValue, b::ConstraintTrees.QuadraticValue) =
-    a + ParameterQuadraticValue(b)
+Base.:/(a::C.QuadraticValue, b::Ex) = C.QuadraticValueT(a.idxs, a.weights ./ b)
 
-Base.:-(a::ConstraintTrees.QuadraticValue, b::ParameterQuadraticValue) = -b + a
-Base.:-(a::ParameterQuadraticValue, b::ConstraintTrees.QuadraticValue) =
-    a - ParameterQuadraticValue(b)
+# QuadraticValues and QuadraticValueTs
+Base.:+(a::C.QuadraticValue, b::QuadraticValueP) = b + a
+Base.:+(a::QuadraticValueP, b::C.QuadraticValue) =
+    a + C.QuadraticValueT(b.idxs, Ex.(b.weights))
 
-# Cross interaction terms
+Base.:-(a::C.QuadraticValue, b::QuadraticValueP) = -b + a
+Base.:-(a::QuadraticValueP, b::C.QuadraticValue) =
+    a - C.QuadraticValueT(b.idxs, Ex.(b.weights))
 
-# LinearValues and ParameterQuadraticValues (+, - only)
-Base.:+(a::ConstraintTrees.LinearValue, b::ParameterQuadraticValue) = b + a
-Base.:+(a::ParameterQuadraticValue, b::ConstraintTrees.LinearValue) =
-    a + ParameterQuadraticValue(b)
+## Cross interaction terms
 
-Base.:-(a::ConstraintTrees.LinearValue, b::ParameterQuadraticValue) = -b + a
-Base.:-(a::ParameterQuadraticValue, b::ConstraintTrees.LinearValue) =
-    a - ParameterQuadraticValue(b)
+# LinearValues and QuadraticValueTs (+, - only)
+Base.:+(a::C.LinearValue, b::QuadraticValueP) = b + a
+Base.:+(a::QuadraticValueP, b::C.LinearValue) = a + C.LinearValueT(b.idxs, Ex.(b.weights))
 
-# LinearValue * ParameterLinearValue
-Base.:*(a::ParameterLinearValue, b::ConstraintTrees.LinearValue) = b * a
-Base.:*(a::ConstraintTrees.LinearValue, b::ParameterLinearValue) =
-    ParameterLinearValue(a) * b
+Base.:-(a::C.LinearValue, b::QuadraticValueP) = -b + a
+Base.:-(a::QuadraticValueP, b::C.LinearValue) = a - C.LinearValueT(b.idxs, Ex.(b.weights))
+
+# LinearValue * LinearValueP
+Base.:*(a::LinearValueP, b::C.LinearValue) = b * a
+Base.:*(a::C.LinearValue, b::LinearValueP) = C.LinearValueT(a.idxs, Ex.(a.weights)) * b
+
+# downcast
+LinearValueP(x::Float64) = C.LinearValue(x)
+LinearValueP(x::Int64) = C.LinearValue(x)
+QuadraticValueP(x::Float64) = C.QuadraticValue(x)
+QuadraticValueP(x::Int64) = C.QuadraticValue(x)

@@ -1,7 +1,7 @@
 
 #=
-Copyright (c) 2024, Heinrich-Heine University Duesseldorf
-Copyright (c) 2024, University of Luxembourg
+Copyright (c) 2025, Heinrich-Heine University Duesseldorf
+Copyright (c) 2025, University of Luxembourg
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,13 +16,14 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
+
 """
 $(TYPEDSIGNATURES)
 
-TODO
+Check if the argument is constrained (i.e. bound not infinity) or not.
 """
-constrained(x) = begin
-    y = FastDifferentiation.value(x)
+is_constrained(x) = begin
+    y = F.value(x)
     y isa Float64 && isinf(y) && return false
     return true
 end
@@ -30,12 +31,11 @@ end
 """
 $(TYPEDSIGNATURES)
 
-Return all the equality constraints of `m` as a tuple `({Parameter}LinearValue,
-value)` representing `{P}LV == value` for each entry.
+Return all the equality constraints of `m` as a tuple `(constraint,
+bound)` representing `constraint == bound` for each entry.
 """
-function equality_constraints(m::ConstraintTrees.ConstraintTree)
-    sink =
-        Vector{Tuple{Union{ParameterLinearValue,ConstraintTrees.LinearValue},Expression}}()
+function equality_constraints(m::C.ConstraintTree)
+    sink = Vector{Tuple{Union{LinearValueP,C.LinearValue},Ex}}()
     get_equality_constraints(m, sink)
     sink
 end
@@ -43,20 +43,20 @@ end
 """
 $(TYPEDSIGNATURES)
 
-TODO
+Helper function for [`equality_constraints`](@ref).
 """
-function get_equality_constraints(m::ConstraintTrees.ConstraintTree, sink)
+function get_equality_constraints(m::C.ConstraintTree, sink)
     get_equality_constraints.(values(m), Ref(sink))
 end
 
 """
 $(TYPEDSIGNATURES)
 
-TODO
+Helper function for [`equality_constraints`](@ref).
 """
-function get_equality_constraints(c::ConstraintTrees.Constraint, sink)
-    if c.bound isa ConstraintTrees.EqualTo || c.bound isa ParameterEqualTo
-        push!(sink, (ConstraintTrees.value(c), Expression(c.bound.equal_to)))
+function get_equality_constraints(c::C.Constraint, sink)
+    if c.bound isa C.EqualToT
+        push!(sink, (C.value(c), Ex(c.bound.equal_to)))
     end
 end
 
@@ -64,25 +64,19 @@ end
 $(TYPEDSIGNATURES)
 
 Return all the inequality constraints of `m` as a tuple of bounds converted to
-the form `({Parameter}LinearValue, upper)` representing `{P}LV ≤ upper` for each
+the form `(constraint, upper)` representing `constraint ≤ upper` for each
 entry.
 """
-function inequality_constraints(m::ConstraintTrees.ConstraintTree)
-    sink = Vector{
-        Tuple{
-            Union{ParameterLinearValue,ConstraintTrees.LinearValue},
-            Expression,
-            Expression,
-        },
-    }()
+function inequality_constraints(m::C.ConstraintTree)
+    sink = Vector{Tuple{Union{LinearValueP,C.LinearValue},Ex,Ex}}()
     get_inequality_constraints(m, sink)
 
     [
         [ # lower bounds to l ≤ x → -x ≤ -l
-            (-val, -lower) for (val, lower, _) in sink if constrained(lower)
+            (-val, -lower) for (val, lower, _) in sink if is_constrained(lower)
         ]
         [ # upper bounds are already in the correct format
-            (val, upper) for (val, _, upper) in sink if constrained(upper)
+            (val, upper) for (val, _, upper) in sink if is_constrained(upper)
         ]
     ]
 end
@@ -90,26 +84,19 @@ end
 """
 $(TYPEDSIGNATURES)
 
-TODO
+Helper function for [`inequality_constraints`](@ref).
 """
-function get_inequality_constraints(m::ConstraintTrees.ConstraintTree, sink)
+function get_inequality_constraints(m::C.ConstraintTree, sink)
     get_inequality_constraints.(values(m), Ref(sink))
 end
 
 """
 $(TYPEDSIGNATURES)
 
-TODO
+Helper function for [`inequality_constraints`](@ref).
 """
-function get_inequality_constraints(c::ConstraintTrees.Constraint, sink)
-    if c.bound isa ConstraintTrees.Between || c.bound isa ParameterBetween
-        push!(
-            sink,
-            (
-                ConstraintTrees.value(c),
-                Expression(c.bound.lower),
-                Expression(c.bound.upper),
-            ),
-        )
+function get_inequality_constraints(c::C.Constraint, sink)
+    if c.bound isa C.BetweenT
+        push!(sink, (C.value(c), Ex(c.bound.lower), Ex(c.bound.upper)))
     end
 end

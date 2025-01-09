@@ -1,7 +1,7 @@
 
 #=
-Copyright (c) 2024, Heinrich-Heine University Duesseldorf
-Copyright (c) 2024, University of Luxembourg
+Copyright (c) 2025, Heinrich-Heine University Duesseldorf
+Copyright (c) 2025, University of Luxembourg
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -16,10 +16,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 =#
 
+
 """
 $(TYPEDSIGNATURES)
 
-TODO
+Return all linearly dependent constraints in  `A`, using the QR decomposition.
 """
 function findall_indeps_qr(A)
     #=
@@ -32,15 +33,15 @@ function findall_indeps_qr(A)
     ordering by default. The default tolerance of what is a 0 seems okay to rely
     on. Could be a source of bugs though...
     =#
-    Is, Js, Vs = SparseArrays.findnz(A)
+    Is, Js, Vs = SA.findnz(A)
 
-    a = SparseArrays.sparse(Js, Is, Vs)
+    a = SA.sparse(Js, Is, Vs)
 
 
-    t = LinearAlgebra.qr(a)  # do transpose here for QR
+    t = LA.qr(a)  # do transpose here for QR
     max_lin_indep_columns = 0
     for i in axes(t.R, 2) # depends on preordered QR!
-        Is, _ = SparseArrays.findnz(t.R[:, i])
+        Is, _ = SA.findnz(t.R[:, i])
         if isempty(Is) || maximum(Is) != i
             break
         else
@@ -48,41 +49,42 @@ function findall_indeps_qr(A)
         end
     end
 
-    t.pcol[1:max_lin_indep_columns] # undo permumation
+    t.pcol[1:max_lin_indep_columns] # undo permutation
 end
-
-export differentiate_prepare_kkt
 
 """
 $(TYPEDSIGNATURES)
 
-Prepare a model `m` with `objective` for differentiation with respect to `parameters`.
+Prepare a model `m` with `objective` for differentiation with respect to
+`parameters`.
+
+This is the most time consuming aspect of differentiation. It pays off to do
+this separately  if the same model will be differentiated multiple times.
 """
 function differentiate_prepare_kkt(
-    m::ConstraintTrees.ConstraintTree,
-    objective::ConstraintTrees.Value,
+    m::C.ConstraintTree,
+    objective::C.Value,
     parameters::Vector{Symbol}; # might not diff wrt all params
 )
     # create symbolic values of the primal and dual variables
-    xs = FastDifferentiation.make_variables(:x, ConstraintTrees.var_count(m))
+    primals = F.make_variables(:x, C.var_count(m))
 
     # objective
-    f = ConstraintTrees.substitute(objective, xs)
+    f = C.substitute(objective, primals)
 
     # equality constraints
     # E * x - b = H = 0
     eqs = equality_constraints(m)
-    H = [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in eqs]
-    # H, lin_indep_rows = remove_linearly_dependent_constraints2(eqs, parameter_values, xs)
+    H = [C.substitute(lhs, primals) - rhs for (lhs, rhs) in eqs]
 
     # inequality constraints (must be built the same as in solver.jl)
     # M * x - h = G ≤ 0
     ineqs = inequality_constraints(m)
-    G = [ConstraintTrees.substitute(lhs, xs) - rhs for (lhs, rhs) in ineqs]
+    G = [C.substitute(lhs, primals) - rhs for (lhs, rhs) in ineqs]
 
     # creaty symbolic variables for the duals, but only those that are required
-    eq_duals = FastDifferentiation.make_variables(:eq_duals, length(H))
-    ineq_duals = FastDifferentiation.make_variables(:ineq_duals, length(G))
+    eq_duals = F.make_variables(:eq_duals, length(H))
+    ineq_duals = F.make_variables(:ineq_duals, length(G))
 
     #=
     Do all the manipulations manually. This is much faster than using the
@@ -94,25 +96,23 @@ function differentiate_prepare_kkt(
         G .* ineq_duals
     ]
 
-    Note, make sure all the lazy operations are expanded to avoid running into bugs:
-    https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/518
-    https://github.com/JuliaFastDifferentiation/FastDifferentiation.jl/issues/498
+    Note, make sure all the lazy operations are expanded to avoid running into bugs...
     =#
-    eq1 = FastDifferentiation.jacobian([f], xs)[1, :]
+    eq1 = F.jacobian([f], primals)[1, :]
 
-    Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparse_jacobian(H, xs))
-    eq2 = zeros(Expression, size(eq1, 1))
+    Is, Js, Vs = SA.findnz(F.sparse_jacobian(H, primals))
+    eq2 = zeros(Ex, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq2[i] += v * eq_duals[j]
     end
 
-    Is, Js, Vs = SparseArrays.findnz(FastDifferentiation.sparse_jacobian(G, xs))
-    eq3 = zeros(Expression, size(eq1, 1))
+    Is, Js, Vs = SA.findnz(F.sparse_jacobian(G, primals))
+    eq3 = zeros(Ex, size(eq1, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq3[i] += v * ineq_duals[j]
     end
 
-    eq4 = zeros(Expression, size(ineq_duals, 1))
+    eq4 = zeros(Ex, size(ineq_duals, 1))
     for i in eachindex(G) # transpose
         eq4[i] += G[i] * ineq_duals[i]
     end
@@ -123,17 +123,24 @@ function differentiate_prepare_kkt(
         eq4
     ]
 
-    A = FastDifferentiation.sparse_jacobian(kkt_eqns, [xs; eq_duals; ineq_duals])
-    B = FastDifferentiation.sparse_jacobian(kkt_eqns, FastDifferentiation.Node.(parameters))
+    A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
+    B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
 
-    return (A, B, xs, eq_duals, ineq_duals, parameters), variable_order(m)
+    return (A, B, primals, eq_duals, ineq_duals, parameters), variable_order(m)
 end
 
 export differentiate_prepare_kkt
 
+"""
+$(TYPEDSIGNATURES)
+
+Differentiate a solution of a model. The first argument is the output of [`differentiate_prepare_kkt`](@ref), and is a tuple of the deconstructed model.
+The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are outputs of [`optimized_constraints_with_parameters`](@ref).
+`parameter_values`
+"""
 function differentiate_solution(
-    (A, B, xs, eq_duals, ineq_duals, parameters),
-    x_vals::Vector{Float64},
+    (A, B, primals, eq_duals, ineq_duals, parameters),
+    primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
     parameter_values::Dict{Symbol,Float64};
@@ -144,17 +151,17 @@ function differentiate_solution(
     syms_to_vals = merge(
         Dict(
             zip(
-                (x.node_value for x in [xs; eq_duals; ineq_duals]),
-                [x_vals; eq_dual_vals; ineq_dual_vals],
+                (x.node_value for x in [primals; eq_duals; ineq_duals]),
+                [primal_vals; eq_dual_vals; ineq_dual_vals],
             ),
         ),
         parameter_values,
     )
 
     # substitute in values
-    Is, Js, Vs = SparseArrays.findnz(A)
+    Is, Js, Vs = SA.findnz(A)
     vs = float.(substitute.(Vs, Ref(k -> syms_to_vals[k])))
-    a = SparseArrays.sparse(Is, Js, vs, size(A)...)
+    a = SA.sparse(Is, Js, vs, size(A)...)
     indep_rows = findall_indeps_qr(a) # find independent rows, prevent singularity issues with \
     a_indep = a[indep_rows, :]
 
@@ -164,18 +171,20 @@ function differentiate_solution(
     world).
     =#
 
-    Is, Js, Vs = SparseArrays.findnz(B)
+    Is, Js, Vs = SA.findnz(B)
     vs = float.(substitute.(Vs, Ref(k -> syms_to_vals[k])))
-    b = Array(SparseArrays.sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
+    b = Array(SA.sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
     b_indep = b[indep_rows, :]
 
     c = -a_indep \ b_indep # sensitivities, unscaled
 
     # get primal variable sensitivities only
     if scale
-        ([parameter_values[p] for p in parameters]' .* c[1:length(xs), :] ./ x_vals)
+        (
+            [parameter_values[p] for p in parameters]' .* c[1:length(primals), :] ./ primal_vals
+        )
     else
-        c[1:length(xs), :]
+        c[1:length(primals), :]
     end
 end
 
@@ -184,20 +193,23 @@ export differentiate_solution
 """
 $(TYPEDSIGNATURES)
 
-TODO
+Return the names of variables in `m`.
+
+NOTE: this function assumes that all variables are bounded explicitly in the
+model. `nothing` bounds are ignored.
 """
 function variable_order(m)
     c = []
-    ff(p, x::ConstraintTrees.ConstraintTree) = nothing
-    ff(p, x::ConstraintTrees.Constraint) = begin
-        if length(x.value.idxs) == 1 && !isnothing(x.bound) #TODO assumes that all variables are bounded somehow!!
-            push!(c, (first(x.value.idxs), p))
+    ff(p, x::C.ConstraintTree) = nothing
+    ff(p, x::C.Constraint) = begin
+        if length(x.value.idxs) == 1 && !isnothing(x.bound) #TODO assumes that all variables are bounded somehow!
+            idx = first(x.value.idxs)
+            push!(c, (idx, p))
         end
     end
 
-    ConstraintTrees.itraverse(ff, m)
+    C.itraverse(ff, m)
 
-    idxs = first.(c)
-    _idxs = sortperm(idxs)
+    _idxs = sortperm(first.(c)) # still need to do this because sets don't respect insertion order
     last.(c)[_idxs]
 end

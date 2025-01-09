@@ -1,7 +1,7 @@
 
 #=
-Copyright (c) 2024, Heinrich-Heine University Duesseldorf
-Copyright (c) 2024, University of Luxembourg
+ExCopyright (c) 2025, Heinrich-Heine University Duesseldorf
+ExCopyright (c) 2025, University of Luxembourg
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -31,24 +31,39 @@ end
 
 example_mds = first.(splitext.(basename.(examples))) .* ".md"
 
-withenv("COLUMNS" => 150) do
-    makedocs(
-        modules = [DifferentiableMetabolism],
-        clean = false,
-        format = Documenter.HTML(
-            ansicolor = true,
-            canonical = "https://stelmo.github.io/DifferentiableMetabolism.jl",
-            assets = String[],
-        ),
-        sitename = "DifferentiableMetabolism.jl",
-        linkcheck = false,
-        pages = ["README" => "index.md"; example_mds; "Reference" => "reference.md"],
-    )
+makedocs(
+    modules = [DifferentiableMetabolism],
+    sitename = "DifferentiableMetabolism.jl",
+    linkcheck = false,
+    format = Documenter.HTML(
+        ansicolor = true,
+        canonical = "https://stelmo.github.io/DifferentiableMetabolism.jl/stable/",
+    ),
+    pages = ["README" => "index.md"; example_mds; "Reference" => "reference.md"],
+)
+
+# clean up examples -- we do not need to deploy all the stuff that was
+# generated in the process
+#
+# extra fun: failing programs (such as plotting libraries) may generate core
+# dumps that contain the dumped environment strings, which in turn contain
+# github auth tokens. These certainly need to be avoided.
+examples_names = [n[begin:end-3] for n in examples]
+ipynb_names = examples_names .* ".ipynb"
+examples_allowed_files = vcat("index.html", ipynb_names)
+@info "allowed files:" examples_allowed_files
+for (root, dirs, files) in walkdir(joinpath(@__DIR__, "build", "examples"))
+    for f in files
+        if !(f in examples_allowed_files)
+            @info "removing notebook build artifact `$(joinpath(root, f))'"
+            rm(joinpath(root, f))
+        end
+    end
 end
 
 deploydocs(
     repo = "github.com/stelmo/DifferentiableMetabolism.jl",
     target = "build",
     branch = "gh-pages",
-    push_preview = false,
+    devbranch = "master",
 )

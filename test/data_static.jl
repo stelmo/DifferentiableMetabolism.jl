@@ -142,7 +142,7 @@ const ecoli_core_gene_product_masses = Dict(
     "b1611" => 50.489,
     "b0726" => 105.062,
     "b2279" => 10.845,
-    "s0001" => 0.0,
+    "s0001" => 30.0,
 )
 
 const ecoli_core_reaction_kcats = Dict(
@@ -190,7 +190,7 @@ const ecoli_core_reaction_kcats = Dict(
     "LDH_D" => 31.11,
     "ME1" => 487.01,
     "PIt2r" => 233.86,
-    "ATPS4r" => 71.42,
+    "ATPS4r" => 71.42 * 2,
     "GLCpts" => 233.90,
     "GLUDy" => 105.32,
     "CYTBD" => 153.18,
@@ -213,4 +213,15 @@ const ecoli_core_reaction_kcats = Dict(
     "GLUt2r" => 234.22,
     "PPS" => 706.14,
     "FUM" => 1576.83,
+    "ACALDt" => 100.0,
+    "ACt2r" => 100.0,
+    "CO2t" => 100.0,
+    "ETOHt2r" => 100.0,
+    "FBP" => 100.0,
+    "H2Ot" => 100.0,
+    "NH4t" => 100.0,
+    "O2t" => 100.0,
+    "PYK" => 100.0,
+    "PYRt2" => 100.0,
+    "SUCCt3" => 100.0,
 )
