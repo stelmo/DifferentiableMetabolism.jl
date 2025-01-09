@@ -101,12 +101,12 @@ function optimized_constraints_with_parameters(
     model::C.ConstraintTree,
     parameters::Dict{Symbol,Float64};
     optimizer,
-    modifications = [],
+    settings = [],
     objective::C.Value,
     sense = X.Maximal,
 )
     om = optimization_model_with_parameters(model, parameters; objective, optimizer, sense)
-    for m in modifications
+    for m in settings
         m(om)
     end
     J.optimize!(om)

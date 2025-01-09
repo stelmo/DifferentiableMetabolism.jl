@@ -118,7 +118,7 @@ for k = 1:150
         objective = km.loss.value,
         optimizer = Q.Optimizer,
         sense = X.Minimal,
-        modifications = [X.silence],
+        settings = [X.silence],
     )
     push!(losses, _sol.tree.loss)
 
