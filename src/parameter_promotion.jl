@@ -25,7 +25,7 @@ C.QuadraticValueT(x::Ex) =
     QuadraticValueP(; idxs = Vector{Tuple{Int,Int}}(), weights = Ex[]) :
     QuadraticValueP(; idxs = [(0, 0)], weights = [x])
 
-## Promotion 
+## Promotion
 
 # Exs and LinearValues
 Base.:+(a::Ex, b::C.LinearValue) = b + a
@@ -85,4 +85,3 @@ LinearValueP(x::Float64) = C.LinearValue(x)
 LinearValueP(x::Int64) = C.LinearValue(x)
 QuadraticValueP(x::Float64) = C.QuadraticValue(x)
 QuadraticValueP(x::Int64) = C.QuadraticValue(x)
-

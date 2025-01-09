@@ -56,7 +56,7 @@ end
 $(TYPEDSIGNATURES)
 
 Prepare a model `m` with `objective` for differentiation with respect to
-`parameters`. 
+`parameters`.
 
 This is the most time consuming aspect of differentiation. It pays off to do
 this separately  if the same model will be differentiated multiple times.

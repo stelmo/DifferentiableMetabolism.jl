@@ -36,8 +36,8 @@ include("../../test/data_static.jl")
 # Load model, and convert to CanonicalModel for ease of use
 model = convert(A.CanonicalModel.Model, X.load_model("e_coli_core.json"))
 
-for rid in ["ACt2r", "ETOHt2r","PYRt2", "SUCCt3"]
-    model.reactions[rid].gene_association_dnf = [["s0001",]]
+for rid in ["ACt2r", "ETOHt2r", "PYRt2", "SUCCt3"]
+    model.reactions[rid].gene_association_dnf = [["s0001"]]
 end
 
 # Modify the model a little bit
@@ -82,7 +82,7 @@ for rid in A.reactions(model)
 end
 
 #md # !!! tip "Use the generalized IsozymeT struct from COBREXA"
-#md #     Note, COBREXA.jl exports `Isozyme` which is specialized to Float64. To use parameters as shown here, you _must_ use the more general type `IsozymeT`. 
+#md #     Note, COBREXA.jl exports `Isozyme` which is specialized to Float64. To use parameters as shown here, you _must_ use the more general type `IsozymeT`.
 
 # Add gene product molar mass and capacity constraint info
 gene_product_molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_masses)
@@ -165,7 +165,7 @@ pkm = X.enzyme_constrained_flux_balance_constraints( # pruned kinetic model
     pruned_model;
     reaction_isozymes = pruned_reaction_isozymes,
     gene_product_molar_masses,
-    capacity = [("total", A.genes(pruned_model), capacitylimitation),]
+    capacity = [("total", A.genes(pruned_model), capacitylimitation)],
 )
 
 pruned_solution = D.optimized_constraints_with_parameters(

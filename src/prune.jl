@@ -51,7 +51,7 @@ function prune_reaction_isozymes(
             x.kcat_forward = x.kcat_reverse # swap to make all reactions forward, also in pruned model
         end
         x.kcat_reverse = nothing
-        
+
         x
     end
 
@@ -70,15 +70,15 @@ $(TYPEDSIGNATURES)
 
 Prune away reactions, metabolites, and genes from a `model` using `solution`.
 Additionally, adjust `reaction_isozymes` using [`prune_reaction_isozymes`](@ref)
-to account for the changed directions of the fluxes. 
-    
+to account for the changed directions of the fluxes.
+
 Fluxes and gene product concentrations smaller than `flux_zero_tol`,
 `gene_zero_tol` are removed. Metabolites that do not take part in the remaining
 reactions are also removed.
 
 Note, in COBREXA reverse variables are always derived quantities, hence making
 everything forward orientated ensures that the variables of the whole model are
-just these. 
+just these.
 """
 function prune_model(
     model::A.CanonicalModel.Model,
@@ -117,19 +117,22 @@ function prune_model(
     end
     # additionally, make all reverse flux reactions forward flux - NB: assumes the kcats have been swapped as well - simplifies things downstream
     for rid in [rid for rid in rids if solution_fluxes[Symbol(rid)] < 0]
-        pruned.reactions[rid].stoichiometry = Dict(k => -1 * v for (k,v) in pruned.reactions[rid].stoichiometry)
+        pruned.reactions[rid].stoichiometry =
+            Dict(k => -1 * v for (k, v) in pruned.reactions[rid].stoichiometry)
         lb = pruned.reactions[rid].lower_bound
         ub = pruned.reactions[rid].upper_bound
         pruned.reactions[rid].lower_bound = ub > 0 ? min(0, abs(ub)) : max(0, abs(ub))
         pruned.reactions[rid].upper_bound = abs(lb)
     end
 
-    pruned, prune_reaction_isozymes(
+    pruned,
+    prune_reaction_isozymes(
         reaction_isozymes,
         solution_isozyme_forward_amounts,
         solution_isozyme_reverse_amounts,
         solution_fluxes,
-        gene_zero_tol)
+        gene_zero_tol,
+    )
 end
 
 export prune_model

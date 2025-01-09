@@ -18,8 +18,14 @@ limitations under the License.
 
 # this doesn't really fit in anywhere
 
-C.drop_zeros(x::LinearValueP) = LinearValueP(idxs = x.idxs[F.value.(x.weights) .!= 0], weights = x.weights[F.value.(x.weights) .!= 0])
+C.drop_zeros(x::LinearValueP) = LinearValueP(
+    idxs = x.idxs[F.value.(x.weights).!=0],
+    weights = x.weights[F.value.(x.weights).!=0],
+)
 
-C.drop_zeros(x::QuadraticValueP) = QuadraticValueT(idxs = x.idxs[F.value.(x.weights) .!= 0], weights = x.weights[F.value.(x.weights) .!= 0])
+C.drop_zeros(x::QuadraticValueP) = QuadraticValueT(
+    idxs = x.idxs[F.value.(x.weights).!=0],
+    weights = x.weights[F.value.(x.weights).!=0],
+)
 
 Base.isreal(x::Symbol) = false

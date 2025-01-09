@@ -53,7 +53,7 @@ m.flux_stoichiometry.m3 =
     C.Constraint(m.flux_stoichiometry.m3.value, C.EqualToT(m3bound) / 2)
 
 #md # !!! tip "Use the generalized bounds from ConstraintTrees"
-#md #     Note, ConstraintTrees.jl exports `Between` and `EqualTo` which are specialized to Float64. To use parameters as shown here, you _must_ use the more general types `BetweenT` and `EqualToT`. Appropriate overloads have been added to simplify type promotion when adding floaty bounds to symbolic bounds. 
+#md #     Note, ConstraintTrees.jl exports `Between` and `EqualTo` which are specialized to Float64. To use parameters as shown here, you _must_ use the more general types `BetweenT` and `EqualToT`. Appropriate overloads have been added to simplify type promotion when adding floaty bounds to symbolic bounds.
 
 # # add parametric constraints
 p = F.make_variables(:p, 4)
@@ -65,7 +65,7 @@ m *=
     )
 
 #md # !!! tip "Use the generalized value types from ConstraintTrees"
-#md #     Note, ConstraintTrees.jl exports `LinearValue` and `QuadraticValue` which are specialized to Float64. To use parameters as shown here, you _must_ use the more general types `LinearValueT` and `QuadraticValueT`. Appropriate overloads have been added to simplify type construction and promotion (as used above). But note that `m.linparam.value` is a `ConstraintTrees.LinearValueT{FastDifferentiation.Node}`. 
+#md #     Note, ConstraintTrees.jl exports `LinearValue` and `QuadraticValue` which are specialized to Float64. To use parameters as shown here, you _must_ use the more general types `LinearValueT` and `QuadraticValueT`. Appropriate overloads have been added to simplify type construction and promotion (as used above). But note that `m.linparam.value` is a `ConstraintTrees.LinearValueT{FastDifferentiation.Node}`.
 
 # substitute params into model to yield a "normal" constraint tree model
 parameter_substitutions = Dict(
@@ -138,4 +138,3 @@ m_noparams3 = D.optimized_constraints_with_parameters(
 m_noparams3.tree.fluxes
 
 @test isapprox(m_noparams3.tree.objective, 11; atol = TEST_TOLERANCE) #src
-

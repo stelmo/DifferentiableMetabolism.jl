@@ -54,4 +54,3 @@ substitute(x::C.Constraint, lookup) =
     C.Constraint(substitute(C.value(x), lookup), substitute(C.bound(x), lookup))
 
 substitute(x::C.ConstraintTree, lookup) = C.map(c -> substitute(c, lookup), x, C.Constraint)
-
