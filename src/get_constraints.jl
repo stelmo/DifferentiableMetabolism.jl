@@ -55,7 +55,7 @@ $(TYPEDSIGNATURES)
 Helper function for [`equality_constraints`](@ref).
 """
 function get_equality_constraints(c::C.Constraint, sink)
-    if c.bound isa C.EqualToT # TODO check if works
+    if c.bound isa C.EqualToT
         push!(sink, (C.value(c), Ex(c.bound.equal_to)))
     end
 end
@@ -96,7 +96,7 @@ $(TYPEDSIGNATURES)
 Helper function for [`inequality_constraints`](@ref).
 """
 function get_inequality_constraints(c::C.Constraint, sink)
-    if c.bound isa C.BetweenT # TODO check if works
+    if c.bound isa C.BetweenT
         push!(sink, (C.value(c), Ex(c.bound.lower), Ex(c.bound.upper)))
     end
 end
