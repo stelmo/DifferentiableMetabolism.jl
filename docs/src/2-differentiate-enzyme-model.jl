@@ -103,7 +103,7 @@ ec_solution = D.optimized_constraints_with_parameters(
     parameter_values;
     objective = km.objective.value,
     optimizer = T.Optimizer,
-    modifications = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    settings = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
 
 ec_solution.tree
@@ -173,7 +173,7 @@ pruned_solution = D.optimized_constraints_with_parameters(
     parameter_values;
     objective = pkm.objective.value,
     optimizer = T.Optimizer,
-    modifications = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
+    settings = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
 
 # Notice, the solution is exactly the same as before, except that all the
@@ -272,7 +272,7 @@ fin_diff_sol = D.optimized_constraints_with_parameters( #src
     parameter_values; #src
     objective = pkm.objective.value, #src
     optimizer = T.Optimizer, #src
-    modifications = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)], #src
+    settings = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)], #src
 ) #src
 fd_sens = Dict( #src
     k => #src
