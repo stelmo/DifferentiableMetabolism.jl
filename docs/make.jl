@@ -43,7 +43,7 @@ makedocs(
         "README" => "index.md",
         "Examples" => [
             "Contents" => "examples.md"
-            examples_mds
+            example_mds
         ],
         "Reference" => "reference.md",
     ],
