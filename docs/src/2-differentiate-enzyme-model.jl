@@ -116,10 +116,10 @@ ec_solution_cobrexa = X.enzyme_constrained_flux_balance_analysis( #src
     optimizer = T.Optimizer, #src
 ) #src
 
-@test isapprox(
-    ec_solution.tree.objective,
-    ec_solution_cobrexa.objective;
-    atol = TEST_TOLERANCE,
+@test isapprox( #src
+    ec_solution.tree.objective, #src
+    ec_solution_cobrexa.objective; #src
+    atol = TEST_TOLERANCE, #src
 ) #src
 
 # Note, this solution contains many inactive reactions
@@ -187,10 +187,10 @@ sort(collect(pruned_solution.tree.fluxes), by = ComposedFunction(abs, last))
 # no zero genes
 sort(abs.(collect(values(pruned_solution.tree.gene_product_amounts))))
 
-@test isapprox(
-    pruned_solution.tree.objective,
-    ec_solution.tree.objective;
-    atol = TEST_TOLERANCE,
+@test isapprox( #src
+    pruned_solution.tree.objective, #src
+    ec_solution.tree.objective; #src
+    atol = TEST_TOLERANCE, #src
 ) #src
 
 @test all(values(pruned_solution.tree.fluxes) .> 0.0) #src
