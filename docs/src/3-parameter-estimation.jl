@@ -46,14 +46,14 @@ F.@variables r3 r4
 
 reaction_isozymes = Dict(
     "r3" => Dict(
-        "isozyme1" => X.IsozymeT(
+        "isozyme1" => X.IsozymeT{Ex}(
             gene_product_stoichiometry = Dict("g1" => 1.0),
             kcat_forward = r3,
             kcat_reverse = nothing,
         ),
     ),
     "r4" => Dict(
-        "isozyme1" => X.IsozymeT(
+        "isozyme1" => X.IsozymeT{Ex}(
             gene_product_stoichiometry = Dict("g2" => 1.0),
             kcat_forward = r4,
             kcat_reverse = nothing,
