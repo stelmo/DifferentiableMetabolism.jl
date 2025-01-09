@@ -1,83 +1,113 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl</title><meta name="title" content="Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl"/><meta property="og:title" content="Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl"/><meta property="twitter:title" content="Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl"/><meta name="description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="twitter:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/2-differentiate-enzyme-model/"/><meta property="twitter:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/2-differentiate-enzyme-model/"/><link rel="canonical" href="https://stelmo.github.io/DifferentiableMetabolism.jl/2-differentiate-enzyme-model/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DifferentiableMetabolism.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">README</a></li><li><a class="tocitem" href="../1-parametric-models/">Parametric constraint-based metabolic models</a></li><li class="is-active"><a class="tocitem" href>Differentiating enzyme constrained metabolic models</a></li><li><a class="tocitem" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data</a></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Differentiating enzyme constrained metabolic models</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Differentiating enzyme constrained metabolic models</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl/blob/master/docs/src/2-differentiate-enzyme-model.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Differentiating-enzyme-constrained-metabolic-models"><a class="docs-heading-anchor" href="#Differentiating-enzyme-constrained-metabolic-models">Differentiating enzyme constrained metabolic models</a><a id="Differentiating-enzyme-constrained-metabolic-models-1"></a><a class="docs-heading-anchor-permalink" href="#Differentiating-enzyme-constrained-metabolic-models" title="Permalink"></a></h1><pre><code class="language-julia hljs">using DifferentiableMetabolism
-using AbstractFBCModels
-using ConstraintTrees
-using COBREXA
-using Tulip
-using JSONFBCModels
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl</title><meta name="title" content="Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl"/><meta property="og:title" content="Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl"/><meta property="twitter:title" content="Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl"/><meta name="description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="twitter:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/stable/2-differentiate-enzyme-model/"/><meta property="twitter:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/stable/2-differentiate-enzyme-model/"/><link rel="canonical" href="https://stelmo.github.io/DifferentiableMetabolism.jl/stable/2-differentiate-enzyme-model/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DifferentiableMetabolism.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">README</a></li><li><a class="tocitem" href="../1-parametric-models/">Parametric constraint-based metabolic models</a></li><li class="is-active"><a class="tocitem" href>Differentiating enzyme constrained metabolic models</a></li><li><a class="tocitem" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data</a></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Differentiating enzyme constrained metabolic models</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Differentiating enzyme constrained metabolic models</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl/blob/master/docs/src/2-differentiate-enzyme-model.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Differentiating-enzyme-constrained-metabolic-models"><a class="docs-heading-anchor" href="#Differentiating-enzyme-constrained-metabolic-models">Differentiating enzyme constrained metabolic models</a><a id="Differentiating-enzyme-constrained-metabolic-models-1"></a><a class="docs-heading-anchor-permalink" href="#Differentiating-enzyme-constrained-metabolic-models" title="Permalink"></a></h1><pre><code class="language-julia hljs">import DifferentiableMetabolism as D
+import FastDifferentiation as F
+const Ex = F.Node
+import ConstraintTrees as C
+import AbstractFBCModels as A
+import JSONFBCModels as JFBC
+import COBREXA as X
+import Tulip as T
+import Clarabel as Q
 import Downloads: download
-using CairoMakie
-using FastDifferentiation
+import CairoMakie as CM
 
 !isfile(&quot;e_coli_core.json&quot;) &amp;&amp;
     download(&quot;http://bigg.ucsd.edu/static/models/e_coli_core.json&quot;, &quot;e_coli_core.json&quot;)
 
-include(&quot;../../test/data_static.jl&quot;)
+include(&quot;../../test/data_static.jl&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Float64} with 73 entries:
+  &quot;ACt2r&quot;   =&gt; 100.0
+  &quot;ACALD&quot;   =&gt; 568.11
+  &quot;PTAr&quot;    =&gt; 1171.97
+  &quot;NH4t&quot;    =&gt; 100.0
+  &quot;PGL&quot;     =&gt; 2120.42
+  &quot;NADTRHD&quot; =&gt; 186.99
+  &quot;ALCD2x&quot;  =&gt; 75.95
+  &quot;PGK&quot;     =&gt; 57.64
+  &quot;PDH&quot;     =&gt; 529.76
+  &quot;LDH_D&quot;   =&gt; 31.11
+  &quot;CO2t&quot;    =&gt; 100.0
+  &quot;ME1&quot;     =&gt; 487.01
+  &quot;PIt2r&quot;   =&gt; 233.86
+  &quot;PYK&quot;     =&gt; 100.0
+  &quot;MALt2_2&quot; =&gt; 234.03
+  &quot;CS&quot;      =&gt; 113.29
+  &quot;PGM&quot;     =&gt; 681.4
+  &quot;TKT1&quot;    =&gt; 311.16
+  &quot;ATPS4r&quot;  =&gt; 142.84
+  ⋮         =&gt; ⋮</code></pre><p>Load model, and convert to CanonicalModel for ease of use</p><pre><code class="language-julia hljs">model = convert(A.CanonicalModel.Model, X.load_model(&quot;e_coli_core.json&quot;))
 
-model = load_model(&quot;e_coli_core.json&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">JSONFBCModels.JSONFBCModel(#= 95 reactions, 72 metabolites =#)</code></pre><p>unconstrain glucose</p><pre><code class="language-julia hljs">rids = [x[&quot;id&quot;] for x in model.reactions]
-glc_idx = first(indexin([&quot;EX_glc__D_e&quot;], rids))
-model.reactions[glc_idx][&quot;lower_bound&quot;] = -1000.0</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-1000.0</code></pre><p>constrain PFL to zero</p><pre><code class="language-julia hljs">pfl_idx = first(indexin([&quot;PFL&quot;], rids))
-model.reactions[pfl_idx][&quot;upper_bound&quot;] = 0.0
-
-rid_kcat =
-    Dict(k =&gt; FastDifferentiation.Node(Symbol(k)) for (k, _) in ecoli_core_reaction_kcats)
-kcats = Symbol.(keys(ecoli_core_reaction_kcats))
-
-parameter_values = Dict{Symbol,Float64}()
-
-reaction_isozymes = Dict{String,Dict{String,ParameterIsozyme}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
-for rid in AbstractFBCModels.reactions(model)
-    grrs = AbstractFBCModels.reaction_gene_association_dnf(model, rid)
+for rid in [&quot;ACt2r&quot;, &quot;ETOHt2r&quot;, &quot;PYRt2&quot;, &quot;SUCCt3&quot;]
+    model.reactions[rid].gene_association_dnf = [[&quot;s0001&quot;]]
+end</code></pre><p>Modify the model a little bit</p><pre><code class="language-julia hljs">model.reactions[&quot;EX_glc__D_e&quot;].lower_bound = -1000.0 # capacity bound suffices
+model.reactions[&quot;PFL&quot;].upper_bound = 0.0 # aerobic simulation</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.0</code></pre><p>Create parameters of all kcats</p><pre><code class="language-julia hljs">rid_kcat = Dict(k =&gt; Ex(Symbol(k)) for (k, _) in ecoli_core_reaction_kcats)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, FastDifferentiation.Node} with 73 entries:
+  &quot;NH4t&quot;    =&gt; NH4t
+  &quot;ACALD&quot;   =&gt; ACALD
+  &quot;PTAr&quot;    =&gt; PTAr
+  &quot;FUM&quot;     =&gt; FUM
+  &quot;PGL&quot;     =&gt; PGL
+  &quot;NADTRHD&quot; =&gt; NADTRHD
+  &quot;ALCD2x&quot;  =&gt; ALCD2x
+  &quot;PGK&quot;     =&gt; PGK
+  &quot;PDH&quot;     =&gt; PDH
+  &quot;LDH_D&quot;   =&gt; LDH_D
+  &quot;CO2t&quot;    =&gt; CO2t
+  &quot;ME1&quot;     =&gt; ME1
+  &quot;PIt2r&quot;   =&gt; PIt2r
+  &quot;PYK&quot;     =&gt; PYK
+  &quot;MALt2_2&quot; =&gt; MALt2_2
+  &quot;CS&quot;      =&gt; CS
+  &quot;PGM&quot;     =&gt; PGM
+  &quot;TKT1&quot;    =&gt; TKT1
+  &quot;ATPS4r&quot;  =&gt; ATPS4r
+  ⋮         =&gt; ⋮</code></pre><p>Create a lookup table to map parameters to values</p><pre><code class="language-julia hljs">parameter_values = Dict{Symbol,Float64}()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{Symbol, Float64}()</code></pre><p>Create a symbolic reaction_isozyme structure to feed into COBREXA</p><pre><code class="language-julia hljs">reaction_isozymes = Dict{String,Dict{String,X.IsozymeT{Ex}}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Dict{String, COBREXA.IsozymeT{FastDifferentiation.Node}}}()</code></pre><p>Populate reaction_isozymes with parameters</p><pre><code class="language-julia hljs">for rid in A.reactions(model)
+    grrs = A.reaction_gene_association_dnf(model, rid)
     isnothing(grrs) &amp;&amp; continue # skip if no grr available
     haskey(ecoli_core_reaction_kcats, rid) || continue # skip if no kcat data available
+
     for (i, grr) in enumerate(grrs)
 
         kcat = ecoli_core_reaction_kcats[rid] * 3.6 # change unit to k/h
-        parameter_values[Symbol(rid)] = kcat
+        parameter_values[Symbol(rid)] = kcat # to substitute later
 
-        d = get!(reaction_isozymes, rid, Dict{String,ParameterIsozyme}())
-        d[&quot;isozyme_$i&quot;] = ParameterIsozyme(
+        d = get!(reaction_isozymes, rid, Dict{String,X.IsozymeT{Ex}}()) # NB: IsozymeT
+        d[&quot;isozyme_$i&quot;] = X.IsozymeT{Ex}(
             gene_product_stoichiometry = Dict(grr .=&gt; fill(1.0, size(grr))), # assume subunit stoichiometry of 1 for all isozymes
-            kcat_forward = rid_kcat[rid],
+            kcat_forward = rid_kcat[rid], # assume forward and reverse have the same kcat
             kcat_reverse = rid_kcat[rid],
         )
+
     end
-end
+end</code></pre><div class="admonition is-success"><header class="admonition-header">Use the generalized IsozymeT struct from COBREXA</header><div class="admonition-body"><p>Note, COBREXA.jl exports <code>Isozyme</code> which is specialized to Float64. To use parameters as shown here, you <em>must</em> use the more general type <code>IsozymeT</code>.</p></div></div><p>Add gene product molar mass and capacity constraint info</p><pre><code class="language-julia hljs">gene_product_molar_masses = Dict(k =&gt; v for (k, v) in ecoli_core_gene_product_masses)
 
-gene_product_molar_masses = Dict(k =&gt; v for (k, v) in ecoli_core_gene_product_masses)
-
-@variables capacitylimitation
-parameter_values[:capacitylimitation] = 50.0 # mg enzyme/gDW
-
-km = build_kinetic_model(
+F.@variables capacitylimitation
+parameter_values[:capacitylimitation] = 50.0 # mg enzyme/gDW</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">50.0</code></pre><p>Create and solve a COBREXA enzyme constrained model</p><pre><code class="language-julia hljs">km = X.enzyme_constrained_flux_balance_constraints( # kinetic model
     model;
     reaction_isozymes,
     gene_product_molar_masses,
     capacity = capacitylimitation,
 )
 
-ec_solution, _, _, _ = optimized_constraints_with_parameters(
+ec_solution = D.optimized_constraints_with_parameters(
     km,
     parameter_values;
     objective = km.objective.value,
-    optimizer = Tulip.Optimizer,
-    modifications = [COBREXA.set_optimizer_attribute(&quot;IPM_IterationsLimit&quot;, 10_000)],
+    optimizer = T.Optimizer,
+    modifications = [X.set_optimizer_attribute(&quot;IPM_IterationsLimit&quot;, 10_000)],
 )
 
-ec_solution</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Tree{Float64} with 13 elements:
-  :coupling                     =&gt; ConstraintTrees.Tree{Float64}(#= 0 elements =#)
-  :directional_flux_balance     =&gt; ConstraintTrees.Tree{Float64}(#= 95 elements =#)
-  :flux_stoichiometry           =&gt; ConstraintTrees.Tree{Float64}(#= 72 elements =#)
-  :fluxes                       =&gt; ConstraintTrees.Tree{Float64}(#= 95 elements =#)
-  :fluxes_forward               =&gt; ConstraintTrees.Tree{Float64}(#= 93 elements =#)
-  :fluxes_reverse               =&gt; ConstraintTrees.Tree{Float64}(#= 47 elements =#)
-  :gene_product_amounts         =&gt; ConstraintTrees.Tree{Float64}(#= 124 elements =#)
-  :gene_product_capacity        =&gt; ConstraintTrees.Tree{Float64}(#= 1 element =#)
-  :isozyme_flux_forward_balance =&gt; ConstraintTrees.Tree{Float64}(#= 60 elements =#)
-  :isozyme_flux_reverse_balance =&gt; ConstraintTrees.Tree{Float64}(#= 32 elements =#)
-  :isozyme_forward_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 60 elements =#)
-  :isozyme_reverse_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 32 elements =#)
-  :objective                    =&gt; 0.750518</code></pre><p>This solution contains many inactive reactions</p><pre><code class="language-julia hljs">sort(collect(ec_solution.fluxes), by = ComposedFunction(abs, last))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">95-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
+ec_solution.tree</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Tree{Float64} with 12 elements:
+  :coupling                     =&gt; ConstraintTrees.Tree{Float64}(#= 0 elements …
+  :flux_stoichiometry           =&gt; ConstraintTrees.Tree{Float64}(#= 72 elements…
+  :fluxes                       =&gt; ConstraintTrees.Tree{Float64}(#= 95 elements…
+  :fluxes_forward               =&gt; ConstraintTrees.Tree{Float64}(#= 95 elements…
+  :fluxes_reverse               =&gt; ConstraintTrees.Tree{Float64}(#= 95 elements…
+  :gene_product_amounts         =&gt; ConstraintTrees.Tree{Float64}(#= 137 element…
+  :gene_product_capacity        =&gt; ConstraintTrees.Tree{Float64}(#= 1 element =…
+  :isozyme_flux_forward_balance =&gt; ConstraintTrees.Tree{Float64}(#= 73 elements…
+  :isozyme_flux_reverse_balance =&gt; ConstraintTrees.Tree{Float64}(#= 73 elements…
+  :isozyme_forward_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 73 elements…
+  :isozyme_reverse_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 73 elements…
+  :objective                    =&gt; 0.886595</code></pre><p>Note, this solution contains many inactive reactions</p><pre><code class="language-julia hljs">sort(collect(ec_solution.tree.fluxes), by = ComposedFunction(abs, last))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">95-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
     :EX_fru_e =&gt; 0.0
     :EX_fum_e =&gt; 0.0
  :EX_gln__L_e =&gt; 0.0
@@ -87,151 +117,181 @@ ec_solution</code></pre><pre class="documenter-example-output"><code class="nohi
       :GLNabc =&gt; 0.0
      :MALt2_2 =&gt; 0.0
          :PFL =&gt; 0.0
-    :EX_for_e =&gt; 4.685845906545776e-15
+    :EX_for_e =&gt; 2.888139093288023e-16
               ⋮
-         :PGK =&gt; -33.89684016777724
-        :GAPD =&gt; 33.89684016777725
-    :EX_h2o_e =&gt; 38.668072869856005
-        :H2Ot =&gt; -38.668072869856005
-      :EX_h_e =&gt; 39.54058803115938
-      :NADH16 =&gt; 64.6666449207555
-       :CYTBD =&gt; 64.66664492281971
-    :SUCCt2_2 =&gt; 101.83896464908304
-      :SUCCt3 =&gt; 101.83896465010721</code></pre><p>And also many inactive gene products.</p><pre><code class="language-julia hljs">sort(collect(ec_solution.gene_product_amounts), by = last)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">124-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
- :b0809 =&gt; 8.141678306020198e-17
- :b0810 =&gt; 8.141678306020198e-17
- :b0811 =&gt; 8.141678306020198e-17
- :b4014 =&gt; 9.846484300151926e-13
- :b0726 =&gt; 1.0446152588779501e-12
- :b0727 =&gt; 1.0446152588779501e-12
- :b1702 =&gt; 1.097789630627885e-12
- :b1479 =&gt; 1.256902936168616e-12
- :b2976 =&gt; 1.295043723786085e-12
- :b3403 =&gt; 2.807358103195605e-12
+    :EX_co2_e =&gt; 18.832055551796454
+         :PGK =&gt; -19.654061644965612
+        :GAPD =&gt; 19.654061644965616
+        :H2Ot =&gt; -25.290364544539184
+    :EX_h2o_e =&gt; 25.290364544539187
+      :EX_h_e =&gt; 26.321074982917896
+      :NADH16 =&gt; 35.61412729486022
+       :CYTBD =&gt; 35.61412729500765
+      :ATPS4r =&gt; 39.25600888943067</code></pre><p>And also many inactive gene products.</p><pre><code class="language-julia hljs">sort(collect(ec_solution.tree.gene_product_amounts), by = last)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">137-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
+ :b0902 =&gt; 0.0
+ :b0903 =&gt; 0.0
+ :b2579 =&gt; 0.0
+ :b3114 =&gt; 0.0
+ :b3951 =&gt; 0.0
+ :b3952 =&gt; 0.0
+ :b0809 =&gt; 1.001893631198233e-17
+ :b0810 =&gt; 1.001893631198233e-17
+ :b0811 =&gt; 1.001893631198233e-17
+ :b1702 =&gt; 5.1577605952357536e-14
         ⋮
- :b2417 =&gt; 0.022586033326179002
- :b2415 =&gt; 0.022586033355673742
- :b2416 =&gt; 0.022586033355673742
- :b2779 =&gt; 0.04348653861416314
- :b1779 =&gt; 0.0731266615462882
- :b0978 =&gt; 0.11726698379336735
- :b0979 =&gt; 0.11726698379336735
- :b3528 =&gt; 0.12079853655910855
- :b2926 =&gt; 0.16335511688953944</code></pre><p>With theory, you can show that this introduces flux variability into the solution, making it non-unique, and consequently non-differentiable. To fix this, one need to prune the model, to include only the active reactions and genes. This can be differentiated uniquely. Below we build a pruned kinetic model, by removing all the reactions, metabolites, and genes that are not active.</p><pre><code class="language-julia hljs">flux_zero_tol = 1e-6 # these bounds make a real difference!
+ :b3732 =&gt; 0.07634028923131067
+ :b3733 =&gt; 0.07634028923131067
+ :b3734 =&gt; 0.07634028923131067
+ :b3735 =&gt; 0.07634028923131067
+ :b3736 =&gt; 0.07634028923131067
+ :b3737 =&gt; 0.07634028923131067
+ :b3738 =&gt; 0.07634028923131067
+ :b2926 =&gt; 0.09471654351397836
+ :s0001 =&gt; 0.1389153638280659</code></pre><p>With theory, you can show that this introduces flux variability into the solution, making it non-unique, and consequently non-differentiable. To fix this, one need to prune the model, to include only the active reactions and genes. This can be differentiated uniquely. Below we build a pruned kinetic model, by removing all the reactions, metabolites, and genes that are not active.</p><pre><code class="language-julia hljs">flux_zero_tol = 1e-6 # these bounds make a real difference!
 gene_zero_tol = 1e-6
 
-pruned_reaction_isozymes =
-    prune_reaction_isozymes(reaction_isozymes, ec_solution, flux_zero_tol)
+pruned_model, pruned_reaction_isozymes = D.prune_model(
+    model,
+    ec_solution.tree.fluxes,
+    ec_solution.tree.gene_product_amounts,
+    reaction_isozymes,
+    ec_solution.tree.isozyme_forward_amounts,
+    ec_solution.tree.isozyme_reverse_amounts,
+    flux_zero_tol,
+    gene_zero_tol,
+);
 
-pruned_gene_product_molar_masses =
-    prune_gene_product_molar_masses(gene_product_molar_masses, ec_solution, gene_zero_tol)
+pruned_model
 
-pkm = build_kinetic_model(
-    prune_model(model, ec_solution, flux_zero_tol, gene_zero_tol);
+
+pkm = X.enzyme_constrained_flux_balance_constraints( # pruned kinetic model
+    pruned_model;
     reaction_isozymes = pruned_reaction_isozymes,
-    gene_product_molar_masses = pruned_gene_product_molar_masses,
-    capacity = capacitylimitation,
+    gene_product_molar_masses,
+    capacity = [(&quot;total&quot;, A.genes(pruned_model), capacitylimitation)],
 )
 
-ec_solution2, x_vals, eq_dual_vals, ineq_dual_vals = optimized_constraints_with_parameters(
+pruned_solution = D.optimized_constraints_with_parameters(
     pkm,
     parameter_values;
     objective = pkm.objective.value,
-    optimizer = Tulip.Optimizer,
-    modifications = [COBREXA.set_optimizer_attribute(&quot;IPM_IterationsLimit&quot;, 10_000)],
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(ConstraintTrees.Tree{Float64}(#= 13 elements =#), [-24.485189487436223, 0.8097342831463148, 0.8097342831463405, -24.485189487436223, 8.390000123367471, 0.7505183827479407, -33.20099699220691, 0.8097342831462997, 64.66664537982322, 32.774064610180126  …  0.04348653850566591, 0.11726698687786197, 0.0019854019751287073, 0.0014080768108310727, 0.0011775007316609776, 0.014402466503864812, 0.013360591188965609, 0.16335511657978186, 0.010287481239658582, 0.012263467164832686], [-0.00036371443276863767, 0.0023267928989590273, 0.0027824213277173244, 0.0, -0.0, -0.0, 0.0, 0.002014742768812649, 0.00311403582583868, 0.0010366917501896827  …  0.0009223262087880106, 0.001535272993307315, 0.0011032142645869476, 0.0007344061982399577, 0.00018361382110082322, 0.0003637144339892305, 0.002192753738711806, 0.0033911130687834675, 0.00016788735882493586, 0.001475886771361535], [-2.5648632097074113e-15, -2.7307996883186784e-12, -2.6483061786531687e-12, -2.564461081706223e-15, -0.012533077620651405, -2.2341675272995034e-13, -2.7230834434230338e-15, -2.7858554439304114e-12, -1.308862742116795e-14, -1.9597639098730116e-14  …  0.0, 0.0, 0.0, 0.0, -2.427875472008117e-15, 0.0, -2.7924524204713963e-15, -2.7585009434656825e-15, -2.40413598659176e-15, -0.017113418119365467])</code></pre><p>Notice, the solution is exactly the same as before, except that all the inactive elements are gone.</p><pre><code class="language-julia hljs">ec_solution2</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Tree{Float64} with 13 elements:
-  :coupling                     =&gt; ConstraintTrees.Tree{Float64}(#= 0 elements =#)
-  :directional_flux_balance     =&gt; ConstraintTrees.Tree{Float64}(#= 48 elements =#)
-  :flux_stoichiometry           =&gt; ConstraintTrees.Tree{Float64}(#= 52 elements =#)
-  :fluxes                       =&gt; ConstraintTrees.Tree{Float64}(#= 48 elements =#)
-  :fluxes_forward               =&gt; ConstraintTrees.Tree{Float64}(#= 36 elements =#)
-  :fluxes_reverse               =&gt; ConstraintTrees.Tree{Float64}(#= 12 elements =#)
-  :gene_product_amounts         =&gt; ConstraintTrees.Tree{Float64}(#= 47 elements =#)
-  :gene_product_capacity        =&gt; ConstraintTrees.Tree{Float64}(#= 1 element =#)
-  :isozyme_flux_forward_balance =&gt; ConstraintTrees.Tree{Float64}(#= 26 elements =#)
-  :isozyme_flux_reverse_balance =&gt; ConstraintTrees.Tree{Float64}(#= 5 elements =#)
-  :isozyme_forward_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 26 elements =#)
-  :isozyme_reverse_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 5 elements =#)
-  :objective                    =&gt; 0.750518</code></pre><p>no zero fluxes</p><pre><code class="language-julia hljs">sort(collect(ec_solution.fluxes), by = ComposedFunction(abs, last))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">95-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
-    :EX_fru_e =&gt; 0.0
-    :EX_fum_e =&gt; 0.0
- :EX_gln__L_e =&gt; 0.0
- :EX_mal__L_e =&gt; 0.0
-     :FRUpts2 =&gt; 0.0
-     :FUMt2_2 =&gt; 0.0
-      :GLNabc =&gt; 0.0
-     :MALt2_2 =&gt; 0.0
-         :PFL =&gt; 0.0
-    :EX_for_e =&gt; 4.685845906545776e-15
-              ⋮
-         :PGK =&gt; -33.89684016777724
-        :GAPD =&gt; 33.89684016777725
-    :EX_h2o_e =&gt; 38.668072869856005
-        :H2Ot =&gt; -38.668072869856005
-      :EX_h_e =&gt; 39.54058803115938
-      :NADH16 =&gt; 64.6666449207555
-       :CYTBD =&gt; 64.66664492281971
-    :SUCCt2_2 =&gt; 101.83896464908304
-      :SUCCt3 =&gt; 101.83896465010721</code></pre><p>no zero genes</p><pre><code class="language-julia hljs">sort(abs.(collect(values(ec_solution2.gene_product_amounts))))
-
-
-
-
-parameters = [:capacitylimitation; kcats]
-
-pkm_kkt, vids = differentiate_prepare_kkt(pkm, pkm.objective.value, parameters)
-
-sens = differentiate_solution(
-    pkm_kkt,
-    x_vals,
-    eq_dual_vals,
-    ineq_dual_vals,
-    parameter_values,
-    scale = true, # unitless sensitivities
-)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">127×63 Matrix{Float64}:
- 0.944774     -0.0  0.00395506    0.000578273  -0.0  -0.0   0.126918     …  -0.0   0.00340805   0.0375147    -0.0  -0.0  -0.0  -0.0  -0.0
- 1.14011       0.0  0.00477276    0.000697831   0.0   0.0   0.153158         0.0   0.00411266   0.0452708     0.0   0.0   0.0   0.0   0.0
- 1.14011      -0.0  0.00477276    0.000697831  -0.0  -0.0   0.153158        -0.0   0.00411266   0.0452708    -0.0  -0.0  -0.0  -0.0  -0.0
- 0.944774     -0.0  0.00395506    0.000578273  -0.0  -0.0   0.126918        -0.0   0.00340805   0.0375147    -0.0  -0.0  -0.0  -0.0  -0.0
- 4.76087e-13  -0.0  2.76756e-11  -1.02542e-11  -0.0  -0.0   1.59896e-11     -0.0  -6.04713e-11  2.76927e-11  -0.0  -0.0  -0.0  -0.0  -0.0
- 1.14011      -0.0  0.00477276    0.000697831  -0.0  -0.0   0.153158     …  -0.0   0.00411266   0.0452708    -0.0  -0.0  -0.0  -0.0  -0.0
- 0.996052      0.0  0.00416972    0.000609659   0.0   0.0   0.133806         0.0   0.00359302   0.0395508     0.0   0.0   0.0   0.0   0.0
- 1.14011       0.0  0.00477276    0.000697831   0.0   0.0   0.153158         0.0   0.00411266   0.0452708     0.0   0.0   0.0   0.0   0.0
- 0.992186      0.0  0.00415353    0.000607293   0.0   0.0   0.133287         0.0   0.00357908   0.0393973     0.0   0.0   0.0   0.0   0.0
- 0.994176     -0.0  0.00416186    0.00060851   -0.0  -0.0   0.133554        -0.0   0.00358625   0.0394763    -0.0  -0.0  -0.0  -0.0  -0.0
- ⋮                                                    ⋮                  ⋱   ⋮                                            ⋮          
- 0.992186      0.0  0.00415353    0.000607293   0.0   0.0   0.133287         0.0   0.00357908   0.0393973     0.0   0.0   0.0   0.0   0.0
- 1.14011      -0.0  0.00477276    0.000697831  -0.0  -0.0   0.153158        -0.0   0.00411266   0.0452708    -0.0  -0.0  -0.0  -0.0  -0.0
- 1.14011      -0.0  0.00477276    0.000697831  -0.0  -0.0   0.153158     …  -0.0   0.00411266   0.0452708    -0.0  -0.0  -0.0  -0.0  -0.0
- 1.14011       0.0  0.00477276    0.000697831   0.0   0.0   0.153158         0.0   0.00411266   0.0452708     0.0   0.0   0.0   0.0   0.0
- 1.14011      -0.0  0.00477276    0.000697831  -0.0  -0.0   0.153158        -0.0   0.00411266   0.0452708    -0.0  -0.0  -0.0  -0.0  -0.0
- 0.994176     -0.0  0.00416186    0.00060851   -0.0  -0.0   0.133554        -0.0   0.00358625   0.0394763    -0.0  -0.0  -0.0  -0.0  -0.0
- 0.999009     -0.0  0.0041821     0.000611469  -0.0  -0.0  -0.865796        -0.0   0.00360369   0.0396682    -0.0  -0.0  -0.0  -0.0  -0.0
- 1.14011       0.0  0.00477276    0.000697831   0.0   0.0   0.153158     …   0.0   0.00411266   0.0452708     0.0   0.0   0.0   0.0   0.0
- 0.944774      0.0  0.00395506    0.000578273   0.0   0.0   0.126918         0.0   0.00340805   0.0375147     0.0   0.0   0.0   0.0   0.0</code></pre><p>look at glycolysis and oxidative phosphorylation only</p><pre><code class="language-julia hljs">subset_ids = [
-    r[&quot;id&quot;] for r in model.reactions[indexin(string.(keys(pkm.fluxes)), rids)] if
-    r[&quot;subsystem&quot;] in [&quot;Glycolysis/Gluconeogenesis&quot;, &quot;Oxidative Phosphorylation&quot;]
-]
-
-flux_idxs = findall(x -&gt; string(last(x)) in subset_ids &amp;&amp; first(x) == :fluxes, vids)
-flux_ids = last.(vids[flux_idxs])
-
-iso_idxs = findall(x -&gt; string(x[2]) in subset_ids &amp;&amp; first(x) != :fluxes, vids)
-iso_ids = [v[2] for v in vids[iso_idxs]]
-
-param_idxs = findall(x -&gt; string(x) in subset_ids, parameters)
-param_ids = parameters[param_idxs]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">11-element Vector{Symbol}:
+    optimizer = T.Optimizer,
+    modifications = [X.set_optimizer_attribute(&quot;IPM_IterationsLimit&quot;, 10_000)],
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(tree = ConstraintTrees.Tree{Float64}(#= 12 elements =#), primal_values = [8.535989199056505, 0.9565467979431083, 0.9565467979431179, 8.535989199056516, 8.390000031747537, 39.25600852344804, 0.8865944924858823, 18.8320553700198, 0.9565467979430886, 35.61412695451347  …  0.006588313652318107, 0.024318281576532378, 0.06458292886095093, 0.002345374206663723, 0.05231126491672214, 0.07634028851910492, 0.023711081108490756, 0.001663374507780516, 0.0013909927958998672, 0.004275271110959089], equality_dual_values = [0.024771133875865933, 0.01412315442578182, 0.013929108530283603, 0.01464125219493892, 0.014984555412469873, -0.000783366754570299, 0.0, 0.005634684534841269, 0.03285939987177818, 0.013557756177643076  …  0.0012543436742330212, 0.0032883777534751194, 0.00016908855738471476, 0.0027872569225550745, 7.195949416590135e-5, 0.0017058446697940867, 0.0017744838601757998, 0.001275106070571816, 0.0008488340321063973, 0.00021222268661523976], inequality_dual_values = [-8.765093327075266e-13, -4.4632648290562385e-12, -4.6451066298069265e-12, -8.733801578683938e-13, -0.012204825094263636, -1.5455125144552313e-13, -3.1798963260138376e-12, -2.956610386340349e-13, -4.068889673839386e-12, -1.6075368034434724e-13  …  -5.034427350836984e-14, -5.07743682565826e-14, -4.995630903525893e-14, -5.056413925045916e-14, -5.017045650751394e-14, -5.029863705667251e-14, -5.0152424747344177e-14, -5.004391846214772e-14, -5.100569805484866e-14, -0.019779859583046712])</code></pre><p>Notice, the solution is exactly the same as before, except that all the inactive elements are gone.</p><pre><code class="language-julia hljs">pruned_solution.tree</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Tree{Float64} with 12 elements:
+  :coupling                     =&gt; ConstraintTrees.Tree{Float64}(#= 0 elements …
+  :flux_stoichiometry           =&gt; ConstraintTrees.Tree{Float64}(#= 50 elements…
+  :fluxes                       =&gt; ConstraintTrees.Tree{Float64}(#= 47 elements…
+  :fluxes_forward               =&gt; ConstraintTrees.Tree{Float64}(#= 47 elements…
+  :fluxes_reverse               =&gt; ConstraintTrees.Tree{Float64}(#= 47 elements…
+  :gene_product_amounts         =&gt; ConstraintTrees.Tree{Float64}(#= 57 elements…
+  :gene_product_capacity        =&gt; ConstraintTrees.Tree{Float64}(#= 1 element =…
+  :isozyme_flux_forward_balance =&gt; ConstraintTrees.Tree{Float64}(#= 37 elements…
+  :isozyme_flux_reverse_balance =&gt; ConstraintTrees.Tree{Float64}(#= 0 elements …
+  :isozyme_forward_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 37 elements…
+  :isozyme_reverse_amounts      =&gt; ConstraintTrees.Tree{Float64}(#= 0 elements …
+  :objective                    =&gt; 0.886594</code></pre><p>no zero fluxes and all fluxes are made positive!</p><pre><code class="language-julia hljs">sort(collect(pruned_solution.tree.fluxes), by = ComposedFunction(abs, last))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">47-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
+                     :GLNS =&gt; 0.2267022117286525
+ :BIOMASS_Ecoli_core_w_GAM =&gt; 0.8865944924858823
+                       :CS =&gt; 0.9565467979430886
+                   :ACONTa =&gt; 0.9565467979431083
+                   :ICDHyr =&gt; 0.9565467979431141
+                   :ACONTb =&gt; 0.9565467979431179
+                     :TKT2 =&gt; 2.0549339381089275
+                     :TKT1 =&gt; 2.3749945498963516
+                     :TALA =&gt; 2.3749945498963583
+                      :PPC =&gt; 2.5406251776676134
+                           ⋮
+                 :EX_co2_e =&gt; 18.8320553700198
+                     :GAPD =&gt; 19.654061453727994
+                      :PGK =&gt; 19.654061453727998
+                 :EX_h2o_e =&gt; 25.29036429108399
+                     :H2Ot =&gt; 25.29036429108399
+                   :EX_h_e =&gt; 26.321074718323317
+                    :CYTBD =&gt; 35.61412695451347
+                   :NADH16 =&gt; 35.61412695451349
+                   :ATPS4r =&gt; 39.25600852344804</code></pre><p>no zero genes</p><pre><code class="language-julia hljs">sort(abs.(collect(values(pruned_solution.tree.gene_product_amounts))))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">57-element Vector{Float64}:
+ 0.0006942432184826019
+ 0.0007010223376284513
+ 0.0009957171631885127
+ 0.002023181575337997
+ 0.002345374206663723
+ 0.002459076908670555
+ 0.0026641887140050396
+ 0.0030543673036803835
+ 0.0033414012658484473
+ 0.0035231391723450946
+ ⋮
+ 0.07634028851910492
+ 0.07634028851910492
+ 0.07634028851910492
+ 0.07634028851910492
+ 0.07634028851910492
+ 0.07634028851910492
+ 0.07634028851910492
+ 0.09471654259063979
+ 0.1389153624860023</code></pre><p>Now we will differentiate the solution. First select parameters that will be differentiated.</p><pre><code class="language-julia hljs">kcats = Symbol.(keys(pruned_reaction_isozymes))
+parameters = [:capacitylimitation; kcats]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">38-element Vector{Symbol}:
+ :capacitylimitation
+ :NH4t
+ :PFK
+ :PTAr
+ :TKT2
+ :PGL
+ :H2Ot
+ :PGI
  :PGK
- :PDH
- :PGM
- :CYTBD
+ :ICDHyr
+ ⋮
+ :TALA
+ :ENO
+ :RPI
  :FBA
  :GAPD
+ :ACt2r
  :NADH16
- :PFK
- :PGI
- :TPI
- :ENO</code></pre><p>Flux sensitivities</p><pre><code class="language-julia hljs">f, a, hm = heatmap(
+ :G6PDH2r
+ :PPC</code></pre><p>Next prepare the model for differentiation</p><pre><code class="language-julia hljs">pkm_kkt, vids = D.differentiate_prepare_kkt(pkm, pkm.objective.value, parameters)
+
+sens = D.differentiate_solution(
+    pkm_kkt,
+    pruned_solution.primal_values,
+    pruned_solution.equality_dual_values,
+    pruned_solution.inequality_dual_values,
+    parameter_values,
+    scale = true, # unitless sensitivities
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">131×38 Matrix{Float64}:
+ 0.871848     0.0070248   0.00139168   …  0.00347958   0.00736495
+ 1.1155       0.00898797  0.0017806       0.00445199   0.00942318
+ 1.1155       0.00898797  0.0017806       0.00445199   0.00942318
+ 0.871848     0.0070248   0.00139168      0.00347958   0.00736495
+ 4.78817e-14  4.0849e-16  7.43817e-17     1.91808e-16  4.75522e-16
+ 0.983047     0.00792077  0.00156917   …  0.00392338   0.0083043
+ 1.1155       0.00898797  0.0017806       0.00445199   0.00942318
+ 1.00506      0.00809813  0.00160431      0.00401123   0.00849025
+ 1.1155       0.00898797  0.0017806       0.00445199   0.00942318
+ 0.998701     0.00804691  0.00159416      0.00398586   0.00843655
+ ⋮                                     ⋱               
+ 1.00202      0.00807364  0.00159946      0.0039991    0.00846457
+ 0.998701     0.00804691  0.00159416      0.00398586   0.00843655
+ 1.1155       0.00898797  0.0017806       0.00445199   0.00942318
+ 1.00506      0.00809813  0.00160431   …  0.00401123   0.00849025
+ 0.983047     0.00792077  0.00156917      0.00392338   0.0083043
+ 0.871848     0.0070248   0.00139168      0.00347958   0.00736495
+ 1.1155       0.00898797  0.0017806       0.00445199   0.00942318
+ 1.1155       0.00898797  0.0017806       0.00445199   0.00942318
+ 0.871848     0.0070248   0.00139168   …  0.00347958   0.00736495</code></pre><p>look at oxidative phosphorylation only</p><pre><code class="language-julia hljs">subset_ids = [:CYTBD, :NADH16, :ATPS4r]
+
+flux_idxs = findall(x -&gt; last(x) in subset_ids &amp;&amp; first(x) == :fluxes, vids)
+flux_ids = last.(vids[flux_idxs])
+
+iso_idxs = findall(x -&gt; x[2] in subset_ids &amp;&amp; occursin(&quot;isozyme&quot;, string(x[1])), vids)
+iso_ids = [v[2] for v in vids[iso_idxs]]
+
+param_idxs = findall(x -&gt; x in subset_ids, parameters)
+param_ids = parameters[param_idxs]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">3-element Vector{Symbol}:
+ :ATPS4r
+ :CYTBD
+ :NADH16</code></pre><p>Flux sensitivities</p><pre><code class="language-julia hljs">f, a, hm = CM.heatmap(
     sens[flux_idxs, param_idxs]&#39;;
     axis = (
         xlabel = &quot;kcat&quot;,
@@ -242,8 +302,8 @@ param_ids = parameters[param_idxs]</code></pre><pre class="documenter-example-ou
         title = &quot;Flux sensitivities&quot;,
     ),
 )
-Colorbar(f[1, 2], hm)
-f</code></pre><img src="8f0d068b.png" alt="Example block output"/><p>Isozyme sensitivities. Note, the gene products themselves are not variables in the formulation of the kinetic model. It inherits its structure from COBREXA, where the gene products are derived variables. If you want the sensitivities of the gene products themselves, you just need to multiply the isozyme sensitivity with the subunit stoichiometry of the relevant gene products.</p><pre><code class="language-julia hljs">f, a, hm = heatmap(
+CM.Colorbar(f[1, 2], hm)
+f</code></pre><img src="d406c32c.png" alt="Example block output"/><p>Isozyme sensitivities. Note, the gene products themselves are not variables in the formulation of the kinetic model. It inherits its structure from COBREXA, where the gene products are derived variables. If you want the sensitivities of the gene products themselves, you just need to multiply the isozyme sensitivity with the subunit stoichiometry of the relevant gene products.</p><pre><code class="language-julia hljs">f, a, hm = CM.heatmap(
     sens[iso_idxs, param_idxs]&#39;;
     axis = (
         xlabel = &quot;kcat&quot;,
@@ -254,5 +314,5 @@ f</code></pre><img src="8f0d068b.png" alt="Example block output"/><p>Isozyme sen
         title = &quot;Isozyme sensitivities&quot;,
     ),
 )
-Colorbar(f[1, 2], hm)
-f</code></pre><img src="e7b708ce.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 17 December 2024 10:50">Tuesday 17 December 2024</span>. Using Julia version 1.10.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+CM.Colorbar(f[1, 2], hm)
+f</code></pre><img src="233a5540.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Thursday 9 January 2025 12:50">Thursday 9 January 2025</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
