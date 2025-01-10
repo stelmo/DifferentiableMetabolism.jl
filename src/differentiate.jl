@@ -135,7 +135,7 @@ export differentiate_prepare_kkt
 $(TYPEDSIGNATURES)
 
 Differentiate a solution of a model. The first argument is the output of [`differentiate_prepare_kkt`](@ref), and is a tuple of the deconstructed model.
-The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are outputs of [`optimized_constraints_with_parameters`](@ref).
+The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are outputs of [`optimized_values`](@ref).
 `parameter_values`
 """
 function differentiate_solution(

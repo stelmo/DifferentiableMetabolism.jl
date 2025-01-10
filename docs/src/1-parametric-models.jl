@@ -86,7 +86,7 @@ m_normal = X.optimized_values(
 )
 
 # alternatively, a convenience function can take care of the substitutions for you
-m_noparams = D.optimized_constraints_with_parameters(
+m_noparams = D.optimized_values(
     m,
     parameter_substitutions;
     objective = m.objective.value,
@@ -100,7 +100,7 @@ m_noparams = D.optimized_constraints_with_parameters(
 # substitute params into model
 parameter_substitutions[:m3bound] = 0.0
 
-m_noparams2 = D.optimized_constraints_with_parameters(
+m_noparams2 = D.optimized_values(
     m,
     parameter_substitutions;
     objective = m.objective.value,
@@ -127,7 +127,7 @@ m *= :objective_bound^C.Constraint(value = m.fluxes.r6.value, bound = 2.0)
 parameter_substitutions =
     merge(parameter_substitutions, Dict(v.node_value => 1.0 for v in q))
 
-m_noparams3 = D.optimized_constraints_with_parameters(
+m_noparams3 = D.optimized_values(
     m,
     parameter_substitutions;
     objective = m.objective.value,

@@ -74,7 +74,7 @@ km = X.enzyme_constrained_flux_balance_constraints(
     capacity = capacitylimitation,
 )
 
-sol = D.optimized_constraints_with_parameters(
+sol = D.optimized_values(
     km,
     true_parameter_values;
     objective = km.objective.value,
@@ -112,7 +112,7 @@ kmKKT, vids =
 
 for k = 1:150
 
-    _sol = D.optimized_constraints_with_parameters(
+    _sol = D.optimized_values(
         km,
         estimated_parameters;
         objective = km.loss.value,

@@ -56,7 +56,7 @@ Construct a JuMP model by substituting `parameters` into the model, `m`. Set the
 
 Converts all inequality constraints to the form `A * x ≤ b`.
 """
-function optimization_model_with_parameters(
+function optimization_model(
     m::C.ConstraintTree,
     parameters::Dict{Symbol,Float64};
     objective::C.Value,
@@ -97,7 +97,7 @@ These duals are ordered according to the constraint output of calling
 [`equality_constraints`](@ref) and [`inequality_constraints`](@ref)
 respectively.
 """
-function optimized_constraints_with_parameters(
+function optimized_values(
     model::C.ConstraintTree,
     parameters::Dict{Symbol,Float64};
     optimizer,
@@ -105,7 +105,7 @@ function optimized_constraints_with_parameters(
     objective::C.Value,
     sense = X.Maximal,
 )
-    om = optimization_model_with_parameters(model, parameters; objective, optimizer, sense)
+    om = optimization_model(model, parameters; objective, optimizer, sense)
     for m in settings
         m(om)
     end
@@ -120,4 +120,4 @@ function optimized_constraints_with_parameters(
     ) : nothing
 end
 
-export optimized_constraints_with_parameters
+export optimized_values
