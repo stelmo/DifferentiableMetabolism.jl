@@ -36,11 +36,12 @@ const EqualToP = C.EqualToT{Ex}
 
 include("parameter_promotion.jl")
 include("substitute.jl")
+include("misc.jl")
 include("get_constraints.jl")
 include("solver.jl")
 include("differentiate.jl")
 include("prune.jl")
-include("misc.jl")
+
 include("public_api.jl")
 
 end

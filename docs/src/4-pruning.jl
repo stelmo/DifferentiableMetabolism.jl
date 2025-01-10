@@ -8,7 +8,7 @@ import JSONFBCModels as JFBC
 import COBREXA as X
 import Tulip as T
 
-
+cd("docs")
 include("../../test/data_static.jl")
 
 # Load model, and convert to CanonicalModel for ease of use
@@ -59,3 +59,58 @@ sol = X.optimized_values(
     optimizer = T.Optimizer,
     settings = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
+
+vs = D.variable_order(m)
+zero_tol = 1e-6
+
+zero_idxs = Set{Int}() # all variables that are close to zero
+
+C.itraverse(m) do p, x
+    if length(x.value.idxs) == 1 && abs(foldl(getproperty, p; init=sol)) <= zero_tol # TODO should have gene and flux specific zeros?
+        push!(zero_idxs, first(x.value.idxs))
+    end
+end
+
+vars = [idx in zero_idxs ? zero(C.LinearValue) : C.variable(; idx).value for idx = 1:C.variable_count(m)]
+
+pm = C.substitute(m, vars)
+
+pm = C.filter_leaves(pm) do leaf
+    !isempty(leaf.value.idxs)
+end
+
+C.variable_count(pm) # TODO delete
+
+# now get rid of forward/reverse fluxes
+C.itraverse(m) do p, x
+    if first(p) == :fluxes
+        if foldl(getproperty, p; init=sol) > 0
+            x.bound = C.Between(0,1000)
+        else
+            x.bound = C.Between(-1000,0)
+        end
+    end
+end
+
+
+
+
+
+pm = C.drop_zeros(pm)
+pm = C.prune_variables() # CTs is wonderful
+
+
+C.variable_count(pm) # TODO delete
+
+parameters = Set{Symbol}()
+C.traverse(pm) do leaf
+    ps = []
+    leaf.value isa LinearValueP && append!(ps, leaf.value.weights)
+    leaf.value isa QuadraticValueP && append!(ps, leaf.value.weights)
+    leaf.bound isa EqualToP && push!(ps, leaf.bound.equal_to)
+    leaf.bound isa BetweenP && append!(ps, [leaf.bound.lower, leaf.bound.upper])
+
+    for s in filter(!isreal, F.value.(ps))
+        push!(parameters, s)
+    end
+end
