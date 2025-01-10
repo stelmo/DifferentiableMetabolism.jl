@@ -46,7 +46,7 @@ model. `nothing` bounds are ignored.
 function variable_order(m)
     c = []
     idxs = Set{Int}()
-    
+
     ff(p, x::C.ConstraintTree) = nothing
     ff(p, x::C.Constraint) = begin
         if length(x.value.idxs) == 1 && !isnothing(x.bound) #TODO assumes that all variables are bounded somehow!
