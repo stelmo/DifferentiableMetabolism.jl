@@ -98,7 +98,7 @@ km = X.enzyme_constrained_flux_balance_constraints( # kinetic model
     capacity = capacitylimitation,
 )
 
-ec_solution = D.optimized_constraints_with_parameters(
+ec_solution = D.optimized_values(
     km,
     parameter_values;
     objective = km.objective.value,
@@ -168,7 +168,7 @@ pkm = X.enzyme_constrained_flux_balance_constraints( # pruned kinetic model
     capacity = [("total", A.genes(pruned_model), capacitylimitation)],
 )
 
-pruned_solution = D.optimized_constraints_with_parameters(
+pruned_solution = D.optimized_values(
     pkm,
     parameter_values;
     objective = pkm.objective.value,
@@ -267,7 +267,7 @@ f
 old_atps4r_kcat = parameter_values[:ATPS4r] #src
 parameter_values[:ATPS4r] *= 1.0001 #src
 kcat_diff = parameter_values[:ATPS4r] - old_atps4r_kcat #src
-fin_diff_sol = D.optimized_constraints_with_parameters( #src
+fin_diff_sol = D.optimized_values( #src
     pkm, #src
     parameter_values; #src
     objective = pkm.objective.value, #src
