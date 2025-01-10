@@ -60,14 +60,14 @@ m_substituted = D.substitute(m, k -&gt; parameter_substitutions[k])</code></pre>
   :flux_stoichiometry =&gt; ConstraintTrees.Tree{Float64}(#= 4 elements =#)
   :fluxes             =&gt; ConstraintTrees.Tree{Float64}(#= 6 elements =#)
   :linparam           =&gt; -4.0
-  :objective          =&gt; 3.9</code></pre><p>alternatively, a convenience function can take care of the substitutions for you</p><pre><code class="language-julia hljs">m_noparams = D.optimized_constraints_with_parameters(
+  :objective          =&gt; 3.9</code></pre><p>alternatively, a convenience function can take care of the substitutions for you</p><pre><code class="language-julia hljs">m_noparams = D.optimized_values(
     m,
     parameter_substitutions;
     objective = m.objective.value,
     optimizer = T.Optimizer,
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">(tree = ConstraintTrees.Tree{Float64}(#= 5 elements =#), primal_values = [-0.05000000004142691, -3.949999999938189, 0.050000000041529165, 4.163417560663754e-11, 3.8999999998967194, 3.8999999999384105], equality_dual_values = [0.9999999997705327, 1.0000000000047113, 1.9999999997136721, 1.000000000004724], inequality_dual_values = [-1.0576241106342151e-11, -4.7333135159142394e-12, -6.157648023600636e-11, -0.9999999997089498, -1.89236393841278e-14, -4.782686623610932e-12, -1.0000000000048568, -2.4489565913717334e-10, -4.882271202202376e-12, -1.9128431302249312e-14, -1.939884735222353e-14, -1.9494739251965798e-14, -1.9453667399759348e-14, 0.0])</code></pre><h2 id="Change-the-parameters-and-re-solve"><a class="docs-heading-anchor" href="#Change-the-parameters-and-re-solve">Change the parameters and re-solve</a><a id="Change-the-parameters-and-re-solve-1"></a><a class="docs-heading-anchor-permalink" href="#Change-the-parameters-and-re-solve" title="Permalink"></a></h2><p>substitute params into model</p><pre><code class="language-julia hljs">parameter_substitutions[:m3bound] = 0.0
 
-m_noparams2 = D.optimized_constraints_with_parameters(
+m_noparams2 = D.optimized_values(
     m,
     parameter_substitutions;
     objective = m.objective.value,
@@ -94,7 +94,7 @@ m *= :objective_bound^C.Constraint(value = m.fluxes.r6.value, bound = 2.0)
 parameter_substitutions =
     merge(parameter_substitutions, Dict(v.node_value =&gt; 1.0 for v in q))
 
-m_noparams3 = D.optimized_constraints_with_parameters(
+m_noparams3 = D.optimized_values(
     m,
     parameter_substitutions;
     objective = m.objective.value,
@@ -108,4 +108,4 @@ m_noparams3.tree.fluxes</code></pre><pre class="documenter-example-output"><code
   :r3 =&gt; 0.5
   :r4 =&gt; 0.5
   :r5 =&gt; 1.5
-  :r6 =&gt; 2.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« README</a><a class="docs-footer-nextpage" href="../2-differentiate-enzyme-model/">Differentiating enzyme constrained metabolic models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Thursday 9 January 2025 20:56">Thursday 9 January 2025</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  :r6 =&gt; 2.0</code></pre><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« README</a><a class="docs-footer-nextpage" href="../2-differentiate-enzyme-model/">Differentiating enzyme constrained metabolic models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Friday 10 January 2025 09:53">Friday 10 January 2025</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
