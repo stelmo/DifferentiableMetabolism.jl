@@ -85,3 +85,12 @@ LinearValueP(x::Float64) = C.LinearValue(x)
 LinearValueP(x::Int64) = C.LinearValue(x)
 QuadraticValueP(x::Float64) = C.QuadraticValue(x)
 QuadraticValueP(x::Int64) = C.QuadraticValue(x)
+
+# Expressions and bounds
+Base.:*(a::Ex, b::C.Between) = b * a
+Base.:*(a::C.Between, b::Ex) = BetweenP(; lower = a.lower * b, upper = a.upper * b)
+Base.:/(a::C.Between, b::Ex) = BetweenP(; lower = a.lower / b, upper = a.upper / b)
+
+Base.:*(a::Ex, b::C.EqualTo) = b * a
+Base.:*(a::C.EqualTo, b::Ex) = EqualToP(; equal_to = a.equal_to * b)
+Base.:/(a::C.EqualTo, b::Ex) = EqualToP(; equal_to = a.equal_to / b)
