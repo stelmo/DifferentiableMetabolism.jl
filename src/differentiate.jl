@@ -190,26 +190,3 @@ end
 
 export differentiate_solution
 
-"""
-$(TYPEDSIGNATURES)
-
-Return the names of variables in `m`.
-
-NOTE: this function assumes that all variables are bounded explicitly in the
-model. `nothing` bounds are ignored.
-"""
-function variable_order(m)
-    c = []
-    ff(p, x::C.ConstraintTree) = nothing
-    ff(p, x::C.Constraint) = begin
-        if length(x.value.idxs) == 1 && !isnothing(x.bound) #TODO assumes that all variables are bounded somehow!
-            idx = first(x.value.idxs)
-            push!(c, (idx, p))
-        end
-    end
-
-    C.itraverse(ff, m)
-
-    _idxs = sortperm(first.(c)) # still need to do this because sets don't respect insertion order
-    last.(c)[_idxs]
-end
