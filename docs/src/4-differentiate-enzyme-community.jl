@@ -83,7 +83,12 @@ wt = X.enzyme_constrained_flux_balance_constraints( # reference model, will be u
     model;
     reaction_isozymes,
     gene_product_molar_masses,
-    capacity = 50.0,
+    capacity = Dict(
+        :total => (
+            Symbol.(A.genes(model)),
+            C.Between(0, 50),
+        ),
+    ),
     interface = :identifier_prefixes,
 )
 
@@ -102,7 +107,12 @@ km = X.enzyme_constrained_flux_balance_analysis( #src
     gln_ko; #src
     reaction_isozymes, #src
     gene_product_molar_masses, #src
-    capacity = 50.0, #src
+    capacity = Dict( #src
+        :total => ( #src
+            Symbol.(A.genes(model)), #src
+            C.Between(0, 50), #src
+        ), #src
+    ), #src
     optimizer = T.Optimizer, #src
     settings = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)], #src
 ) #src
@@ -117,7 +127,12 @@ km = X.enzyme_constrained_flux_balance_analysis( #src
     akg_ko; #src
     reaction_isozymes, #src
     gene_product_molar_masses, #src
-    capacity = 50.0, #src
+    capacity = Dict( #src
+        :total => ( #src
+            Symbol.(A.genes(model)), #src
+            C.Between(0, 50), #src
+        ), #src
+    ), #src
     optimizer = T.Optimizer, #src
     settings = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)], #src
 ) #src
@@ -129,7 +144,12 @@ ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
     gln_ko;
     reaction_isozymes,
     gene_product_molar_masses,
-    capacity = 50.0,
+    capacity = Dict(
+        :total => ( 
+            Symbol.(A.genes(model)), 
+            C.Between(0, 50), 
+        ), 
+    ), 
     interface = :identifier_prefixes,
 )
 
@@ -137,7 +157,12 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
     akg_ko;
     reaction_isozymes,
     gene_product_molar_masses,
-    capacity = 50.0,
+    capacity = Dict(
+        :total => ( 
+            Symbol.(A.genes(model)), 
+            C.Between(0, 50), 
+        ), 
+    ), 
     interface = :identifier_prefixes,
 )
 
@@ -204,7 +229,12 @@ ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
     p_gln_ko;
     reaction_isozymes = p_r_iso_gln,
     gene_product_molar_masses,
-    capacity = 50.0,
+    capacity = Dict(
+        :total => ( 
+            Symbol.(A.genes(model)), 
+            C.Between(0, 50), 
+        ), 
+    ), 
     interface = :identifier_prefixes,
 )
 
@@ -212,7 +242,12 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
     p_akg_ko;
     reaction_isozymes = p_r_iso_akg,
     gene_product_molar_masses,
-    capacity = 50.0,
+    capacity = Dict(
+        :total => ( 
+            Symbol.(A.genes(model)), 
+            C.Between(0, 50), 
+        ), 
+    ), 
     interface = :identifier_prefixes,
 )
 
