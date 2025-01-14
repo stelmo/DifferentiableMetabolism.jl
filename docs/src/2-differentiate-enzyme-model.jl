@@ -95,7 +95,12 @@ km = X.enzyme_constrained_flux_balance_constraints( # kinetic model
     model;
     reaction_isozymes,
     gene_product_molar_masses,
-    capacity = capacitylimitation,
+    capacity = Dict(
+        :total => (
+            Symbol.(A.genes(model)),
+            C.BetweenT(Ex(0), capacitylimitation),
+        ),
+    ),
 )
 
 ec_solution = D.optimized_values(
@@ -112,7 +117,12 @@ ec_solution_cobrexa = X.enzyme_constrained_flux_balance_analysis( #src
     model; #src
     reaction_isozymes = float_reaction_isozymes, #src
     gene_product_molar_masses = ecoli_core_gene_product_masses, #src
-    capacity = 50.0, #src
+    capacity = Dict( #src
+        :total => ( #src
+            Symbol.(A.genes(model)), #src
+            C.Between(0, 50.0), #src
+        ), #src
+    ), #src
     optimizer = T.Optimizer, #src
 ) #src
 
@@ -165,7 +175,12 @@ pkm = X.enzyme_constrained_flux_balance_constraints( # pruned kinetic model
     pruned_model;
     reaction_isozymes = pruned_reaction_isozymes,
     gene_product_molar_masses,
-    capacity = [("total", A.genes(pruned_model), capacitylimitation)],
+    capacity = Dict(
+        :total => (
+            Symbol.(A.genes(pruned_model)),
+            C.BetweenT(Ex(0), capacitylimitation),
+        ),
+    )
 )
 
 pruned_solution = D.optimized_values(
