@@ -96,10 +96,7 @@ km = X.enzyme_constrained_flux_balance_constraints( # kinetic model
     reaction_isozymes,
     gene_product_molar_masses,
     capacity = Dict(
-        :total => (
-            Symbol.(A.genes(model)),
-            C.BetweenT(Ex(0), capacitylimitation),
-        ),
+        :total => (Symbol.(A.genes(model)), C.BetweenT(Ex(0), capacitylimitation)),
     ),
 )
 
@@ -176,11 +173,9 @@ pkm = X.enzyme_constrained_flux_balance_constraints( # pruned kinetic model
     reaction_isozymes = pruned_reaction_isozymes,
     gene_product_molar_masses,
     capacity = Dict(
-        :total => (
-            Symbol.(A.genes(pruned_model)),
-            C.BetweenT(Ex(0), capacitylimitation),
-        ),
-    )
+        :total =>
+            (Symbol.(A.genes(pruned_model)), C.BetweenT(Ex(0), capacitylimitation)),
+    ),
 )
 
 pruned_solution = D.optimized_values(
