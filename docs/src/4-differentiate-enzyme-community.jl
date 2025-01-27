@@ -14,8 +14,8 @@
 # See the License for the specific language governing permissions and      #src
 # limitations under the License.                                           #src
 
-# # Differentiating enzyme constrained metabolic models
-# Construct a community of two interacting E. coli's that share oxoglutarate and
+# # Differentiating enzyme constrained community models
+# Construct a community of two interacting E. coli cells that share oxoglutarate and
 # glutamine.
 
 import DifferentiableMetabolism as D
@@ -28,6 +28,9 @@ import COBREXA as X
 import Tulip as T
 import Downloads: download
 import CairoMakie as CM
+
+!isfile("e_coli_core.json") &&
+    download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
 
 include("../../test/data_static.jl")
 
@@ -42,7 +45,7 @@ end
 model.reactions["EX_glc__D_e"].lower_bound = -1000.0 # capacity bound suffices
 model.reactions["PFL"].upper_bound = 0.0 # aerobic simulation
 
-# add a transporter for glutamine
+# Add a transporter for glutamine
 model.reactions["GLNt"] = A.CanonicalModel.Reaction(;
     name = "Glutamine transporter",
     lower_bound = -1000.0,
@@ -57,7 +60,7 @@ model.reactions["GLNt"] = A.CanonicalModel.Reaction(;
 
 reaction_isozymes = Dict{String,Dict{String,X.Isozyme}}()
 
-# Populate reaction_isozymes with parameters
+# Populate `reaction_isozymes` with parameters
 for rid in A.reactions(model)
     grrs = A.reaction_gene_association_dnf(model, rid)
     isnothing(grrs) && continue # skip if no grr available
@@ -76,7 +79,8 @@ for rid in A.reactions(model)
     end
 end
 
-# Add gene product molar mass and capacity constraint info
+# Make the wildtype model `wt`, where we add gene product molar mass and capacity
+# constraint info
 gene_product_molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_masses)
 
 wt = X.enzyme_constrained_flux_balance_constraints( # reference model, will be used to get some bound info from
@@ -95,6 +99,7 @@ km = X.optimized_values( #src
 ) #src
 @test isapprox(km.objective, 0.8865945023142839, atol = TEST_TOLERANCE) #src
 
+# Make a glutamine auxotrophic mutant `gln_ko`
 gln_ko = deepcopy(model) # cannot produce glutamine
 delete!(gln_ko.reactions, "GLNS") # KO reaction
 
@@ -110,6 +115,7 @@ km = X.enzyme_constrained_flux_balance_analysis( #src
 
 gln_ko.reactions["EX_gln__L_e"].lower_bound = -1000.0 # open exchange bound to other organism
 
+# Make an oxoglutarate auxotrophic mutant `akg_ko`
 akg_ko = deepcopy(model) # cannot produce oxoglutarate
 delete!(akg_ko.reactions, "ICDHyr") # KO reaction
 
@@ -125,6 +131,7 @@ km = X.enzyme_constrained_flux_balance_analysis( #src
 
 akg_ko.reactions["EX_akg_e"].lower_bound = -1000.0 # open exchange bound to other organism
 
+# Add isozymes, gene product molar masses, and capacity constraints to the KO mutants
 ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
     gln_ko;
     reaction_isozymes,
@@ -141,25 +148,25 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
     interface = :identifier_prefixes,
 )
 
-# bound the exchanges - adopt similar bounds to wt wrt to the environment
+# Bound the exchanges - adopt similar bounds to wt wrt to the environment
 boundf(id) = begin
     ex_id = first(id)
     wt.interface.exchanges[ex_id].bound
 end
 
-# create KO pairs to be joined via their exchanges
+# Create KO pairs to be joined via their exchanges
 ko_pairs = [
     :gln => (ec_gln_ko, ec_gln_ko.interface.exchanges, 0.5) # simulate at abundance of 0.5 for each organism
     :akg => (ec_akg_ko, ec_akg_ko.interface.exchanges, 0.5)
 ]
 
-# create community model (interface joins them)
+# Create community model, where `interface` joins the two enzyme constrained KO models
 x = X.interface_constraints(ko_pairs...; bound = boundf)
 
-# set all growth rates equal
+# Set all growth rates equal
 x *= :equalgrowth^C.Constraint(x.gln.objective.value - x.akg.objective.value, C.EqualTo(0))
 
-# set objective as any of the biomass functions (they are constrained equal)
+# Set objective as any of the biomass functions (they are constrained equal)
 x *= :objective^C.Constraint(x.gln.objective.value, nothing)
 
 sol = X.optimized_values( # test that community can grow
@@ -172,13 +179,14 @@ sol = X.optimized_values( # test that community can grow
 
 @test isapprox(sol.objective, 0.8641022797127501, atol = TEST_TOLERANCE) #src
 
-# now prune the base models
-# slighty more involved this time
+# Now prune the base models. Here it is slighty more involved than in the case of a
+# single enzyme constrained model.
 
 #md # !!! info "Pruning the model can be tricky"
-#md #     Important to ensure no zero fluxes are included in the model - uniqueness.
+#md #     For a unique, and therefore differentiable solution, it is important to ensure that no zero fluxes are
+#md #     included in the model.
 
-p_akg_ko, p_r_iso_akg = D.prune_model(
+pruned_akg_ko, pruned_isozymes_akg = D.prune_model(
     akg_ko,
     sol.akg.fluxes,
     sol.akg.gene_product_amounts,
@@ -189,7 +197,7 @@ p_akg_ko, p_r_iso_akg = D.prune_model(
     1e-6,
 );
 
-p_gln_ko, p_r_iso_gln = D.prune_model(
+pruned_gln_ko, pruned_isozymes_gln = D.prune_model(
     gln_ko,
     sol.gln.fluxes,
     sol.gln.gene_product_amounts,
@@ -200,27 +208,30 @@ p_gln_ko, p_r_iso_gln = D.prune_model(
     1e-6,
 );
 
+# Make the pruned enzyme constrained KO models
 ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
-    p_gln_ko;
-    reaction_isozymes = p_r_iso_gln,
+    pruned_gln_ko;
+    reaction_isozymes = pruned_isozymes_gln,
     gene_product_molar_masses,
     capacity = 50.0,
     interface = :identifier_prefixes,
 )
 
 ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
-    p_akg_ko;
-    reaction_isozymes = p_r_iso_akg,
+    pruned_akg_ko;
+    reaction_isozymes = pruned_isozymes_akg,
     gene_product_molar_masses,
     capacity = 50.0,
     interface = :identifier_prefixes,
 )
 
 
-# bound the exchanges - adopt similar bounds to wt wrt to the environment
+# Bound the exchanges - adopt similar bounds to wt wrt to the environment
 env = deepcopy(ec_gln_ko.interface.exchanges)
 
-# delete the exchange of akg and gln to the environment! Will introduce a 0 flux if not
+#md # !!! Delete the KO exchanges
+#md #     Exchanges of akg and gln to the environment need to be deleted! Otherwise, a zero flux will be introduced
+
 delete!(env, :EX_akg_e)
 delete!(env, :EX_gln__L_e)
 env
@@ -230,46 +241,48 @@ boundf(id) = begin
     env[ex_id].bound
 end
 
-# ignore the deleted bound, it is still in the interface of each organism and will generate an error if not ignored
+# Ignore the deleted bound, it is still in the interface of each organism and will generate an error if not ignored
 ignoref(id, p) = begin
     (id == :gln || id == :akg) && (:EX_gln__L_e in p || :EX_akg_e in p)
 end
 
-# investigate the sensitivity of the variables wrt to the abundances of each organism
-F.@variables a_gln a_akg
+# ## Investigating sensitivity of variables to the organism abundances
+# We want to see how sensitive the variables of both KO models are to the abundances of
+# each organism in the community.
+F.@variables abundance_gln abundance_akg
 
-# add parameters into community construction
+# Add parameters into a community construction
 ko_pairs = [
-    :gln => (ec_gln_ko, ec_gln_ko.interface.exchanges, a_gln)
-    :akg => (ec_akg_ko, ec_akg_ko.interface.exchanges, a_akg)
+    :gln => (ec_gln_ko, ec_gln_ko.interface.exchanges, abundance_gln)
+    :akg => (ec_akg_ko, ec_akg_ko.interface.exchanges, abundance_akg)
 ]
 
-# create community model (interface joins them)
+# Create community model (`interface`` joins them)
 x = X.interface_constraints(ko_pairs...; bound = boundf, ignore = ignoref)
 
-# join partner exchanges - need to do this to avoid making a 0 env variable
+# Join partner exchanges - need to do this to avoid making a 0 env variable
 x.interface_balance *=
     :akg^C.Constraint(
-        a_akg * x.akg.interface.exchanges.EX_akg_e.value -
-        a_gln * x.gln.interface.exchanges.EX_akg_e.value,
+        abundance_akg * x.akg.interface.exchanges.EX_akg_e.value -
+        abundance_gln * x.gln.interface.exchanges.EX_akg_e.value,
         C.EqualTo(0),
     )
 x.interface_balance *=
     :gln^C.Constraint(
-        a_akg * x.akg.interface.exchanges.EX_gln__L_e.value -
-        a_gln * x.gln.interface.exchanges.EX_gln__L_e.value,
+        abundance_akg * x.akg.interface.exchanges.EX_gln__L_e.value -
+        abundance_gln * x.gln.interface.exchanges.EX_gln__L_e.value,
         C.EqualTo(0),
     )
 
-# set all growth rates equal
+# Set all growth rates equal
 x *= :equalgrowth^C.Constraint(x.gln.objective.value - x.akg.objective.value, C.EqualTo(0))
 
-# set objective as any of the biomass functions (they are constrained equal)
+# Set objective as any of the biomass functions (they are constrained equal)
 x *= :objective^C.Constraint(x.gln.objective.value, nothing)
 
-param_vals = Dict(:a_gln => 0.5, :a_akg => 0.5)
+param_vals = Dict(:abundance_gln => 0.5, :abundance_akg => 0.5)
 
-psol = D.optimized_values(
+pruned_sol = D.optimized_values(
     x,
     param_vals;
     optimizer = T.Optimizer,
@@ -277,29 +290,30 @@ psol = D.optimized_values(
     sense = X.Maximal,
     settings = [X.set_optimizer_attribute("IPM_IterationsLimit", 10_000)],
 )
-psol.tree
+pruned_sol.tree
 
-@test isapprox(sol.objective, psol.tree.objective, atol = TEST_TOLERANCE) #src
+@test isapprox(sol.objective, pruned_sol.tree.objective, atol = TEST_TOLERANCE) #src
 
-# differentiate wrt to the params
-dparams = [:a_akg, :a_gln]
+# Want to differenciate with respect to the parameters `abundance_akg` and `abundance_gln`, the respective
+# abundances of the two KO mutants
+dparams = [:abundance_akg, :abundance_gln]
 
-# prepare derivatives
+# Prepare and calculate derivatives
 pm_kkt, vids = D.differentiate_prepare_kkt(x, x.objective.value, dparams)
 
 sens = D.differentiate_solution(
     pm_kkt,
-    psol.primal_values,
-    psol.equality_dual_values,
-    psol.inequality_dual_values,
+    pruned_sol.primal_values,
+    pruned_sol.equality_dual_values,
+    pruned_sol.inequality_dual_values,
     param_vals,
     scale = true, # unitless sensitivities
 )
 
-# only look at how the abundances impact the environmental exchanges
+# Only look at how the abundances impact the environmental exchanges
 env_exs = string.(last.(vids)[end-7:end])
 
-# lets look at the environmental exchanges
+# Now we plot the environmental exchanges
 fig, ax, hm = CM.heatmap(
     sens[end-7:end, :];
     axis = (
