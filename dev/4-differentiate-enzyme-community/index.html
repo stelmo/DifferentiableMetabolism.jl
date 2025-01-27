@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl</title><meta name="title" content="Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl"/><meta property="og:title" content="Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl"/><meta property="twitter:title" content="Differentiating enzyme constrained metabolic models · DifferentiableMetabolism.jl"/><meta name="description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="twitter:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/stable/4-differentiate-enzyme-community/"/><meta property="twitter:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/stable/4-differentiate-enzyme-community/"/><link rel="canonical" href="https://stelmo.github.io/DifferentiableMetabolism.jl/stable/4-differentiate-enzyme-community/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DifferentiableMetabolism.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">README</a></li><li><a class="tocitem" href="../1-parametric-models/">Parametric constraint-based metabolic models</a></li><li><a class="tocitem" href="../2-differentiate-enzyme-model/">Differentiating enzyme constrained metabolic models</a></li><li><a class="tocitem" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data</a></li><li class="is-active"><a class="tocitem" href>Differentiating enzyme constrained metabolic models</a></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Differentiating enzyme constrained metabolic models</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Differentiating enzyme constrained metabolic models</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl/blob/master/docs/src/4-differentiate-enzyme-community.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Differentiating-enzyme-constrained-metabolic-models"><a class="docs-heading-anchor" href="#Differentiating-enzyme-constrained-metabolic-models">Differentiating enzyme constrained metabolic models</a><a id="Differentiating-enzyme-constrained-metabolic-models-1"></a><a class="docs-heading-anchor-permalink" href="#Differentiating-enzyme-constrained-metabolic-models" title="Permalink"></a></h1><p>Construct a community of two interacting E. coli&#39;s that share oxoglutarate and glutamine.</p><pre><code class="language-julia hljs">import DifferentiableMetabolism as D
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Differentiating enzyme constrained community models · DifferentiableMetabolism.jl</title><meta name="title" content="Differentiating enzyme constrained community models · DifferentiableMetabolism.jl"/><meta property="og:title" content="Differentiating enzyme constrained community models · DifferentiableMetabolism.jl"/><meta property="twitter:title" content="Differentiating enzyme constrained community models · DifferentiableMetabolism.jl"/><meta name="description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="twitter:description" content="Documentation for DifferentiableMetabolism.jl."/><meta property="og:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/stable/4-differentiate-enzyme-community/"/><meta property="twitter:url" content="https://stelmo.github.io/DifferentiableMetabolism.jl/stable/4-differentiate-enzyme-community/"/><link rel="canonical" href="https://stelmo.github.io/DifferentiableMetabolism.jl/stable/4-differentiate-enzyme-community/"/><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../">DifferentiableMetabolism.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">README</a></li><li><a class="tocitem" href="../1-parametric-models/">Parametric constraint-based metabolic models</a></li><li><a class="tocitem" href="../2-differentiate-enzyme-model/">Differentiating enzyme constrained metabolic models</a></li><li><a class="tocitem" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data</a></li><li class="is-active"><a class="tocitem" href>Differentiating enzyme constrained community models</a><ul class="internal"><li><a class="tocitem" href="#Investigating-sensitivity-of-variables-to-the-organism-abundances"><span>Investigating sensitivity of variables to the organism abundances</span></a></li></ul></li><li><a class="tocitem" href="../reference/">Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>Differentiating enzyme constrained community models</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Differentiating enzyme constrained community models</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/stelmo/DifferentiableMetabolism.jl/blob/master/docs/src/4-differentiate-enzyme-community.jl" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Differentiating-enzyme-constrained-community-models"><a class="docs-heading-anchor" href="#Differentiating-enzyme-constrained-community-models">Differentiating enzyme constrained community models</a><a id="Differentiating-enzyme-constrained-community-models-1"></a><a class="docs-heading-anchor-permalink" href="#Differentiating-enzyme-constrained-community-models" title="Permalink"></a></h1><p>Construct a community of two interacting E. coli cells that share oxoglutarate and glutamine.</p><pre><code class="language-julia hljs">import DifferentiableMetabolism as D
 import FastDifferentiation as F
 const Ex = F.Node
 import ConstraintTrees as C
@@ -9,6 +9,9 @@ import COBREXA as X
 import Tulip as T
 import Downloads: download
 import CairoMakie as CM
+
+!isfile(&quot;e_coli_core.json&quot;) &amp;&amp;
+    download(&quot;http://bigg.ucsd.edu/static/models/e_coli_core.json&quot;, &quot;e_coli_core.json&quot;)
 
 include(&quot;../../test/data_static.jl&quot;)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Float64} with 73 entries:
   &quot;ACt2r&quot;   =&gt; 100.0
@@ -35,7 +38,7 @@ include(&quot;../../test/data_static.jl&quot;)</code></pre><pre class="documente
 for rid in [&quot;ACt2r&quot;, &quot;ETOHt2r&quot;, &quot;PYRt2&quot;, &quot;SUCCt3&quot;]
     model.reactions[rid].gene_association_dnf = [[&quot;s0001&quot;]]
 end</code></pre><p>Modify the model a little bit</p><pre><code class="language-julia hljs">model.reactions[&quot;EX_glc__D_e&quot;].lower_bound = -1000.0 # capacity bound suffices
-model.reactions[&quot;PFL&quot;].upper_bound = 0.0 # aerobic simulation</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.0</code></pre><p>add a transporter for glutamine</p><pre><code class="language-julia hljs">model.reactions[&quot;GLNt&quot;] = A.CanonicalModel.Reaction(;
+model.reactions[&quot;PFL&quot;].upper_bound = 0.0 # aerobic simulation</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">0.0</code></pre><p>Add a transporter for glutamine</p><pre><code class="language-julia hljs">model.reactions[&quot;GLNt&quot;] = A.CanonicalModel.Reaction(;
     name = &quot;Glutamine transporter&quot;,
     lower_bound = -1000.0,
     upper_bound = 1000.0,
@@ -47,7 +50,7 @@ model.reactions[&quot;PFL&quot;].upper_bound = 0.0 # aerobic simulation</code></
     ),
 )
 
-reaction_isozymes = Dict{String,Dict{String,X.Isozyme}}()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Dict{String, COBREXA.Isozyme}}()</code></pre><p>Populate reaction_isozymes with parameters</p><pre><code class="language-julia hljs">for rid in A.reactions(model)
+reaction_isozymes = Dict{String,Dict{String,X.Isozyme}}()</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Dict{String, Dict{String, COBREXA.Isozyme}}()</code></pre><p>Populate <code>reaction_isozymes</code> with parameters</p><pre><code class="language-julia hljs">for rid in A.reactions(model)
     grrs = A.reaction_gene_association_dnf(model, rid)
     isnothing(grrs) &amp;&amp; continue # skip if no grr available
     haskey(ecoli_core_reaction_kcats, rid) || continue # skip if no kcat data available
@@ -63,7 +66,7 @@ reaction_isozymes = Dict{String,Dict{String,X.Isozyme}}()</code></pre><pre class
             kcat_reverse = kcat,
         )
     end
-end</code></pre><p>Add gene product molar mass and capacity constraint info</p><pre><code class="language-julia hljs">gene_product_molar_masses = Dict(k =&gt; v for (k, v) in ecoli_core_gene_product_masses)
+end</code></pre><p>Make the wildtype model <code>wt</code>, where we add gene product molar mass and capacity constraint info</p><pre><code class="language-julia hljs">gene_product_molar_masses = Dict(k =&gt; v for (k, v) in ecoli_core_gene_product_masses)
 
 wt = X.enzyme_constrained_flux_balance_constraints( # reference model, will be used to get some bound info from
     model;
@@ -71,22 +74,28 @@ wt = X.enzyme_constrained_flux_balance_constraints( # reference model, will be u
     gene_product_molar_masses,
     capacity = 50.0,
     interface = :identifier_prefixes,
-)
-
-
-gln_ko = deepcopy(model) # cannot produce glutamine
+)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 13 elements:
+  :coupling                     =&gt; ConstraintTrees.ConstraintTree(#= 0 elements…
+  :flux_stoichiometry           =&gt; ConstraintTrees.ConstraintTree(#= 72 element…
+  :fluxes                       =&gt; ConstraintTrees.ConstraintTree(#= 96 element…
+  :fluxes_forward               =&gt; ConstraintTrees.ConstraintTree(#= 96 element…
+  :fluxes_reverse               =&gt; ConstraintTrees.ConstraintTree(#= 96 element…
+  :gene_product_amounts         =&gt; ConstraintTrees.ConstraintTree(#= 137 elemen…
+  :gene_product_capacity        =&gt; ConstraintTrees.ConstraintTree(#= 1 element …
+  :interface                    =&gt; ConstraintTrees.ConstraintTree(#= 3 elements…
+  :isozyme_flux_forward_balance =&gt; ConstraintTrees.ConstraintTree(#= 73 element…
+  :isozyme_flux_reverse_balance =&gt; ConstraintTrees.ConstraintTree(#= 73 element…
+  :isozyme_forward_amounts      =&gt; ConstraintTrees.ConstraintTree(#= 73 element…
+  :isozyme_reverse_amounts      =&gt; ConstraintTrees.ConstraintTree(#= 73 element…
+  :objective                    =&gt; ConstraintTrees.Constraint(ConstraintTrees.L…</code></pre><p>Make a glutamine auxotrophic mutant <code>gln_ko</code></p><pre><code class="language-julia hljs">gln_ko = deepcopy(model) # cannot produce glutamine
 delete!(gln_ko.reactions, &quot;GLNS&quot;) # KO reaction
 
 
-gln_ko.reactions[&quot;EX_gln__L_e&quot;].lower_bound = -1000.0 # open exchange bound to other organism
-
-akg_ko = deepcopy(model) # cannot produce oxoglutarate
+gln_ko.reactions[&quot;EX_gln__L_e&quot;].lower_bound = -1000.0 # open exchange bound to other organism</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-1000.0</code></pre><p>Make an oxoglutarate auxotrophic mutant <code>akg_ko</code></p><pre><code class="language-julia hljs">akg_ko = deepcopy(model) # cannot produce oxoglutarate
 delete!(akg_ko.reactions, &quot;ICDHyr&quot;) # KO reaction
 
 
-akg_ko.reactions[&quot;EX_akg_e&quot;].lower_bound = -1000.0 # open exchange bound to other organism
-
-ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
+akg_ko.reactions[&quot;EX_akg_e&quot;].lower_bound = -1000.0 # open exchange bound to other organism</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">-1000.0</code></pre><p>Add isozymes, gene product molar masses, and capacity constraints to the KO mutants</p><pre><code class="language-julia hljs">ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
     gln_ko;
     reaction_isozymes,
     gene_product_molar_masses,
@@ -113,24 +122,24 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
   :isozyme_flux_reverse_balance =&gt; ConstraintTrees.ConstraintTree(#= 72 element…
   :isozyme_forward_amounts      =&gt; ConstraintTrees.ConstraintTree(#= 72 element…
   :isozyme_reverse_amounts      =&gt; ConstraintTrees.ConstraintTree(#= 72 element…
-  :objective                    =&gt; ConstraintTrees.Constraint(ConstraintTrees.L…</code></pre><p>bound the exchanges - adopt similar bounds to wt wrt to the environment</p><pre><code class="language-julia hljs">boundf(id) = begin
+  :objective                    =&gt; ConstraintTrees.Constraint(ConstraintTrees.L…</code></pre><p>Bound the exchanges - adopt similar bounds to wt wrt to the environment</p><pre><code class="language-julia hljs">boundf(id) = begin
     ex_id = first(id)
     wt.interface.exchanges[ex_id].bound
-end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">boundf (generic function with 1 method)</code></pre><p>create KO pairs to be joined via their exchanges</p><pre><code class="language-julia hljs">ko_pairs = [
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">boundf (generic function with 1 method)</code></pre><p>Create KO pairs to be joined via their exchanges</p><pre><code class="language-julia hljs">ko_pairs = [
     :gln =&gt; (ec_gln_ko, ec_gln_ko.interface.exchanges, 0.5) # simulate at abundance of 0.5 for each organism
     :akg =&gt; (ec_akg_ko, ec_akg_ko.interface.exchanges, 0.5)
 ]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Pair{Symbol, Tuple{ConstraintTrees.ConstraintTree, ConstraintTrees.ConstraintTree, Float64}}}:
  :gln =&gt; (ConstraintTrees.ConstraintTree(#= 13 elements =#), ConstraintTrees.ConstraintTree(#= 20 elements =#), 0.5)
- :akg =&gt; (ConstraintTrees.ConstraintTree(#= 13 elements =#), ConstraintTrees.ConstraintTree(#= 20 elements =#), 0.5)</code></pre><p>create community model (interface joins them)</p><pre><code class="language-julia hljs">x = X.interface_constraints(ko_pairs...; bound = boundf)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 4 elements:
+ :akg =&gt; (ConstraintTrees.ConstraintTree(#= 13 elements =#), ConstraintTrees.ConstraintTree(#= 20 elements =#), 0.5)</code></pre><p>Create community model, where <code>interface</code> joins the two enzyme constrained KO models</p><pre><code class="language-julia hljs">x = X.interface_constraints(ko_pairs...; bound = boundf)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 4 elements:
   :akg               =&gt; ConstraintTrees.ConstraintTree(#= 13 elements =#)
   :gln               =&gt; ConstraintTrees.ConstraintTree(#= 13 elements =#)
   :interface         =&gt; ConstraintTrees.ConstraintTree(#= 20 elements =#)
-  :interface_balance =&gt; ConstraintTrees.ConstraintTree(#= 20 elements =#)</code></pre><p>set all growth rates equal</p><pre><code class="language-julia hljs">x *= :equalgrowth^C.Constraint(x.gln.objective.value - x.akg.objective.value, C.EqualTo(0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 5 elements:
+  :interface_balance =&gt; ConstraintTrees.ConstraintTree(#= 20 elements =#)</code></pre><p>Set all growth rates equal</p><pre><code class="language-julia hljs">x *= :equalgrowth^C.Constraint(x.gln.objective.value - x.akg.objective.value, C.EqualTo(0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 5 elements:
   :akg               =&gt; ConstraintTrees.ConstraintTree(#= 13 elements =#)
   :equalgrowth       =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(…
   :gln               =&gt; ConstraintTrees.ConstraintTree(#= 13 elements =#)
   :interface         =&gt; ConstraintTrees.ConstraintTree(#= 20 elements =#)
-  :interface_balance =&gt; ConstraintTrees.ConstraintTree(#= 20 elements =#)</code></pre><p>set objective as any of the biomass functions (they are constrained equal)</p><pre><code class="language-julia hljs">x *= :objective^C.Constraint(x.gln.objective.value, nothing)
+  :interface_balance =&gt; ConstraintTrees.ConstraintTree(#= 20 elements =#)</code></pre><p>Set objective as any of the biomass functions (they are constrained equal)</p><pre><code class="language-julia hljs">x *= :objective^C.Constraint(x.gln.objective.value, nothing)
 
 sol = X.optimized_values( # test that community can grow
     x;
@@ -144,7 +153,7 @@ sol = X.optimized_values( # test that community can grow
   :gln               =&gt; ConstraintTrees.Tree{Float64}(#= 13 elements =#)
   :interface         =&gt; ConstraintTrees.Tree{Float64}(#= 20 elements =#)
   :interface_balance =&gt; ConstraintTrees.Tree{Float64}(#= 20 elements =#)
-  :objective         =&gt; 0.864102</code></pre><p>now prune the base models slighty more involved this time</p><div class="admonition is-info"><header class="admonition-header">Pruning the model can be tricky</header><div class="admonition-body"><p>Important to ensure no zero fluxes are included in the model - uniqueness.</p></div></div><pre><code class="language-julia hljs">p_akg_ko, p_r_iso_akg = D.prune_model(
+  :objective         =&gt; 0.864102</code></pre><p>Now prune the base models. Here it is slighty more involved than in the case of a single enzyme constrained model.</p><div class="admonition is-info"><header class="admonition-header">Pruning the model can be tricky</header><div class="admonition-body"><p>For a unique, and therefore differentiable solution, it is important to ensure that no zero fluxes are included in the model.</p></div></div><pre><code class="language-julia hljs">pruned_akg_ko, pruned_isozymes_akg = D.prune_model(
     akg_ko,
     sol.akg.fluxes,
     sol.akg.gene_product_amounts,
@@ -155,7 +164,7 @@ sol = X.optimized_values( # test that community can grow
     1e-6,
 );
 
-p_gln_ko, p_r_iso_gln = D.prune_model(
+pruned_gln_ko, pruned_isozymes_gln = D.prune_model(
     gln_ko,
     sol.gln.fluxes,
     sol.gln.gene_product_amounts,
@@ -164,19 +173,17 @@ p_gln_ko, p_r_iso_gln = D.prune_model(
     sol.gln.isozyme_reverse_amounts,
     1e-6,
     1e-6,
-);
-
-ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
-    p_gln_ko;
-    reaction_isozymes = p_r_iso_gln,
+);</code></pre><p>Make the pruned enzyme constrained KO models</p><pre><code class="language-julia hljs">ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
+    pruned_gln_ko;
+    reaction_isozymes = pruned_isozymes_gln,
     gene_product_molar_masses,
     capacity = 50.0,
     interface = :identifier_prefixes,
 )
 
 ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
-    p_akg_ko;
-    reaction_isozymes = p_r_iso_akg,
+    pruned_akg_ko;
+    reaction_isozymes = pruned_isozymes_akg,
     gene_product_molar_masses,
     capacity = 50.0,
     interface = :identifier_prefixes,
@@ -193,7 +200,7 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
   :isozyme_flux_reverse_balance =&gt; ConstraintTrees.ConstraintTree(#= 0 elements…
   :isozyme_forward_amounts      =&gt; ConstraintTrees.ConstraintTree(#= 34 element…
   :isozyme_reverse_amounts      =&gt; ConstraintTrees.ConstraintTree(#= 0 elements…
-  :objective                    =&gt; ConstraintTrees.Constraint(ConstraintTrees.L…</code></pre><p>bound the exchanges - adopt similar bounds to wt wrt to the environment</p><pre><code class="language-julia hljs">env = deepcopy(ec_gln_ko.interface.exchanges)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 10 elements:
+  :objective                    =&gt; ConstraintTrees.Constraint(ConstraintTrees.L…</code></pre><p>Bound the exchanges - adopt similar bounds to wt wrt to the environment</p><pre><code class="language-julia hljs">env = deepcopy(ec_gln_ko.interface.exchanges)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 10 elements:
   :EX_ac_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…
   :EX_akg_e    =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…
   :EX_co2_e    =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…
@@ -203,34 +210,34 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
   :EX_h_e      =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…
   :EX_nh4_e    =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…
   :EX_o2_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…
-  :EX_pi_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…</code></pre><p>delete the exchange of akg and gln to the environment! Will introduce a 0 flux if not</p><pre><code class="language-julia hljs">delete!(env, :EX_akg_e)
+  :EX_pi_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…</code></pre><p>!!! Delete the KO exchanges     Exchanges of akg and gln to the environment need to be deleted! Otherwise, a zero flux will be introduced</p><pre><code class="language-julia hljs">delete!(env, :EX_akg_e)
 delete!(env, :EX_gln__L_e)
 env
 
 boundf(id) = begin
     ex_id = first(id)
     env[ex_id].bound
-end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">boundf (generic function with 1 method)</code></pre><p>ignore the deleted bound, it is still in the interface of each organism and will generate an error if not ignored</p><pre><code class="language-julia hljs">ignoref(id, p) = begin
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">boundf (generic function with 1 method)</code></pre><p>Ignore the deleted bound, it is still in the interface of each organism and will generate an error if not ignored</p><pre><code class="language-julia hljs">ignoref(id, p) = begin
     (id == :gln || id == :akg) &amp;&amp; (:EX_gln__L_e in p || :EX_akg_e in p)
-end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ignoref (generic function with 1 method)</code></pre><p>investigate the sensitivity of the variables wrt to the abundances of each organism</p><pre><code class="language-julia hljs">F.@variables a_gln a_akg</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">a_akg</code></pre><p>add parameters into community construction</p><pre><code class="language-julia hljs">ko_pairs = [
-    :gln =&gt; (ec_gln_ko, ec_gln_ko.interface.exchanges, a_gln)
-    :akg =&gt; (ec_akg_ko, ec_akg_ko.interface.exchanges, a_akg)
+end</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ignoref (generic function with 1 method)</code></pre><h2 id="Investigating-sensitivity-of-variables-to-the-organism-abundances"><a class="docs-heading-anchor" href="#Investigating-sensitivity-of-variables-to-the-organism-abundances">Investigating sensitivity of variables to the organism abundances</a><a id="Investigating-sensitivity-of-variables-to-the-organism-abundances-1"></a><a class="docs-heading-anchor-permalink" href="#Investigating-sensitivity-of-variables-to-the-organism-abundances" title="Permalink"></a></h2><p>We want to see how sensitive the variables of both KO models are to the abundances of each organism in the community.</p><pre><code class="language-julia hljs">F.@variables abundance_gln abundance_akg</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">abundance_akg</code></pre><p>Add parameters into a community construction</p><pre><code class="language-julia hljs">ko_pairs = [
+    :gln =&gt; (ec_gln_ko, ec_gln_ko.interface.exchanges, abundance_gln)
+    :akg =&gt; (ec_akg_ko, ec_akg_ko.interface.exchanges, abundance_akg)
 ]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Pair{Symbol, Tuple{ConstraintTrees.ConstraintTree, ConstraintTrees.ConstraintTree, FastDifferentiation.Node}}}:
- :gln =&gt; (ConstraintTrees.ConstraintTree(#= 13 elements =#), ConstraintTrees.ConstraintTree(#= 10 elements =#), a_gln)
- :akg =&gt; (ConstraintTrees.ConstraintTree(#= 13 elements =#), ConstraintTrees.ConstraintTree(#= 10 elements =#), a_akg)</code></pre><p>create community model (interface joins them)</p><pre><code class="language-julia hljs">x = X.interface_constraints(ko_pairs...; bound = boundf, ignore = ignoref)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 4 elements:
+ :gln =&gt; (ConstraintTrees.ConstraintTree(#= 13 elements =#), ConstraintTrees.ConstraintTree(#= 10 elements =#), abundance_gln)
+ :akg =&gt; (ConstraintTrees.ConstraintTree(#= 13 elements =#), ConstraintTrees.ConstraintTree(#= 10 elements =#), abundance_akg)</code></pre><p>Create community model (<code>interface</code>` joins them)</p><pre><code class="language-julia hljs">x = X.interface_constraints(ko_pairs...; bound = boundf, ignore = ignoref)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 4 elements:
   :akg               =&gt; ConstraintTrees.ConstraintTree(#= 13 elements =#)
   :gln               =&gt; ConstraintTrees.ConstraintTree(#= 13 elements =#)
   :interface         =&gt; ConstraintTrees.ConstraintTree(#= 8 elements =#)
-  :interface_balance =&gt; ConstraintTrees.ConstraintTree(#= 8 elements =#)</code></pre><p>join partner exchanges - need to do this to avoid making a 0 env variable</p><pre><code class="language-julia hljs">x.interface_balance *=
+  :interface_balance =&gt; ConstraintTrees.ConstraintTree(#= 8 elements =#)</code></pre><p>Join partner exchanges - need to do this to avoid making a 0 env variable</p><pre><code class="language-julia hljs">x.interface_balance *=
     :akg^C.Constraint(
-        a_akg * x.akg.interface.exchanges.EX_akg_e.value -
-        a_gln * x.gln.interface.exchanges.EX_akg_e.value,
+        abundance_akg * x.akg.interface.exchanges.EX_akg_e.value -
+        abundance_gln * x.gln.interface.exchanges.EX_akg_e.value,
         C.EqualTo(0),
     )
 x.interface_balance *=
     :gln^C.Constraint(
-        a_akg * x.akg.interface.exchanges.EX_gln__L_e.value -
-        a_gln * x.gln.interface.exchanges.EX_gln__L_e.value,
+        abundance_akg * x.akg.interface.exchanges.EX_gln__L_e.value -
+        abundance_gln * x.gln.interface.exchanges.EX_gln__L_e.value,
         C.EqualTo(0),
     )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 10 elements:
   :EX_ac_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValueT{FastD…
@@ -242,16 +249,16 @@ x.interface_balance *=
   :EX_o2_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValueT{FastD…
   :EX_pi_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValueT{FastD…
   :akg         =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValueT{FastD…
-  :gln         =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValueT{FastD…</code></pre><p>set all growth rates equal</p><pre><code class="language-julia hljs">x *= :equalgrowth^C.Constraint(x.gln.objective.value - x.akg.objective.value, C.EqualTo(0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 5 elements:
+  :gln         =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValueT{FastD…</code></pre><p>Set all growth rates equal</p><pre><code class="language-julia hljs">x *= :equalgrowth^C.Constraint(x.gln.objective.value - x.akg.objective.value, C.EqualTo(0))</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.ConstraintTree with 5 elements:
   :akg               =&gt; ConstraintTrees.ConstraintTree(#= 13 elements =#)
   :equalgrowth       =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(…
   :gln               =&gt; ConstraintTrees.ConstraintTree(#= 13 elements =#)
   :interface         =&gt; ConstraintTrees.ConstraintTree(#= 8 elements =#)
-  :interface_balance =&gt; ConstraintTrees.ConstraintTree(#= 10 elements =#)</code></pre><p>set objective as any of the biomass functions (they are constrained equal)</p><pre><code class="language-julia hljs">x *= :objective^C.Constraint(x.gln.objective.value, nothing)
+  :interface_balance =&gt; ConstraintTrees.ConstraintTree(#= 10 elements =#)</code></pre><p>Set objective as any of the biomass functions (they are constrained equal)</p><pre><code class="language-julia hljs">x *= :objective^C.Constraint(x.gln.objective.value, nothing)
 
-param_vals = Dict(:a_gln =&gt; 0.5, :a_akg =&gt; 0.5)
+param_vals = Dict(:abundance_gln =&gt; 0.5, :abundance_akg =&gt; 0.5)
 
-psol = D.optimized_values(
+pruned_sol = D.optimized_values(
     x,
     param_vals;
     optimizer = T.Optimizer,
@@ -259,21 +266,21 @@ psol = D.optimized_values(
     sense = X.Maximal,
     settings = [X.set_optimizer_attribute(&quot;IPM_IterationsLimit&quot;, 10_000)],
 )
-psol.tree</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Tree{Float64} with 6 elements:
+pruned_sol.tree</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">ConstraintTrees.Tree{Float64} with 6 elements:
   :akg               =&gt; ConstraintTrees.Tree{Float64}(#= 13 elements =#)
   :equalgrowth       =&gt; 1.89626e-13
   :gln               =&gt; ConstraintTrees.Tree{Float64}(#= 13 elements =#)
   :interface         =&gt; ConstraintTrees.Tree{Float64}(#= 8 elements =#)
   :interface_balance =&gt; ConstraintTrees.Tree{Float64}(#= 10 elements =#)
-  :objective         =&gt; 0.864102</code></pre><p>differentiate wrt to the params</p><pre><code class="language-julia hljs">dparams = [:a_akg, :a_gln]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Symbol}:
- :a_akg
- :a_gln</code></pre><p>prepare derivatives</p><pre><code class="language-julia hljs">pm_kkt, vids = D.differentiate_prepare_kkt(x, x.objective.value, dparams)
+  :objective         =&gt; 0.864102</code></pre><p>Want to differenciate with respect to the parameters <code>abundance_akg</code> and <code>abundance_gln</code>, the respective abundances of the two KO mutants</p><pre><code class="language-julia hljs">dparams = [:abundance_akg, :abundance_gln]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">2-element Vector{Symbol}:
+ :abundance_akg
+ :abundance_gln</code></pre><p>Prepare and calculate derivatives</p><pre><code class="language-julia hljs">pm_kkt, vids = D.differentiate_prepare_kkt(x, x.objective.value, dparams)
 
 sens = D.differentiate_solution(
     pm_kkt,
-    psol.primal_values,
-    psol.equality_dual_values,
-    psol.inequality_dual_values,
+    pruned_sol.primal_values,
+    pruned_sol.equality_dual_values,
+    pruned_sol.inequality_dual_values,
     param_vals,
     scale = true, # unitless sensitivities
 )</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">276×2 Matrix{Float64}:
@@ -296,7 +303,7 @@ sens = D.differentiate_solution(
   0.485184      0.514816
   0.474567      0.525433
   0.490184      0.509816
-  0.474567      0.525433</code></pre><p>only look at how the abundances impact the environmental exchanges</p><pre><code class="language-julia hljs">env_exs = string.(last.(vids)[end-7:end])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{String}:
+  0.474567      0.525433</code></pre><p>Only look at how the abundances impact the environmental exchanges</p><pre><code class="language-julia hljs">env_exs = string.(last.(vids)[end-7:end])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{String}:
  &quot;EX_ac_e&quot;
  &quot;EX_co2_e&quot;
  &quot;EX_glc__D_e&quot;
@@ -304,7 +311,7 @@ sens = D.differentiate_solution(
  &quot;EX_h_e&quot;
  &quot;EX_nh4_e&quot;
  &quot;EX_o2_e&quot;
- &quot;EX_pi_e&quot;</code></pre><p>lets look at the environmental exchanges</p><pre><code class="language-julia hljs">fig, ax, hm = CM.heatmap(
+ &quot;EX_pi_e&quot;</code></pre><p>Now we plot the environmental exchanges</p><pre><code class="language-julia hljs">fig, ax, hm = CM.heatmap(
     sens[end-7:end, :];
     axis = (
         xticks = (1:8, env_exs),
@@ -313,4 +320,4 @@ sens = D.differentiate_solution(
     ),
 )
 CM.Colorbar(fig[1, 2], hm)
-fig</code></pre><img src="f9aab06d.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../3-parameter-estimation/">« Parameter estimation using proteomics and flux data</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Thursday 16 January 2025 16:04">Thursday 16 January 2025</span>. Using Julia version 1.11.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+fig</code></pre><img src="d86aa28f.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../3-parameter-estimation/">« Parameter estimation using proteomics and flux data</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Monday 27 January 2025 12:12">Monday 27 January 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
