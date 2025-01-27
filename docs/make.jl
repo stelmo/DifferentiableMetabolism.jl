@@ -62,7 +62,7 @@ for (root, dirs, files) in walkdir(joinpath(@__DIR__, "build", "examples"))
 end
 
 deploydocs(
-    repo = "github.com/stelmo/DifferentiableMetabolism.jl",
+    repo = "github.com/stelmo/DifferentiableMetabolism.jl.git",
     target = "build",
     branch = "gh-pages",
     devbranch = "master",
