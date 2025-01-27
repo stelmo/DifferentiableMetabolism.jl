@@ -236,7 +236,7 @@ param_ids = parameters[param_idxs]
 
 # ## Visualising flux sensitivities
 
-# The flux sensitivities of these three reactions to the model parameters are 
+# The flux sensitivities of these three reactions to the model parameters are
 # visualised in a heatmap
 f, a, hm = CM.heatmap(
     sens[flux_idxs, param_idxs]';
@@ -252,7 +252,7 @@ f, a, hm = CM.heatmap(
 CM.Colorbar(f[1, 2], hm)
 f
 
-# ## Visualising isozyme sensitivities.
+# ## Visualising isozyme sensitivities
 
 # Note, the gene products themselves are not variables in
 # the formulation of the kinetic model. It inherits its structure from COBREXA,
