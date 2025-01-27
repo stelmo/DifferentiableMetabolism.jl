@@ -51,7 +51,7 @@ rid_kcat = Dict(k => Ex(Symbol(k)) for (k, _) in ecoli_core_reaction_kcats)
 # Create a lookup table to map parameters to values
 parameter_values = Dict{Symbol,Float64}()
 
-# Create a symbolic `reaction_isozyme` structure to feed into COBREXA. This is where we first introduce 
+# Create a symbolic `reaction_isozyme` structure to feed into COBREXA. This is where we first introduce
 # the kcats as parameters
 reaction_isozymes = Dict{String,Dict{String,X.IsozymeT{Ex}}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
 float_reaction_isozymes = Dict{String,Dict{String,X.Isozyme}}() #src
@@ -135,7 +135,7 @@ sort(collect(ec_solution.tree.gene_product_amounts), by = last)
 
 @test any(isapprox.(values(ec_solution.tree.gene_product_amounts), 0, atol = 1e-8)) #src
 
-# ## Pruning the parameterised model 
+# ## Pruning the parameterised model
 
 # With theory, you can show that the inactive reactions introduce flux variability into the
 # solution, making it non-unique, and consequently non-differentiable. To fix
@@ -204,9 +204,9 @@ sort(abs.(collect(values(pruned_solution.tree.gene_product_amounts))))
     k in intersect(keys(ec_solution.tree.fluxes), keys(pruned_solution.tree.fluxes)) #src
 ) #src
 
-# ## Differentiating the optimal solution 
+# ## Differentiating the optimal solution
 
-# Now we will differentiate the solution. First select parameters that will be differentiated, here it is 
+# Now we will differentiate the solution. First select parameters that will be differentiated, here it is
 # the kcats and the capacity bound.
 
 kcats = Symbol.(keys(pruned_reaction_isozymes))
@@ -252,7 +252,7 @@ f, a, hm = CM.heatmap(
 CM.Colorbar(f[1, 2], hm)
 f
 
-# ## Visualising isozyme sensitivities. 
+# ## Visualising isozyme sensitivities.
 
 # Note, the gene products themselves are not variables in
 # the formulation of the kinetic model. It inherits its structure from COBREXA,
