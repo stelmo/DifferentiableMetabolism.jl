@@ -26,14 +26,14 @@ import Clarabel as Q
 
 # ## Load and solve a simple model
 
-# load a small test model
+# Load a small test model
 include("../../test/simple_model.jl");
 
 # ![simple_model](./assets/simple_model.svg)
 
 model
 
-# Build a basic ConstraintTree model without parameters
+# Build a basic `ConstraintTree` model without parameters
 m = X.flux_balance_constraints(model)
 
 # Solve normally
@@ -44,7 +44,7 @@ base_model.fluxes
 
 # ## Add parameters to the model
 
-# Make bound of r2 and mass balance of m3 parameters
+# Make bound of `r2` and mass balance of `m3` parameters
 F.@variables r2bound m3bound
 
 m.fluxes.r2 = C.Constraint(m.fluxes.r2.value, C.BetweenT(-2 * r2bound, Ex(0)))
@@ -55,7 +55,7 @@ m.flux_stoichiometry.m3 =
 #md # !!! tip "Use the generalized bounds from ConstraintTrees"
 #md #     Note, ConstraintTrees.jl exports `Between` and `EqualTo` which are specialized to Float64. To use parameters as shown here, you _must_ use the more general types `BetweenT` and `EqualToT`. Appropriate overloads have been added to simplify type promotion when adding floaty bounds to symbolic bounds.
 
-# # add parametric constraints
+# # Add parametric constraints
 p = F.make_variables(:p, 4)
 
 m *=
@@ -67,7 +67,7 @@ m *=
 #md # !!! tip "Use the generalized value types from ConstraintTrees"
 #md #     Note, ConstraintTrees.jl exports `LinearValue` and `QuadraticValue` which are specialized to Float64. To use parameters as shown here, you _must_ use the more general types `LinearValueT` and `QuadraticValueT`. Appropriate overloads have been added to simplify type construction and promotion (as used above). But note that `m.linparam.value` is a `ConstraintTrees.LinearValueT{FastDifferentiation.Node}`.
 
-# substitute params into model to yield a "normal" constraint tree model
+# Substitute parameters into model to yield a "normal" constraint tree model
 parameter_substitutions = Dict(
     :r2bound => 4.0,
     :m3bound => 0.1, # lose some mass here
@@ -78,14 +78,14 @@ parameter_substitutions = Dict(
 
 m_substituted = D.substitute(m, k -> parameter_substitutions[k])
 
-# this can be solve like any constraint tree
+# This can be solved like any constraint tree
 m_normal = X.optimized_values(
     m_substituted,
     objective = m.objective.value,
     optimizer = T.Optimizer,
 )
 
-# alternatively, a convenience function can take care of the substitutions for you
+# Alternatively, a convenience function can take care of the substitutions for you
 m_noparams = D.optimized_values(
     m,
     parameter_substitutions;
@@ -97,7 +97,7 @@ m_noparams = D.optimized_values(
 
 # ## Change the parameters and re-solve
 
-# substitute params into model
+# Substitute parameters into model
 parameter_substitutions[:m3bound] = 0.0
 
 m_noparams2 = D.optimized_values(

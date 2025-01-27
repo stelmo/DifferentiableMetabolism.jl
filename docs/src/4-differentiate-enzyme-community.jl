@@ -229,7 +229,7 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
 # Bound the exchanges - adopt similar bounds to wt wrt to the environment
 env = deepcopy(ec_gln_ko.interface.exchanges)
 
-#md # !!! Delete the KO exchanges
+#md # !!! info Delete the KO exchanges
 #md #     Exchanges of akg and gln to the environment need to be deleted! Otherwise, a zero flux will be introduced
 
 delete!(env, :EX_akg_e)
