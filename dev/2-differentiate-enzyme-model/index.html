@@ -82,7 +82,9 @@ parameter_values[:capacitylimitation] = 50.0 # mg enzyme/gDW</code></pre><pre cl
     model;
     reaction_isozymes,
     gene_product_molar_masses,
-    capacity = capacitylimitation,
+    capacity = Dict(
+        :total =&gt; (Symbol.(A.genes(model)), C.BetweenT(Ex(0), capacitylimitation)),
+    ),
 )
 
 ec_solution = D.optimized_values(
@@ -115,37 +117,37 @@ ec_solution.tree</code></pre><pre class="documenter-example-output"><code class=
       :GLNabc =&gt; 0.0
      :MALt2_2 =&gt; 0.0
          :PFL =&gt; 0.0
-    :EX_for_e =&gt; 2.888139093288023e-16
+    :EX_for_e =&gt; 2.8885211895920223e-16
               ⋮
-    :EX_co2_e =&gt; 18.832055551796454
-         :PGK =&gt; -19.654061644965612
-        :GAPD =&gt; 19.654061644965616
-        :H2Ot =&gt; -25.290364544539184
-    :EX_h2o_e =&gt; 25.290364544539187
-      :EX_h_e =&gt; 26.321074982917896
-      :NADH16 =&gt; 35.61412729486022
-       :CYTBD =&gt; 35.61412729500765
-      :ATPS4r =&gt; 39.25600888943067</code></pre><p>And also many inactive gene products.</p><pre><code class="language-julia hljs">sort(collect(ec_solution.tree.gene_product_amounts), by = last)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">137-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
+    :EX_co2_e =&gt; 18.83205555179633
+        :GAPD =&gt; 19.6540616449655
+         :PGK =&gt; -19.6540616449655
+    :EX_h2o_e =&gt; 25.29036454453902
+        :H2Ot =&gt; -25.290364544539024
+      :EX_h_e =&gt; 26.321074982917683
+      :NADH16 =&gt; 35.61412729485996
+       :CYTBD =&gt; 35.6141272950074
+      :ATPS4r =&gt; 39.25600888943036</code></pre><p>And also many inactive gene products.</p><pre><code class="language-julia hljs">sort(collect(ec_solution.tree.gene_product_amounts), by = last)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">137-element Vector{Pair{Symbol, Union{Float64, ConstraintTrees.Tree{Float64}}}}:
  :b0902 =&gt; 0.0
  :b0903 =&gt; 0.0
  :b2579 =&gt; 0.0
  :b3114 =&gt; 0.0
  :b3951 =&gt; 0.0
  :b3952 =&gt; 0.0
- :b0809 =&gt; 1.001893631198233e-17
- :b0810 =&gt; 1.001893631198233e-17
- :b0811 =&gt; 1.001893631198233e-17
- :b1702 =&gt; 5.1577605952357536e-14
+ :b0809 =&gt; 1.0021237887391767e-17
+ :b0810 =&gt; 1.0021237887391767e-17
+ :b0811 =&gt; 1.0021237887391767e-17
+ :b1702 =&gt; 5.157984858423639e-14
         ⋮
- :b3732 =&gt; 0.07634028923131067
- :b3733 =&gt; 0.07634028923131067
- :b3734 =&gt; 0.07634028923131067
- :b3735 =&gt; 0.07634028923131067
- :b3736 =&gt; 0.07634028923131067
- :b3737 =&gt; 0.07634028923131067
- :b3738 =&gt; 0.07634028923131067
- :b2926 =&gt; 0.09471654351397836
- :s0001 =&gt; 0.1389153638280659</code></pre><h2 id="Pruning-the-parameterised-model"><a class="docs-heading-anchor" href="#Pruning-the-parameterised-model">Pruning the parameterised model</a><a id="Pruning-the-parameterised-model-1"></a><a class="docs-heading-anchor-permalink" href="#Pruning-the-parameterised-model" title="Permalink"></a></h2><p>With theory, you can show that the inactive reactions introduce flux variability into the solution, making it non-unique, and consequently non-differentiable. To fix this, one needs to prune the model, to keep only the active reactions and genes. This can be differentiated uniquely. Below we build a pruned kinetic model, by removing all the reactions, metabolites, and genes that are not active.</p><pre><code class="language-julia hljs">flux_zero_tol = 1e-6 # these bounds make a real difference!
+ :b3732 =&gt; 0.07634028923131009
+ :b3733 =&gt; 0.07634028923131009
+ :b3734 =&gt; 0.07634028923131009
+ :b3735 =&gt; 0.07634028923131009
+ :b3736 =&gt; 0.07634028923131009
+ :b3737 =&gt; 0.07634028923131009
+ :b3738 =&gt; 0.07634028923131009
+ :b2926 =&gt; 0.0947165435139779
+ :s0001 =&gt; 0.1389153638280663</code></pre><h2 id="Pruning-the-parameterised-model"><a class="docs-heading-anchor" href="#Pruning-the-parameterised-model">Pruning the parameterised model</a><a id="Pruning-the-parameterised-model-1"></a><a class="docs-heading-anchor-permalink" href="#Pruning-the-parameterised-model" title="Permalink"></a></h2><p>With theory, you can show that the inactive reactions introduce flux variability into the solution, making it non-unique, and consequently non-differentiable. To fix this, one needs to prune the model, to keep only the active reactions and genes. This can be differentiated uniquely. Below we build a pruned kinetic model, by removing all the reactions, metabolites, and genes that are not active.</p><pre><code class="language-julia hljs">flux_zero_tol = 1e-6 # these bounds make a real difference!
 gene_zero_tol = 1e-6
 
 pruned_model, pruned_reaction_isozymes = D.prune_model(
@@ -166,7 +168,10 @@ pkm = X.enzyme_constrained_flux_balance_constraints( # pruned kinetic model
     pruned_model;
     reaction_isozymes = pruned_reaction_isozymes,
     gene_product_molar_masses,
-    capacity = [(&quot;total&quot;, A.genes(pruned_model), capacitylimitation)],
+    capacity = Dict(
+        :total =&gt;
+            (Symbol.(A.genes(pruned_model)), C.BetweenT(Ex(0), capacitylimitation)),
+    ),
 )
 
 pruned_solution = D.optimized_values(
@@ -311,4 +316,4 @@ f, a, hm = CM.heatmap(
     ),
 )
 CM.Colorbar(f[1, 2], hm)
-f</code></pre><img src="233a5540.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Monday 27 January 2025 14:07">Monday 27 January 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+f</code></pre><img src="233a5540.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Monday 27 January 2025 20:05">Monday 27 January 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

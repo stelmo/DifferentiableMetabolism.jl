@@ -78,7 +78,9 @@ km = X.enzyme_constrained_flux_balance_constraints(
     model;
     reaction_isozymes,
     gene_product_molar_masses,
-    capacity = capacitylimitation,
+    capacity = Dict(
+        :total => (Symbol.(A.genes(model)), C.BetweenT(Ex(0), capacitylimitation)),
+    ),
 )
 
 sol = D.optimized_values(
