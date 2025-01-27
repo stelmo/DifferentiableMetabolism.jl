@@ -28,6 +28,7 @@ import Clarabel as Q
 import Downloads: download
 import CairoMakie as CM
 
+# ## Constructing a parameterised enzyme constrained model
 !isfile("e_coli_core.json") &&
     download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
 
@@ -50,11 +51,12 @@ rid_kcat = Dict(k => Ex(Symbol(k)) for (k, _) in ecoli_core_reaction_kcats)
 # Create a lookup table to map parameters to values
 parameter_values = Dict{Symbol,Float64}()
 
-# Create a symbolic reaction_isozyme structure to feed into COBREXA
+# Create a symbolic `reaction_isozyme` structure to feed into COBREXA. This is where we first introduce
+# the kcats as parameters
 reaction_isozymes = Dict{String,Dict{String,X.IsozymeT{Ex}}}() # a mapping from reaction IDs to isozyme IDs to isozyme structs.
 float_reaction_isozymes = Dict{String,Dict{String,X.Isozyme}}() #src
 
-# Populate reaction_isozymes with parameters
+# Populate `reaction_isozymes` with parameters
 for rid in A.reactions(model)
     grrs = A.reaction_gene_association_dnf(model, rid)
     isnothing(grrs) && continue # skip if no grr available
@@ -133,9 +135,11 @@ sort(collect(ec_solution.tree.gene_product_amounts), by = last)
 
 @test any(isapprox.(values(ec_solution.tree.gene_product_amounts), 0, atol = 1e-8)) #src
 
-# With theory, you can show that this introduces flux variability into the
+# ## Pruning the parameterised model
+
+# With theory, you can show that the inactive reactions introduce flux variability into the
 # solution, making it non-unique, and consequently non-differentiable. To fix
-# this, one need to prune the model, to include only the active reactions and
+# this, one needs to prune the model, to keep only the active reactions and
 # genes. This can be differentiated uniquely. Below we build a pruned kinetic
 # model, by removing all the reactions, metabolites, and genes that are not
 # active.
@@ -181,10 +185,10 @@ pruned_solution = D.optimized_values(
 
 pruned_solution.tree
 
-# no zero fluxes and all fluxes are made positive!
+# There are no zero fluxes and all fluxes are made positive!
 sort(collect(pruned_solution.tree.fluxes), by = ComposedFunction(abs, last))
 
-# no zero genes
+# No zero genes
 sort(abs.(collect(values(pruned_solution.tree.gene_product_amounts))))
 
 @test isapprox( #src
@@ -200,7 +204,10 @@ sort(abs.(collect(values(pruned_solution.tree.gene_product_amounts))))
     k in intersect(keys(ec_solution.tree.fluxes), keys(pruned_solution.tree.fluxes)) #src
 ) #src
 
-# Now we will differentiate the solution. First select parameters that will be differentiated.
+# ## Differentiating the optimal solution
+
+# Now we will differentiate the solution. First select parameters that will be differentiated, here it is
+# the kcats and the capacity bound.
 
 kcats = Symbol.(keys(pruned_reaction_isozymes))
 parameters = [:capacitylimitation; kcats]
@@ -208,6 +215,7 @@ parameters = [:capacitylimitation; kcats]
 # Next prepare the model for differentiation
 pkm_kkt, vids = D.differentiate_prepare_kkt(pkm, pkm.objective.value, parameters)
 
+# Now differentiate the solution
 sens = D.differentiate_solution(
     pkm_kkt,
     pruned_solution.primal_values,
@@ -217,19 +225,19 @@ sens = D.differentiate_solution(
     scale = true, # unitless sensitivities
 )
 
-# look at oxidative phosphorylation only
+# Let's look at oxidative phosphorylation only
 subset_ids = [:CYTBD, :NADH16, :ATPS4r]
 
 flux_idxs = findall(x -> last(x) in subset_ids && first(x) == :fluxes, vids)
 flux_ids = last.(vids[flux_idxs])
 
-iso_idxs = findall(x -> x[2] in subset_ids && occursin("isozyme", string(x[1])), vids)
-iso_ids = [v[2] for v in vids[iso_idxs]]
-
 param_idxs = findall(x -> x in subset_ids, parameters)
 param_ids = parameters[param_idxs]
 
-# Flux sensitivities
+# ## Visualising flux sensitivities
+
+# The flux sensitivities of these three reactions to the model parameters are
+# visualised in a heatmap
 f, a, hm = CM.heatmap(
     sens[flux_idxs, param_idxs]';
     axis = (
@@ -244,11 +252,16 @@ f, a, hm = CM.heatmap(
 CM.Colorbar(f[1, 2], hm)
 f
 
-# Isozyme sensitivities. Note, the gene products themselves are not variables in
+# ## Visualising isozyme sensitivities
+
+# Note, the gene products themselves are not variables in
 # the formulation of the kinetic model. It inherits its structure from COBREXA,
 # where the gene products are derived variables. If you want the sensitivities
 # of the gene products themselves, you just need to multiply the isozyme
 # sensitivity with the subunit stoichiometry of the relevant gene products.
+
+iso_idxs = findall(x -> x[2] in subset_ids && occursin("isozyme", string(x[1])), vids)
+iso_ids = [v[2] for v in vids[iso_idxs]] # ids of isozymes in ox phos
 
 f, a, hm = CM.heatmap(
     sens[iso_idxs, param_idxs]';
