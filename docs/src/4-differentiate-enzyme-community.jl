@@ -83,12 +83,7 @@ wt = X.enzyme_constrained_flux_balance_constraints( # reference model, will be u
     model;
     reaction_isozymes,
     gene_product_molar_masses,
-    capacity = Dict(
-        :total => (
-            Symbol.(A.genes(model)),
-            C.Between(0, 50),
-        ),
-    ),
+    capacity = Dict(:total => (Symbol.(A.genes(model)), C.Between(0, 50))),
     interface = :identifier_prefixes,
 )
 
@@ -144,12 +139,7 @@ ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
     gln_ko;
     reaction_isozymes,
     gene_product_molar_masses,
-    capacity = Dict(
-        :total => ( 
-            Symbol.(A.genes(model)), 
-            C.Between(0, 50), 
-        ), 
-    ), 
+    capacity = Dict(:total => (Symbol.(A.genes(model)), C.Between(0, 50))),
     interface = :identifier_prefixes,
 )
 
@@ -157,12 +147,7 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
     akg_ko;
     reaction_isozymes,
     gene_product_molar_masses,
-    capacity = Dict(
-        :total => ( 
-            Symbol.(A.genes(model)), 
-            C.Between(0, 50), 
-        ), 
-    ), 
+    capacity = Dict(:total => (Symbol.(A.genes(model)), C.Between(0, 50))),
     interface = :identifier_prefixes,
 )
 
@@ -229,12 +214,7 @@ ec_gln_ko = X.enzyme_constrained_flux_balance_constraints(
     p_gln_ko;
     reaction_isozymes = p_r_iso_gln,
     gene_product_molar_masses,
-    capacity = Dict(
-        :total => ( 
-            Symbol.(A.genes(model)), 
-            C.Between(0, 50), 
-        ), 
-    ), 
+    capacity = Dict(:total => (Symbol.(A.genes(model)), C.Between(0, 50))),
     interface = :identifier_prefixes,
 )
 
@@ -242,12 +222,7 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
     p_akg_ko;
     reaction_isozymes = p_r_iso_akg,
     gene_product_molar_masses,
-    capacity = Dict(
-        :total => ( 
-            Symbol.(A.genes(model)), 
-            C.Between(0, 50), 
-        ), 
-    ), 
+    capacity = Dict(:total => (Symbol.(A.genes(model)), C.Between(0, 50))),
     interface = :identifier_prefixes,
 )
 
