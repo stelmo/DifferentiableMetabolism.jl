@@ -29,6 +29,8 @@ import Tulip as T
 import Downloads: download
 import CairoMakie as CM
 
+# ## Constructing and solving an enzyme constrained community model
+
 !isfile("e_coli_core.json") &&
     download("http://bigg.ucsd.edu/static/models/e_coli_core.json", "e_coli_core.json")
 
@@ -179,6 +181,8 @@ sol = X.optimized_values( # test that community can grow
 
 @test isapprox(sol.objective, 0.8641022797127501, atol = TEST_TOLERANCE) #src
 
+# ## Pruning the community
+
 # Now prune the base models. Here it is slighty more involved than in the case of a
 # single enzyme constrained model.
 
@@ -229,7 +233,7 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
 # Bound the exchanges - adopt similar bounds to wt wrt to the environment
 env = deepcopy(ec_gln_ko.interface.exchanges)
 
-#md # !!! info Delete the KO exchanges
+#md # !!! info "Delete the KO exchanges"
 #md #     Exchanges of akg and gln to the environment need to be deleted! Otherwise, a zero flux will be introduced
 
 delete!(env, :EX_akg_e)

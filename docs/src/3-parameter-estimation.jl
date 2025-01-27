@@ -26,10 +26,13 @@ import Tulip as T
 import Clarabel as Q
 import CairoMakie as CM
 
-# load a small test model
+# ## Setting up the test model
 include("../../test/simple_model.jl");
 
-# prune model
+# ![simple_model](./assets/simple_model.svg)
+
+
+# Prune the model
 delete!(model.reactions, "r5")
 delete!(model.genes, "g4")
 delete!(model.genes, "g5")
@@ -38,12 +41,14 @@ model.reactions["r4"].gene_association_dnf = [["g2"]]
 model.reactions["r1"].lower_bound = -1000.0
 model.reactions["r2"].lower_bound = -1000.0
 
-# now models looks like this
+# The model now looks like this
 
 # ![simple_model](./assets/simple_model_pruned.svg)
 
+# Use the two reactions `r3` and `r4` as variables
 F.@variables r3 r4
 
+# Make parameterised reaction isozymes for these two reactions
 reaction_isozymes = Dict(
     "r3" => Dict(
         "isozyme1" => X.IsozymeT{Ex}(
@@ -61,12 +66,14 @@ reaction_isozymes = Dict(
     ),
 )
 
+# Include gene product masses and a capacity limitation
 gene_product_molar_masses = Dict("g1" => 20.0, "g2" => 10.0)
 
 F.@variables capacitylimitation
 
 true_parameter_values = Dict(:capacitylimitation => 50.0, :r3 => 2.0, :r4 => 3.0)
 
+# Solve the parameterised enzymed constrained model
 km = X.enzyme_constrained_flux_balance_constraints(
     model;
     reaction_isozymes,
@@ -83,7 +90,9 @@ sol = D.optimized_values(
 
 sol.tree.fluxes
 
-# create a loss function
+# ## Performing the parameter estimation
+
+# First, we need to create a loss function
 measured = [
     sol.tree.fluxes.r1,
     sol.tree.fluxes.r3,
@@ -107,9 +116,11 @@ estimated_parameters = Dict(:capacitylimitation => 50.0, :r3 => 5.0, :r4 => 1.0)
 
 losses = Float64[]
 
+# Prepare for differentiating, this is the slow part
 kmKKT, vids =
     D.differentiate_prepare_kkt(km, km.loss.value, [:r3, :r4, :capacitylimitation])
 
+# Estimate the parameters
 for k = 1:150
 
     _sol = D.optimized_values(
@@ -122,7 +133,7 @@ for k = 1:150
     )
     push!(losses, _sol.tree.loss)
 
-    sens = D.differentiate_solution(
+    sens = D.differentiate_solution( # this is the fast part
         kmKKT,
         _sol.primal_values,
         _sol.equality_dual_values,
@@ -145,6 +156,7 @@ for k = 1:150
     estimated_parameters[:r4] -= η * dL_dkcats[2]
 end
 
+# Finally, we plot the loss function over 150 iterations
 CM.lines(losses; axis = (xlabel = "Iterations", ylabel = "L2 loss"))
 
 
