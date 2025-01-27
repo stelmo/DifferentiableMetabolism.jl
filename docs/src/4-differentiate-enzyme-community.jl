@@ -79,7 +79,7 @@ for rid in A.reactions(model)
     end
 end
 
-# Make the wildtype model `wt`, where we add gene product molar mass and capacity 
+# Make the wildtype model `wt`, where we add gene product molar mass and capacity
 # constraint info
 gene_product_molar_masses = Dict(k => v for (k, v) in ecoli_core_gene_product_masses)
 
@@ -179,11 +179,11 @@ sol = X.optimized_values( # test that community can grow
 
 @test isapprox(sol.objective, 0.8641022797127501, atol = TEST_TOLERANCE) #src
 
-# Now prune the base models. Here it is slighty more involved than in the case of a 
+# Now prune the base models. Here it is slighty more involved than in the case of a
 # single enzyme constrained model.
 
 #md # !!! info "Pruning the model can be tricky"
-#md #     For a unique, and therefore differentiable solution, it is important to ensure that no zero fluxes are 
+#md #     For a unique, and therefore differentiable solution, it is important to ensure that no zero fluxes are
 #md #     included in the model.
 
 pruned_akg_ko, pruned_isozymes_akg = D.prune_model(
@@ -229,7 +229,7 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
 # Bound the exchanges - adopt similar bounds to wt wrt to the environment
 env = deepcopy(ec_gln_ko.interface.exchanges)
 
-#md # !!! Delete the KO exchanges 
+#md # !!! Delete the KO exchanges
 #md #     Exchanges of akg and gln to the environment need to be deleted! Otherwise, a zero flux will be introduced
 
 delete!(env, :EX_akg_e)
@@ -247,7 +247,7 @@ ignoref(id, p) = begin
 end
 
 # ## Investigating sensitivity of variables to the organism abundances
-# We want to see how sensitive the variables of both KO models are to the abundances of 
+# We want to see how sensitive the variables of both KO models are to the abundances of
 # each organism in the community.
 F.@variables abundance_gln abundance_akg
 
@@ -294,7 +294,7 @@ pruned_sol.tree
 
 @test isapprox(sol.objective, pruned_sol.tree.objective, atol = TEST_TOLERANCE) #src
 
-# Want to differenciate with respect to the parameters `abundance_akg` and `abundance_gln`, the respective 
+# Want to differenciate with respect to the parameters `abundance_akg` and `abundance_gln`, the respective
 # abundances of the two KO mutants
 dparams = [:abundance_akg, :abundance_gln]
 
