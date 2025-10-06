@@ -164,4 +164,4 @@ CM.lines(losses; axis = (xlabel = "Iterations", ylabel = "L2 loss"))
 
 @test abs(estimated_parameters[:r3] - true_parameter_values[:r3]) <= 0.1 #src
 @test abs(estimated_parameters[:r4] - true_parameter_values[:r4]) <= 0.1 #src
-@test all(losses[2:end] .<= losses[1:end-1]) #src
+@test all(losses[2:end] .<= losses[1:(end-1)]) #src
