@@ -151,7 +151,7 @@ sol = X.optimized_values( # test that community can grow
   :gln               =&gt; ConstraintTrees.Tree{Float64}(#= 13 elements =#)
   :interface         =&gt; ConstraintTrees.Tree{Float64}(#= 20 elements =#)
   :interface_balance =&gt; ConstraintTrees.Tree{Float64}(#= 20 elements =#)
-  :objective         =&gt; 0.864102</code></pre><h2 id="Pruning-the-community"><a class="docs-heading-anchor" href="#Pruning-the-community">Pruning the community</a><a id="Pruning-the-community-1"></a><a class="docs-heading-anchor-permalink" href="#Pruning-the-community" title="Permalink"></a></h2><p>Now prune the base models. Here it is slighty more involved than in the case of a single enzyme constrained model.</p><div class="admonition is-info"><header class="admonition-header">Pruning the model can be tricky</header><div class="admonition-body"><p>For a unique, and therefore differentiable solution, it is important to ensure that no zero fluxes are included in the model.</p></div></div><pre><code class="language-julia hljs">pruned_akg_ko, pruned_isozymes_akg = D.prune_model(
+  :objective         =&gt; 0.864102</code></pre><h2 id="Pruning-the-community"><a class="docs-heading-anchor" href="#Pruning-the-community">Pruning the community</a><a id="Pruning-the-community-1"></a><a class="docs-heading-anchor-permalink" href="#Pruning-the-community" title="Permalink"></a></h2><p>Now prune the base models. Here it is slighty more involved than in the case of a single enzyme constrained model.</p><div class="admonition is-info" id="Pruning-the-model-can-be-tricky-9a1415bf42c9cc0d"><header class="admonition-header">Pruning the model can be tricky<a class="admonition-anchor" href="#Pruning-the-model-can-be-tricky-9a1415bf42c9cc0d" title="Permalink"></a></header><div class="admonition-body"><p>For a unique, and therefore differentiable solution, it is important to ensure that no zero fluxes are included in the model.</p></div></div><pre><code class="language-julia hljs">pruned_akg_ko, pruned_isozymes_akg = D.prune_model(
     akg_ko,
     sol.akg.fluxes,
     sol.akg.gene_product_amounts,
@@ -208,7 +208,7 @@ ec_akg_ko = X.enzyme_constrained_flux_balance_constraints(
   :EX_h_e      =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…
   :EX_nh4_e    =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…
   :EX_o2_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…
-  :EX_pi_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…</code></pre><div class="admonition is-info"><header class="admonition-header">Delete the KO exchanges</header><div class="admonition-body"><p>Exchanges of akg and gln to the environment need to be deleted! Otherwise, a zero flux will be introduced</p></div></div><pre><code class="language-julia hljs">delete!(env, :EX_akg_e)
+  :EX_pi_e     =&gt; ConstraintTrees.Constraint(ConstraintTrees.LinearValue(#= ...…</code></pre><div class="admonition is-info" id="Delete-the-KO-exchanges-ab02d0f8d0e67fd"><header class="admonition-header">Delete the KO exchanges<a class="admonition-anchor" href="#Delete-the-KO-exchanges-ab02d0f8d0e67fd" title="Permalink"></a></header><div class="admonition-body"><p>Exchanges of akg and gln to the environment need to be deleted! Otherwise, a zero flux will be introduced</p></div></div><pre><code class="language-julia hljs">delete!(env, :EX_akg_e)
 delete!(env, :EX_gln__L_e)
 env
 
@@ -301,7 +301,7 @@ sens = D.differentiate_solution(
   0.485184      0.514816
   0.474567      0.525433
   0.490184      0.509816
-  0.474567      0.525433</code></pre><p>Only look at how the abundances impact the environmental exchanges</p><pre><code class="language-julia hljs">env_exs = string.(last.(vids)[end-7:end])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{String}:
+  0.474567      0.525433</code></pre><p>Only look at how the abundances impact the environmental exchanges</p><pre><code class="language-julia hljs">env_exs = string.(last.(vids)[(end-7):end])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">8-element Vector{String}:
  &quot;EX_ac_e&quot;
  &quot;EX_co2_e&quot;
  &quot;EX_glc__D_e&quot;
@@ -310,7 +310,7 @@ sens = D.differentiate_solution(
  &quot;EX_nh4_e&quot;
  &quot;EX_o2_e&quot;
  &quot;EX_pi_e&quot;</code></pre><p>Now we plot the environmental exchanges</p><pre><code class="language-julia hljs">fig, ax, hm = CM.heatmap(
-    sens[end-7:end, :];
+    sens[(end-7):end, :];
     axis = (
         xticks = (1:8, env_exs),
         xticklabelrotation = -pi / 2,
@@ -318,4 +318,4 @@ sens = D.differentiate_solution(
     ),
 )
 CM.Colorbar(fig[1, 2], hm)
-fig</code></pre><img src="d86aa28f.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../3-parameter-estimation/">« Parameter estimation using proteomics and flux data</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.8.0 on <span class="colophon-date" title="Tuesday 4 February 2025 15:16">Tuesday 4 February 2025</span>. Using Julia version 1.11.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+fig</code></pre><img src="dbfec986.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../3-parameter-estimation/">« Parameter estimation using proteomics and flux data</a><a class="docs-footer-nextpage" href="../reference/">Reference »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.14.1 on <span class="colophon-date" title="Monday 6 October 2025 18:28">Monday 6 October 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

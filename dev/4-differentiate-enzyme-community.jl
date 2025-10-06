@@ -325,11 +325,11 @@ sens = D.differentiate_solution(
 )
 
 # Only look at how the abundances impact the environmental exchanges
-env_exs = string.(last.(vids)[end-7:end])
+env_exs = string.(last.(vids)[(end-7):end])
 
 # Now we plot the environmental exchanges
 fig, ax, hm = CM.heatmap(
-    sens[end-7:end, :];
+    sens[(end-7):end, :];
     axis = (
         xticks = (1:8, env_exs),
         xticklabelrotation = -pi / 2,
