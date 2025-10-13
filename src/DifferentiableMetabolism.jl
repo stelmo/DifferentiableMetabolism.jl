@@ -50,6 +50,5 @@ include("get_constraints.jl")
 include("solver.jl")
 include("differentiate.jl")
 include("prune.jl")
-include("public_api.jl")
 
 end
