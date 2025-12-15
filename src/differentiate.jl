@@ -98,16 +98,16 @@ function differentiate_prepare_kkt(
 
     Note, make sure all the lazy operations are expanded to avoid running into bugs...
     =#
-    eq1 = F.jacobian([f], primals)[1, :]
+    dObj_dprimal = F.jacobian([f], primals)[1, :]
 
     Is, Js, Vs = SA.findnz(F.sparse_jacobian(H, primals))
-    eq2 = zeros(Ex, size(eq1, 1))
+    eq2 = zeros(Ex, size(dObj_dprimal, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq2[i] += v * eq_duals[j]
     end
 
     Is, Js, Vs = SA.findnz(F.sparse_jacobian(G, primals))
-    eq3 = zeros(Ex, size(eq1, 1))
+    eq3 = zeros(Ex, size(dObj_dprimal, 1))
     for (i, j, v) in zip(Js, Is, Vs) # transpose
         eq3[i] += v * ineq_duals[j]
     end
@@ -118,7 +118,7 @@ function differentiate_prepare_kkt(
     end
 
     kkt_eqns = [ # negatives because of KKT formulation in JuMP
-        eq1 - eq2 - eq3
+        dObj_dprimal - eq2 - eq3
         H
         eq4
     ]
@@ -126,7 +126,7 @@ function differentiate_prepare_kkt(
     A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
     B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
 
-    return (A, B, primals, eq_duals, ineq_duals, parameters), variable_order(m)
+    return (dObj_dprimal, A, B, primals, eq_duals, ineq_duals, parameters), variable_order(m)
 end
 
 export differentiate_prepare_kkt
@@ -139,7 +139,7 @@ The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are ou
 `parameter_values`
 """
 function differentiate_solution(
-    (A, B, primals, eq_duals, ineq_duals, parameters),
+    (_, A, B, primals, eq_duals, ineq_duals, parameters),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
@@ -189,3 +189,36 @@ function differentiate_solution(
 end
 
 export differentiate_solution
+
+"""
+$(TYPEDSIGNATURES)
+
+Differentiate the objective of a model with respect to the variables. The first
+argument is the output of [`differentiate_prepare_kkt`](@ref), and is a tuple of
+the deconstructed model. The following arguments (`primal_vals`, `eq_dual_vals`,
+`ineq_dual_vals`) are outputs of [`optimized_values`](@ref). `parameter_values`
+"""
+function differentiate_objective(
+    (dObj_dprimal, _, _, primals, eq_duals, ineq_duals, _),
+    primal_vals::Vector{Float64},
+    eq_dual_vals::Vector{Float64},
+    ineq_dual_vals::Vector{Float64},
+    parameter_values::Dict{Symbol,Float64};
+)
+
+    # symbolic values at the optimal solution incl parameters
+    syms_to_vals = merge(
+        Dict(
+            zip(
+                (x.node_value for x in [primals; eq_duals; ineq_duals]),
+                [primal_vals; eq_dual_vals; ineq_dual_vals],
+            ),
+        ),
+        parameter_values,
+    )
+
+    # substitute in values
+    float.(substitute.(dObj_dprimal, Ref(k -> syms_to_vals[k])))
+end
+
+export differentiate_objective
