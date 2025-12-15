@@ -135,24 +135,23 @@ for k = 1:150
     )
     push!(losses, _sol.tree.loss)
 
-    sens = D.differentiate_solution( # this is the fast part
+    sens = D.differentiate_solution(
         kmKKT,
         _sol.primal_values,
         _sol.equality_dual_values,
         _sol.inequality_dual_values,
         estimated_parameters,
-    )
-    measured_idxs = [1, 3, 12, 11]
+    ) # derivative of variables wrt parameters
 
-    x = [
-        _sol.tree.fluxes.r1,
-        _sol.tree.fluxes.r3,
-        _sol.tree.isozyme_forward_amounts.r3.isozyme1,
-        _sol.tree.isozyme_forward_amounts.r4.isozyme1,
-    ]
+    dL_dx = D.differentiate_objective(
+        kmKKT,
+        _sol.primal_values,
+        _sol.equality_dual_values,
+        _sol.inequality_dual_values,
+        estimated_parameters,
+    ) # derivative of loss function wrt variables
 
-    dL_dx = x - measured # derivative of loss function with respect to optimization variables
-    dL_dkcats = sens[measured_idxs, :]' * dL_dx # derivative of loss function with respect to parameters
+    dL_dkcats = sens' * dL_dx # derivative of loss function wrt parameters
 
     estimated_parameters[:r3] -= η * dL_dkcats[1]
     estimated_parameters[:r4] -= η * dL_dkcats[2]
