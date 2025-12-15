@@ -119,7 +119,8 @@ estimated_parameters = Dict(:capacitylimitation => 50.0, :r3 => 5.0, :r4 => 1.0)
 losses = Float64[]
 
 # Prepare for differentiating, this is the slow part
-kmKKT, vids = D.differentiate_prepare_kkt(km, km.loss.value, [:r3, :r4, :capacitylimitation])
+kmKKT, vids =
+    D.differentiate_prepare_kkt(km, km.loss.value, [:r3, :r4, :capacitylimitation])
 
 # Estimate the parameters
 for k = 1:150
@@ -134,7 +135,7 @@ for k = 1:150
     )
     push!(losses, _sol.tree.loss)
 
-    sens = D.differentiate_solution( 
+    sens = D.differentiate_solution(
         kmKKT,
         _sol.primal_values,
         _sol.equality_dual_values,
