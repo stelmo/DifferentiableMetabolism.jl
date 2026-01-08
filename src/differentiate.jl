@@ -123,10 +123,12 @@ function differentiate_prepare_kkt(
         eq4
     ]
 
-    A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
-    B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
+    var_order = [primals; eq_duals; ineq_duals; F.Node.(parameters)]
 
-    return (A, B, primals, eq_duals, ineq_duals, parameters), variable_order(m)
+    A = F.make_function(F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals]), var_order)
+    B = F.make_function(F.sparse_jacobian(kkt_eqns, F.Node.(parameters)), var_order)
+
+    return (A, B, parameters), variable_order(m)
 end
 
 export differentiate_prepare_kkt
@@ -139,52 +141,49 @@ The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are ou
 `parameter_values`
 """
 function differentiate_solution(
-    (A, B, primals, eq_duals, ineq_duals, parameters),
+    (A, B, parameters),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
     parameter_values::Dict{Symbol,Float64};
     scale = false, # scale sensitivities
+    make_indep = true,
 )
 
     # symbolic values at the optimal solution incl parameters
-    syms_to_vals = merge(
-        Dict(
-            zip(
-                (x.node_value for x in [primals; eq_duals; ineq_duals]),
-                [primal_vals; eq_dual_vals; ineq_dual_vals],
-            ),
-        ),
-        parameter_values,
-    )
+    pvs = [parameter_values[p] for p in parameters]
+    sym_input = [primal_vals; eq_dual_vals; ineq_dual_vals; pvs]
+   
 
-    # substitute in values
-    Is, Js, Vs = SA.findnz(A)
-    vs = float.(substitute.(Vs, Ref(k -> syms_to_vals[k])))
-    a = SA.sparse(Is, Js, vs, size(A)...)
-    indep_rows = findall_indeps_qr(a) # find independent rows, prevent singularity issues with \
-    a_indep = a[indep_rows, :]
+    a = A(sym_input)
+    b = Array(B(sym_input)) # no sparse rhs solver, need to make dense
 
-    #=
-    If a is rectangular (more equations than variables), then the above should
-    be sufficient, because the equations should not be in conflict (in an ideal
-    world).
-    =#
+    if make_indep
+        indep_rows = findall_indeps_qr(a) # find independent rows, prevent singularity issues with \
+        a_indep = a[indep_rows, :]
+        #=
+        If a is rectangular (more equations than variables), then the above should
+        be sufficient, because the equations should not be in conflict (in an ideal
+        world).
+        =#
 
-    Is, Js, Vs = SA.findnz(B)
-    vs = float.(substitute.(Vs, Ref(k -> syms_to_vals[k])))
-    b = Array(SA.sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
-    b_indep = b[indep_rows, :]
+        b_indep = b[indep_rows, :]
 
-    c = -a_indep \ b_indep # sensitivities, unscaled
+        c = -a_indep \ b_indep # sensitivities, unscaled
+
+    else
+        c = -a \ b
+    end
+
+
 
     # get primal variable sensitivities only
     if scale
         (
-            [parameter_values[p] for p in parameters]' .* c[1:length(primals), :] ./ primal_vals
+            [parameter_values[p] for p in parameters]' .* c[1:length(primal_vals), :] ./ primal_vals
         )
     else
-        c[1:length(primals), :]
+        c[1:length(primal_vals), :]
     end
 end
 
