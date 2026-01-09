@@ -127,9 +127,9 @@ function differentiate_prepare_kkt(
     _A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
     _B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
     
-    A = F.make_function(_A, var_order; in_place=true)
-    B = F.make_function(_B, var_order; in_place=true)
-    f_dObj_dprimal = F.make_function(dObj_dprimal, var_order; in_place=true)
+    A = F.make_Expr(_A, var_order; true, false)
+    B = F.make_Expr(_B, var_order; true, false)
+    f_dObj_dprimal = F.make_Expr(dObj_dprimal, var_order; true, false)
 
     return (f_dObj_dprimal, A, B, parameters, size(_A), size(_B), size(dObj_dprimal)), variable_order(m)
 end
