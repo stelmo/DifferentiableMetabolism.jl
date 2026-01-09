@@ -124,13 +124,14 @@ function differentiate_prepare_kkt(
     ]
 
     var_order = [primals; eq_duals; ineq_duals; F.Node.(parameters)]
+    _A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
+    _B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
+    
+    A = F.make_function(_A, var_order; in_place=true)
+    B = F.make_function(_B, var_order; in_place=true)
+    f_dObj_dprimal = F.make_function(dObj_dprimal, var_order; in_place=true)
 
-    A = F.make_function(F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals]), var_order)
-    B = F.make_function(F.sparse_jacobian(kkt_eqns, F.Node.(parameters)), var_order)
-
-    f_dObj_dprimal = F.make_function(dObj_dprimal, var_order)
-
-    return (f_dObj_dprimal, A, B, parameters), variable_order(m)
+    return (f_dObj_dprimal, A, B, parameters, size(_A), size(_B), size(dObj_dprimal)), variable_order(m)
 end
 
 export differentiate_prepare_kkt
@@ -143,7 +144,7 @@ The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are ou
 `parameter_values`
 """
 function differentiate_solution(
-    (_, A, B, parameters),
+    (_, A, B, parameters, sizeA, sizeB, _),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
@@ -155,9 +156,11 @@ function differentiate_solution(
     # symbolic values at the optimal solution incl parameters
     pvs = [parameter_values[p] for p in parameters]
     sym_input = [primal_vals; eq_dual_vals; ineq_dual_vals; pvs]
-   
-    a = A(sym_input)
-    b = Array(B(sym_input)) # no sparse rhs solver, need to make dense
+
+    a = zeros(sizeA...)
+    b = zeros(sizeB...)
+    A(a, sym_input)
+    Array(B(b, sym_input)) # no sparse rhs solver, need to make dense
 
     if make_indep
         indep_rows = findall_indeps_qr(a) # find independent rows, prevent singularity issues with \
@@ -197,7 +200,7 @@ the deconstructed model. The following arguments (`primal_vals`, `eq_dual_vals`,
 `ineq_dual_vals`) are outputs of [`optimized_values`](@ref). `parameter_values`
 """
 function differentiate_objective(
-    (dObj_dprimal, _, _, parameters),
+    (dObj_dprimal, _, _, parameters, _, _, sizeF),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
@@ -207,8 +210,10 @@ function differentiate_objective(
     # symbolic values at the optimal solution incl parameters
     pvs = [parameter_values[p] for p in parameters]
     sym_input = [primal_vals; eq_dual_vals; ineq_dual_vals; pvs]
-    
-    dObj_dprimal(sym_input)
+
+    df = zeros(sizeF...)
+    dObj_dprimal(df, sym_input)
+    df
 end
 
 export differentiate_objective
