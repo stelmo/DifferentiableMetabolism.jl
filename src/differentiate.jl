@@ -65,7 +65,6 @@ function differentiate_prepare_kkt(
     m::C.ConstraintTree,
     objective::C.Value,
     parameters::Vector{Symbol}; # might not diff wrt all params
-    make_expression = false,
     make_sparse = true,
 )
     # create symbolic values of the primal and dual variables
@@ -126,38 +125,23 @@ function differentiate_prepare_kkt(
     ]
 
     var_order = [primals; eq_duals; ineq_duals; F.Node.(parameters)]
-    if make_sparse
-        _A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
-        _B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
-    else
-        _A = F.jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
-        _B = F.jacobian(kkt_eqns, F.Node.(parameters))
-    end
 
-    if make_expression
-        f_A = F.make_Expr(_A, var_order; in_place = true, init_with_zeros = false)
-        f_B = F.make_Expr(_B, var_order; in_place = true, init_with_zeros = false)
-        f_dObj_dprimal =
-            F.make_Expr(dObj_dprimal, var_order; in_place = true, init_with_zeros = false)
-    else
-        f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
-        f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
-        f_dObj_dprimal = F.make_function(
-            dObj_dprimal,
-            var_order;
-            in_place = true,
-            init_with_zeros = false,
-        )
-    end
+    _A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
+    _B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
+    _dobj = F.sparse_jacobian([f], primals)[1, :]
+
+    f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
+    f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
+    f_dobj = F.make_function(_dobj, var_order; in_place = true, init_with_zeros = false)
 
     return (
-        f_dObj_dprimal,
+        f_dobj,
         f_A,
         f_B,
         parameters,
         similar(_A, Float64),
         similar(_B, Float64),
-        similar(dObj_dprimal, Float64),
+        similar(_dobj, Float64),
     ),
     variable_order(m)
 end
@@ -186,7 +170,9 @@ function differentiate_solution(
     sym_input = [primal_vals; eq_dual_vals; ineq_dual_vals; pvs]
 
     f_A(A, sym_input)
-    arr_B = Array(f_B(B, sym_input)) # no sparse rhs solver, need to make dense
+    f_B(B, sym_input)
+
+    arr_B = Array(B) # no sparse rhs solver, need to make dense
 
     if make_indep
         indep_rows = findall_indeps_qr(A) # find independent rows, prevent singularity issues with \
