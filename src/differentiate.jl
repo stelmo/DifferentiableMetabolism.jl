@@ -65,7 +65,6 @@ function differentiate_prepare_kkt(
     m::C.ConstraintTree,
     objective::C.Value,
     parameters::Vector{Symbol}; # might not diff wrt all params
-    make_sparse = true,
 )
     # create symbolic values of the primal and dual variables
     primals = F.make_variables(:x, C.var_count(m))
