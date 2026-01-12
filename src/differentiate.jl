@@ -161,7 +161,6 @@ function differentiate_solution(
     ineq_dual_vals::Vector{Float64},
     parameter_values::Dict{Symbol,Float64};
     scale = false, # scale sensitivities
-    make_indep = true,
 )
 
     # symbolic values at the optimal solution incl parameters
@@ -170,25 +169,19 @@ function differentiate_solution(
 
     f_A(A, sym_input)
     f_B(B, sym_input)
-
     arr_B = Array(B) # no sparse rhs solver, need to make dense
 
-    if make_indep
-        indep_rows = findall_indeps_qr(A) # find independent rows, prevent singularity issues with \
-        a_indep = A[indep_rows, :]
-        #=
-        If a is rectangular (more equations than variables), then the above should
-        be sufficient, because the equations should not be in conflict (in an ideal
-        world).
-        =#
+    indep_rows = findall_indeps_qr(A) # find independent rows, prevent singularity issues with \
+    a_indep = A[indep_rows, :]
+    
+    #=
+    If a is rectangular (more equations than variables), then the above should
+    be sufficient, because the equations should not be in conflict (in an ideal
+    world).
+    =#
+    b_indep = arr_B[indep_rows, :]
 
-        b_indep = arr_B[indep_rows, :]
-
-        c = -a_indep \ b_indep # sensitivities, unscaled
-
-    else
-        c = -A \ arr_B
-    end
+    c = -a_indep \ b_indep # sensitivities, unscaled
 
     # get primal variable sensitivities only
     if scale
