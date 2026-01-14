@@ -65,6 +65,7 @@ function differentiate_prepare_kkt(
     m::C.ConstraintTree,
     objective::C.Value,
     parameters::Vector{Symbol}; # might not diff wrt all params
+    make_expressions=false,
 )
     # create symbolic values of the primal and dual variables
     primals = F.make_variables(:x, C.var_count(m))
@@ -128,10 +129,16 @@ function differentiate_prepare_kkt(
     _A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
     _B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
     _dobj = F.jacobian([f], primals)[1, :]
-
-    f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
-    f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
-    f_dobj = F.make_function(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
+    
+    if make_expressions
+        f_A = F.make_Expr(_A, var_order; in_place = true, init_with_zeros = false)
+        f_B = F.make_Expr(_B, var_order; in_place = true, init_with_zeros = false)
+        f_dobj = F.make_Expr(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
+    else
+        f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
+        f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
+        f_dobj = F.make_function(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
+    end
 
     return (
         f_dobj,
