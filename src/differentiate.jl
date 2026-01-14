@@ -127,11 +127,11 @@ function differentiate_prepare_kkt(
 
     _A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
     _B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
-    _dobj = F.sparse_jacobian([f], primals)[1, :]
+    _dobj = F.jacobian([f], primals)[1, :]
 
     f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
     f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
-    f_dobj = F.make_function(_dobj, var_order; in_place = true, init_with_zeros = false)
+    f_dobj = F.make_function(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
 
     return (
         f_dobj,
