@@ -227,3 +227,76 @@ function differentiate_objective(
 end
 
 export differentiate_objective
+
+
+
+function get_kkt_funcs(
+    m::C.ConstraintTree,
+    objective::C.Value,
+    parameters::Vector{Symbol}; # might not diff wrt all params
+)
+    # create symbolic values of the primal and dual variables
+    primals = F.make_variables(:x, C.var_count(m))
+
+    # objective
+    f = C.substitute(objective, primals)
+
+    # equality constraints
+    # E * x - b = H = 0
+    eqs = equality_constraints(m)
+    H = [C.substitute(lhs, primals) - rhs for (lhs, rhs) in eqs]
+
+    # inequality constraints (must be built the same as in solver.jl)
+    # M * x - h = G ≤ 0
+    ineqs = inequality_constraints(m)
+    G = [C.substitute(lhs, primals) - rhs for (lhs, rhs) in ineqs]
+
+    # creaty symbolic variables for the duals, but only those that are required
+    eq_duals = F.make_variables(:eq_duals, length(H))
+    ineq_duals = F.make_variables(:ineq_duals, length(G))
+
+    #=
+    Do all the manipulations manually. This is much faster than using the
+    builtin functions.
+
+    kkt_eqns = [
+        ∇ₓfᵀ - ∇ₓHᵀ ν  - ∇ₓGᵀ λ # negatives because of KKT formulation in JuMP
+        H
+        G .* ineq_duals
+    ]
+
+    Note, make sure all the lazy operations are expanded to avoid running into bugs...
+    =#
+    dObj_dprimal = F.jacobian([f], primals)[1, :]
+
+    Is, Js, Vs = SA.findnz(F.sparse_jacobian(H, primals))
+    eq2 = zeros(Ex, size(dObj_dprimal, 1))
+    for (i, j, v) in zip(Js, Is, Vs) # transpose
+        eq2[i] += v * eq_duals[j]
+    end
+
+    Is, Js, Vs = SA.findnz(F.sparse_jacobian(G, primals))
+    eq3 = zeros(Ex, size(dObj_dprimal, 1))
+    for (i, j, v) in zip(Js, Is, Vs) # transpose
+        eq3[i] += v * ineq_duals[j]
+    end
+
+    eq4 = zeros(Ex, size(ineq_duals, 1))
+    for i in eachindex(G) # transpose
+        eq4[i] += G[i] * ineq_duals[i]
+    end
+
+    kkt_eqns = [ # negatives because of KKT formulation in JuMP
+        dObj_dprimal - eq2 - eq3
+        H
+        eq4
+    ]
+
+    var_order = [primals; eq_duals; ineq_duals; F.Node.(parameters)]
+    
+    f = F.make_function(kkt_eqns, var_order; in_place = false, init_with_zeros = true)
+
+    return (f, var_order)
+end
+
+export get_kkt_funcs
