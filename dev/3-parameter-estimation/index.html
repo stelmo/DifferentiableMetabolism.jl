@@ -80,7 +80,322 @@ estimated_parameters = Dict(:capacitylimitation =&gt; 50.0, :r3 =&gt; 5.0, :r4 =
 η = 0.1 # learning rate
 
 losses = Float64[]</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">Float64[]</code></pre><p>Prepare for differentiating, this is the slow part</p><pre><code class="language-julia hljs">kmKKT, vids =
-    D.differentiate_prepare_kkt(km, km.loss.value, [:r3, :r4, :capacitylimitation])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">((FastDifferentiation.Node[(x1 + 3.7499999501746792), 0, (-3.749999950152528 + x3), 0, 0, 0, 0, 0, 0, 0, (-1.249999983366651 + x11), (x12 + -1.87499997498086)], sparse([1, 13, 24, 32, 37, 45, 14, 25, 33, 38  …  44, 1, 6, 45, 2, 7, 46, 11, 12, 47], [1, 1, 1, 1, 1, 1, 2, 2, 2, 2  …  44, 45, 45, 45, 46, 46, 46, 47, 47, 47], FastDifferentiation.Node[1, -1, -(ineq_duals1), ineq_duals9, ineq_duals14, -(ineq_duals22), -1, -(ineq_duals2), ineq_duals10, ineq_duals15  …  (x10 - 1000.0), 1, -1, ((x6 + -(x1)) - 1000.0), 1, -1, ((x7 + -(x2)) - 1000.0), -10.0, -20.0, (((20.0 * x12) + (10.0 * x11)) - capacitylimitation)], 47, 47), sparse([12, 22, 11, 23, 47], [1, 1, 2, 2, 3], FastDifferentiation.Node[-(eq_duals10), x12, -(eq_duals11), x11, -(ineq_duals24)], 47, 3), FastDifferentiation.Node[x1, x2, x3, x4, x5, x6, x7, x8, x9, x10, x11, x12], FastDifferentiation.Node[eq_duals1, eq_duals2, eq_duals3, eq_duals4, eq_duals5, eq_duals6, eq_duals7, eq_duals8, eq_duals9, eq_duals10, eq_duals11], FastDifferentiation.Node[ineq_duals1, ineq_duals2, ineq_duals3, ineq_duals4, ineq_duals5, ineq_duals6, ineq_duals7, ineq_duals8, ineq_duals9, ineq_duals10  …  ineq_duals15, ineq_duals16, ineq_duals17, ineq_duals18, ineq_duals19, ineq_duals20, ineq_duals21, ineq_duals22, ineq_duals23, ineq_duals24], [:r3, :r4, :capacitylimitation]), Tuple{Symbol, Symbol, Vararg{Symbol}}[(:fluxes, :r1), (:fluxes, :r2), (:fluxes, :r3), (:fluxes, :r4), (:fluxes, :r6), (:fluxes_forward, :r1), (:fluxes_forward, :r2), (:fluxes_forward, :r3), (:fluxes_forward, :r4), (:fluxes_forward, :r6), (:isozyme_forward_amounts, :r4, :isozyme1), (:isozyme_forward_amounts, :r3, :isozyme1)])</code></pre><p>Estimate the parameters</p><pre><code class="language-julia hljs">for k = 1:150
+    D.differentiate_prepare_kkt(km, km.loss.value, [:r3, :r4, :capacitylimitation])</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">((RuntimeGeneratedFunctions.RuntimeGeneratedFunction{(:result, :input_variables1), FastDifferentiation.var&quot;#_RGF_ModTag&quot;, FastDifferentiation.var&quot;#_RGF_ModTag&quot;, (0xdbac74af, 0x4e899bad, 0x49c633f4, 0x6f8cfe5a, 0xe72c0de3), Expr}(quote
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:277 =#</span>
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:279 =#</span>
+    begin
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span>
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span> @boundscheck begin
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:197 =#</span>
+                expected_res_size = (12,)
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:198 =#</span>
+                if size(result) != expected_res_size
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:199 =#</span>
+                    throw(ArgumentError(&quot;The in place result array does not have the expected size. Expected size: $(expected_res_size). Actual size: $(size(result)).&quot;))
+                end
+            end
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:203 =#</span>
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:178 =#</span> @boundscheck begin
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:180 =#</span>
+                lengths = (50,)
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:181 =#</span>
+                for (input, expected_length) = zip((input_variables1,), lengths)
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:182 =#</span>
+                    if length(input) != expected_length
+                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:183 =#</span>
+                        actual_lengths = map(length, (input_variables1,))
+                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:184 =#</span>
+                        throw(ArgumentError(&quot;The input variables must have the same length as the input_variables argument to make_function. Expected lengths: $(lengths). Actual lengths: $(actual_lengths).&quot;))
+                    end
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:186 =#</span>
+                end
+            end
+    end
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:280 =#</span>
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:280 =#</span> @inbounds begin
+            <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:281 =#</span>
+            begin
+                result_element_type = promote_type(eltype.((input_variables1,))...)
+                result .= zero(result_element_type)
+                var&quot;##937&quot; = input_variables1[1] + 3.7499999501746792
+                result[1] = var&quot;##937&quot;
+                var&quot;##938&quot; = -3.749999950152528 + input_variables1[3]
+                result[3] = var&quot;##938&quot;
+                var&quot;##939&quot; = -1.249999983366651 + input_variables1[11]
+                result[11] = var&quot;##939&quot;
+                var&quot;##940&quot; = input_variables1[12] + -1.87499997498086
+                result[12] = var&quot;##940&quot;
+                return nothing
+            end
+        end
+end), RuntimeGeneratedFunctions.RuntimeGeneratedFunction{(:result, :input_variables1), FastDifferentiation.var&quot;#_RGF_ModTag&quot;, FastDifferentiation.var&quot;#_RGF_ModTag&quot;, (0x1bc73e17, 0x54ccf48d, 0x59356190, 0xd22d2e48, 0x7c286a76), Expr}(quote
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:355 =#</span>
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:357 =#</span>
+    begin
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span>
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span> @boundscheck begin
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:197 =#</span>
+                expected_res_size = (47, 47)
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:198 =#</span>
+                if size(result) != expected_res_size
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:199 =#</span>
+                    throw(ArgumentError(&quot;The in place result array does not have the expected size. Expected size: $(expected_res_size). Actual size: $(size(result)).&quot;))
+                end
+            end
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:203 =#</span>
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:178 =#</span> @boundscheck begin
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:180 =#</span>
+                lengths = (50,)
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:181 =#</span>
+                for (input, expected_length) = zip((input_variables1,), lengths)
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:182 =#</span>
+                    if length(input) != expected_length
+                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:183 =#</span>
+                        actual_lengths = map(length, (input_variables1,))
+                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:184 =#</span>
+                        throw(ArgumentError(&quot;The input variables must have the same length as the input_variables argument to make_function. Expected lengths: $(lengths). Actual lengths: $(actual_lengths).&quot;))
+                    end
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:186 =#</span>
+                end
+            end
+    end
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:358 =#</span>
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:358 =#</span> @inbounds begin
+            <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:359 =#</span>
+            begin
+                vals = nonzeros(result)
+                vals[1] = 1
+                vals[2] = -1
+                var&quot;##881&quot; = -(input_variables1[24])
+                vals[3] = var&quot;##881&quot;
+                vals[4] = input_variables1[32]
+                vals[5] = input_variables1[37]
+                var&quot;##882&quot; = -(input_variables1[45])
+                vals[6] = var&quot;##882&quot;
+                vals[7] = -1
+                var&quot;##883&quot; = -(input_variables1[25])
+                vals[8] = var&quot;##883&quot;
+                vals[9] = input_variables1[33]
+                vals[10] = input_variables1[38]
+                var&quot;##884&quot; = -(input_variables1[46])
+                vals[11] = var&quot;##884&quot;
+                vals[12] = 1
+                vals[13] = -1
+                vals[14] = -1
+                vals[15] = 1
+                vals[16] = -1
+                var&quot;##885&quot; = -(input_variables1[26])
+                vals[17] = var&quot;##885&quot;
+                vals[18] = input_variables1[39]
+                vals[19] = -1
+                vals[20] = 1
+                vals[21] = -1
+                var&quot;##886&quot; = -(input_variables1[27])
+                vals[22] = var&quot;##886&quot;
+                vals[23] = input_variables1[40]
+                vals[24] = -1
+                vals[25] = -1
+                var&quot;##887&quot; = -(input_variables1[28])
+                vals[26] = var&quot;##887&quot;
+                vals[27] = input_variables1[41]
+                vals[28] = 1.0
+                var&quot;##888&quot; = -(input_variables1[32])
+                vals[29] = var&quot;##888&quot;
+                vals[30] = input_variables1[45]
+                vals[31] = 1.0
+                var&quot;##889&quot; = -(input_variables1[33])
+                vals[32] = var&quot;##889&quot;
+                vals[33] = input_variables1[46]
+                vals[34] = 1
+                vals[35] = -1
+                var&quot;##890&quot; = -(input_variables1[29])
+                vals[36] = var&quot;##890&quot;
+                vals[37] = input_variables1[42]
+                vals[38] = 1
+                vals[39] = -1
+                var&quot;##891&quot; = -(input_variables1[30])
+                vals[40] = var&quot;##891&quot;
+                vals[41] = input_variables1[43]
+                vals[42] = 1
+                var&quot;##892&quot; = -(input_variables1[31])
+                vals[43] = var&quot;##892&quot;
+                vals[44] = input_variables1[44]
+                vals[45] = 1
+                vals[46] = input_variables1[49]
+                var&quot;##893&quot; = -10.0 * input_variables1[34]
+                vals[47] = var&quot;##893&quot;
+                var&quot;##894&quot; = -(input_variables1[36])
+                vals[48] = var&quot;##894&quot;
+                var&quot;##895&quot; = 10.0 * input_variables1[47]
+                vals[49] = var&quot;##895&quot;
+                vals[50] = 1
+                vals[51] = input_variables1[48]
+                var&quot;##896&quot; = -20.0 * input_variables1[34]
+                vals[52] = var&quot;##896&quot;
+                var&quot;##897&quot; = -(input_variables1[35])
+                vals[53] = var&quot;##897&quot;
+                var&quot;##898&quot; = 20.0 * input_variables1[47]
+                vals[54] = var&quot;##898&quot;
+                vals[55] = 1
+                vals[56] = 1
+                vals[57] = 1
+                vals[58] = 1
+                vals[59] = -1
+                vals[60] = 1
+                vals[61] = -1
+                vals[62] = 1
+                vals[63] = -1
+                vals[64] = -1
+                vals[65] = 1
+                vals[66] = -1
+                vals[67] = 1
+                vals[68] = -1
+                vals[69] = 1
+                vals[70] = -1
+                vals[71] = 1
+                var&quot;##899&quot; = -(input_variables1[48])
+                vals[72] = var&quot;##899&quot;
+                vals[73] = 1
+                var&quot;##900&quot; = -(input_variables1[49])
+                vals[74] = var&quot;##900&quot;
+                vals[75] = 1
+                var&quot;##902&quot; = -(input_variables1[1])
+                var&quot;##901&quot; = var&quot;##902&quot; - 1000.0
+                vals[76] = var&quot;##901&quot;
+                vals[77] = 1
+                var&quot;##904&quot; = -(input_variables1[2])
+                var&quot;##903&quot; = var&quot;##904&quot; - 1000.0
+                vals[78] = var&quot;##903&quot;
+                vals[79] = 1
+                var&quot;##905&quot; = -(input_variables1[3])
+                vals[80] = var&quot;##905&quot;
+                vals[81] = 1
+                var&quot;##906&quot; = -(input_variables1[4])
+                vals[82] = var&quot;##906&quot;
+                vals[83] = 1
+                var&quot;##907&quot; = -(input_variables1[5])
+                vals[84] = var&quot;##907&quot;
+                vals[85] = 1
+                var&quot;##908&quot; = -(input_variables1[8])
+                vals[86] = var&quot;##908&quot;
+                vals[87] = 1
+                var&quot;##909&quot; = -(input_variables1[9])
+                vals[88] = var&quot;##909&quot;
+                vals[89] = 1
+                var&quot;##910&quot; = -(input_variables1[10])
+                vals[90] = var&quot;##910&quot;
+                vals[91] = -1
+                vals[92] = 1
+                var&quot;##912&quot; = -(input_variables1[6])
+                var&quot;##911&quot; = var&quot;##912&quot; + input_variables1[1]
+                vals[93] = var&quot;##911&quot;
+                vals[94] = -1
+                vals[95] = 1
+                var&quot;##914&quot; = -(input_variables1[7])
+                var&quot;##913&quot; = var&quot;##914&quot; + input_variables1[2]
+                vals[96] = var&quot;##913&quot;
+                vals[97] = 10.0
+                vals[98] = 20.0
+                var&quot;##916&quot; = -20.0 * input_variables1[12]
+                var&quot;##917&quot; = -10.0 * input_variables1[11]
+                var&quot;##915&quot; = var&quot;##916&quot; + var&quot;##917&quot;
+                vals[99] = var&quot;##915&quot;
+                vals[100] = 1
+                var&quot;##918&quot; = -(input_variables1[12])
+                vals[101] = var&quot;##918&quot;
+                vals[102] = 1
+                var&quot;##919&quot; = -(input_variables1[11])
+                vals[103] = var&quot;##919&quot;
+                vals[104] = -1
+                vals[105] = input_variables1[1]
+                vals[106] = -1
+                vals[107] = input_variables1[2]
+                vals[108] = -1
+                var&quot;##920&quot; = input_variables1[3] - 1000.0
+                vals[109] = var&quot;##920&quot;
+                vals[110] = -1
+                var&quot;##921&quot; = input_variables1[4] - 1000.0
+                vals[111] = var&quot;##921&quot;
+                vals[112] = -1
+                var&quot;##922&quot; = input_variables1[5] - 1000.0
+                vals[113] = var&quot;##922&quot;
+                vals[114] = -1
+                var&quot;##923&quot; = input_variables1[8] - 1000.0
+                vals[115] = var&quot;##923&quot;
+                vals[116] = -1
+                var&quot;##924&quot; = input_variables1[9] - 1000.0
+                vals[117] = var&quot;##924&quot;
+                vals[118] = -1
+                var&quot;##925&quot; = input_variables1[10] - 1000.0
+                vals[119] = var&quot;##925&quot;
+                vals[120] = 1
+                vals[121] = -1
+                var&quot;##927&quot; = input_variables1[6] + var&quot;##902&quot;
+                var&quot;##926&quot; = var&quot;##927&quot; - 1000.0
+                vals[122] = var&quot;##926&quot;
+                vals[123] = 1
+                vals[124] = -1
+                var&quot;##929&quot; = input_variables1[7] + var&quot;##904&quot;
+                var&quot;##928&quot; = var&quot;##929&quot; - 1000.0
+                vals[125] = var&quot;##928&quot;
+                vals[126] = -10.0
+                vals[127] = -20.0
+                var&quot;##932&quot; = 20.0 * input_variables1[12]
+                var&quot;##933&quot; = 10.0 * input_variables1[11]
+                var&quot;##931&quot; = var&quot;##932&quot; + var&quot;##933&quot;
+                var&quot;##930&quot; = var&quot;##931&quot; - input_variables1[50]
+                vals[128] = var&quot;##930&quot;
+                return result
+            end
+        end
+end), RuntimeGeneratedFunctions.RuntimeGeneratedFunction{(:result, :input_variables1), FastDifferentiation.var&quot;#_RGF_ModTag&quot;, FastDifferentiation.var&quot;#_RGF_ModTag&quot;, (0xcaafdb9f, 0xafdb8839, 0x1963634c, 0xd682c792, 0xe6657313), Expr}(quote
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:355 =#</span>
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:357 =#</span>
+    begin
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span>
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span> @boundscheck begin
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:197 =#</span>
+                expected_res_size = (47, 3)
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:198 =#</span>
+                if size(result) != expected_res_size
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:199 =#</span>
+                    throw(ArgumentError(&quot;The in place result array does not have the expected size. Expected size: $(expected_res_size). Actual size: $(size(result)).&quot;))
+                end
+            end
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:203 =#</span>
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:178 =#</span> @boundscheck begin
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:180 =#</span>
+                lengths = (50,)
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:181 =#</span>
+                for (input, expected_length) = zip((input_variables1,), lengths)
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:182 =#</span>
+                    if length(input) != expected_length
+                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:183 =#</span>
+                        actual_lengths = map(length, (input_variables1,))
+                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:184 =#</span>
+                        throw(ArgumentError(&quot;The input variables must have the same length as the input_variables argument to make_function. Expected lengths: $(lengths). Actual lengths: $(actual_lengths).&quot;))
+                    end
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:186 =#</span>
+                end
+            end
+    end
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:358 =#</span>
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:358 =#</span> @inbounds begin
+            <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:359 =#</span>
+            begin
+                vals = nonzeros(result)
+                var&quot;##934&quot; = -(input_variables1[22])
+                vals[1] = var&quot;##934&quot;
+                vals[2] = input_variables1[12]
+                var&quot;##935&quot; = -(input_variables1[23])
+                vals[3] = var&quot;##935&quot;
+                vals[4] = input_variables1[11]
+                var&quot;##936&quot; = -(input_variables1[47])
+                vals[5] = var&quot;##936&quot;
+                return result
+            end
+        end
+end), [:r3, :r4, :capacitylimitation], sparse([1, 13, 24, 32, 37, 45, 14, 25, 33, 38  …  44, 1, 6, 45, 2, 7, 46, 11, 12, 47], [1, 1, 1, 1, 1, 1, 2, 2, 2, 2  …  44, 45, 45, 45, 46, 46, 46, 47, 47, 47], [6.9342433216638e-310, 6.9342433216638e-310, 6.93420461741167e-310, 6.9341955944623e-310, 6.9342433216638e-310, 6.9342433216638e-310, 6.9342433216638e-310, 6.9342433216638e-310, 6.9342433216638e-310, 6.93419561566367e-310  …  6.9342433216638e-310, 6.9342433216638e-310, 6.9342433216638e-310, 6.9342433216638e-310, 6.9342433216638e-310, 6.9342433216638e-310, 0.0, 0.0, 0.0, 0.0], 47, 47), sparse([12, 22, 11, 23, 47], [1, 1, 2, 2, 3], [6.9342039390445e-310, 6.934208694575e-310, 6.93420393905084e-310, 6.9341225056618e-310, 6.93412250566416e-310], 47, 3), [5.0e-324, 0.0, 5.0e-324, 5.0e-324, 5.0e-324, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]), Tuple{Symbol, Symbol, Vararg{Symbol}}[(:fluxes, :r1), (:fluxes, :r2), (:fluxes, :r3), (:fluxes, :r4), (:fluxes, :r6), (:fluxes_forward, :r1), (:fluxes_forward, :r2), (:fluxes_forward, :r3), (:fluxes_forward, :r4), (:fluxes_forward, :r6), (:isozyme_forward_amounts, :r4, :isozyme1), (:isozyme_forward_amounts, :r3, :isozyme1)])</code></pre><p>Estimate the parameters</p><pre><code class="language-julia hljs">for k = 1:150
 
     _sol = D.optimized_values(
         km,
@@ -112,4 +427,4 @@ losses = Float64[]</code></pre><pre class="documenter-example-output"><code clas
 
     estimated_parameters[:r3] -= η * dL_dkcats[1]
     estimated_parameters[:r4] -= η * dL_dkcats[2]
-end</code></pre><p>Finally, we plot the loss function over 150 iterations</p><pre><code class="language-julia hljs">CM.lines(losses; axis = (xlabel = &quot;Iterations&quot;, ylabel = &quot;L2 loss&quot;))</code></pre><img src="9fdd5dd6.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../2-differentiate-enzyme-model/">« Differentiating enzyme constrained metabolic models</a><a class="docs-footer-nextpage" href="../4-differentiate-enzyme-community/">Differentiating enzyme constrained community models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Monday 15 December 2025 16:34">Monday 15 December 2025</span>. Using Julia version 1.11.7.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><p>Finally, we plot the loss function over 150 iterations</p><pre><code class="language-julia hljs">CM.lines(losses; axis = (xlabel = &quot;Iterations&quot;, ylabel = &quot;L2 loss&quot;))</code></pre><img src="9fdd5dd6.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../2-differentiate-enzyme-model/">« Differentiating enzyme constrained metabolic models</a><a class="docs-footer-nextpage" href="../4-differentiate-enzyme-community/">Differentiating enzyme constrained community models »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 28 January 2026 13:21">Wednesday 28 January 2026</span>. Using Julia version 1.11.8.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
