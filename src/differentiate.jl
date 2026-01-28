@@ -65,6 +65,7 @@ function differentiate_prepare_kkt(
     m::C.ConstraintTree,
     objective::C.Value,
     parameters::Vector{Symbol}; # might not diff wrt all params
+    make_expressions = false,
 )
     # create symbolic values of the primal and dual variables
     primals = F.make_variables(:x, C.var_count(m))
@@ -123,10 +124,31 @@ function differentiate_prepare_kkt(
         eq4
     ]
 
-    A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
-    B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
+    var_order = [primals; eq_duals; ineq_duals; F.Node.(parameters)]
 
-    return (dObj_dprimal, A, B, primals, eq_duals, ineq_duals, parameters),
+    _A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
+    _B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
+    _dobj = F.jacobian([f], primals)[1, :]
+
+    if make_expressions
+        f_A = F.make_Expr(_A, var_order; in_place = true, init_with_zeros = false)
+        f_B = F.make_Expr(_B, var_order; in_place = true, init_with_zeros = false)
+        f_dobj = F.make_Expr(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
+    else
+        f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
+        f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
+        f_dobj = F.make_function(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
+    end
+
+    return (
+        f_dobj,
+        f_A,
+        f_B,
+        parameters,
+        similar(_A, Float64),
+        similar(_B, Float64),
+        similar(_dobj, Float64),
+    ),
     variable_order(m)
 end
 
@@ -140,7 +162,7 @@ The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are ou
 `parameter_values`
 """
 function differentiate_solution(
-    (_, A, B, primals, eq_duals, ineq_duals, parameters),
+    (_, f_A, f_B, parameters, A, B, _),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
@@ -149,43 +171,32 @@ function differentiate_solution(
 )
 
     # symbolic values at the optimal solution incl parameters
-    syms_to_vals = merge(
-        Dict(
-            zip(
-                (x.node_value for x in [primals; eq_duals; ineq_duals]),
-                [primal_vals; eq_dual_vals; ineq_dual_vals],
-            ),
-        ),
-        parameter_values,
-    )
+    pvs = [parameter_values[p] for p in parameters]
+    sym_input = [primal_vals; eq_dual_vals; ineq_dual_vals; pvs]
 
-    # substitute in values
-    Is, Js, Vs = SA.findnz(A)
-    vs = float.(substitute.(Vs, Ref(k -> syms_to_vals[k])))
-    a = SA.sparse(Is, Js, vs, size(A)...)
-    indep_rows = findall_indeps_qr(a) # find independent rows, prevent singularity issues with \
-    a_indep = a[indep_rows, :]
+    f_A(A, sym_input)
+    f_B(B, sym_input)
+    arr_B = Array(B) # no sparse rhs solver, need to make dense
+
+    indep_rows = findall_indeps_qr(A) # find independent rows, prevent singularity issues with \
+    a_indep = A[indep_rows, :]
 
     #=
     If a is rectangular (more equations than variables), then the above should
     be sufficient, because the equations should not be in conflict (in an ideal
     world).
     =#
-
-    Is, Js, Vs = SA.findnz(B)
-    vs = float.(substitute.(Vs, Ref(k -> syms_to_vals[k])))
-    b = Array(SA.sparse(Is, Js, vs, size(B)...)) # no sparse rhs solver, need to make dense
-    b_indep = b[indep_rows, :]
+    b_indep = arr_B[indep_rows, :]
 
     c = -a_indep \ b_indep # sensitivities, unscaled
 
     # get primal variable sensitivities only
     if scale
         (
-            [parameter_values[p] for p in parameters]' .* c[1:length(primals), :] ./ primal_vals
+            [parameter_values[p] for p in parameters]' .* c[1:length(primal_vals), :] ./ primal_vals
         )
     else
-        c[1:length(primals), :]
+        c[1:length(primal_vals), :]
     end
 end
 
@@ -200,7 +211,7 @@ the deconstructed model. The following arguments (`primal_vals`, `eq_dual_vals`,
 `ineq_dual_vals`) are outputs of [`optimized_values`](@ref). `parameter_values`
 """
 function differentiate_objective(
-    (dObj_dprimal, _, _, primals, eq_duals, ineq_duals, _),
+    (f_dObj_dprimal, _, _, parameters, _, _, df),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
@@ -208,18 +219,11 @@ function differentiate_objective(
 )
 
     # symbolic values at the optimal solution incl parameters
-    syms_to_vals = merge(
-        Dict(
-            zip(
-                (x.node_value for x in [primals; eq_duals; ineq_duals]),
-                [primal_vals; eq_dual_vals; ineq_dual_vals],
-            ),
-        ),
-        parameter_values,
-    )
+    pvs = [parameter_values[p] for p in parameters]
+    sym_input = [primal_vals; eq_dual_vals; ineq_dual_vals; pvs]
 
-    # substitute in values
-    float.(substitute.(dObj_dprimal, Ref(k -> syms_to_vals[k])))
+    f_dObj_dprimal(df, sym_input)
+    df
 end
 
 export differentiate_objective
