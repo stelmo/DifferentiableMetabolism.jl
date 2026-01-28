@@ -65,7 +65,7 @@ function differentiate_prepare_kkt(
     m::C.ConstraintTree,
     objective::C.Value,
     parameters::Vector{Symbol}; # might not diff wrt all params
-    make_expressions=false,
+    make_expressions = false,
 )
     # create symbolic values of the primal and dual variables
     primals = F.make_variables(:x, C.var_count(m))
@@ -129,7 +129,7 @@ function differentiate_prepare_kkt(
     _A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
     _B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
     _dobj = F.jacobian([f], primals)[1, :]
-    
+
     if make_expressions
         f_A = F.make_Expr(_A, var_order; in_place = true, init_with_zeros = false)
         f_B = F.make_Expr(_B, var_order; in_place = true, init_with_zeros = false)
@@ -180,7 +180,7 @@ function differentiate_solution(
 
     indep_rows = findall_indeps_qr(A) # find independent rows, prevent singularity issues with \
     a_indep = A[indep_rows, :]
-    
+
     #=
     If a is rectangular (more equations than variables), then the above should
     be sufficient, because the equations should not be in conflict (in an ideal
