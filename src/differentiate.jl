@@ -75,7 +75,10 @@ function differentiate_prepare_kkt(
     f = C.substitute(objective, primals)
 
     # additional derivative to calculate
-    _dxdvs = [F.jacobian([C.substitute(func, primals)], primals)[1, :] for func in additional_derivatives]
+    _dxdvs = [
+        F.jacobian([C.substitute(func, primals)], primals)[1, :] for
+        func in additional_derivatives
+    ]
 
     # equality constraints
     # E * x - b = H = 0
@@ -138,12 +141,18 @@ function differentiate_prepare_kkt(
         f_A = F.make_Expr(_A, var_order; in_place = true, init_with_zeros = false)
         f_B = F.make_Expr(_B, var_order; in_place = true, init_with_zeros = false)
         f_dobj = F.make_Expr(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
-        dxdvs = [F.make_Expr(func, var_order; in_place = true, init_with_zeros = true) for func in _dxdvs]
+        dxdvs = [
+            F.make_Expr(func, var_order; in_place = true, init_with_zeros = true) for
+            func in _dxdvs
+        ]
     else
         f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
         f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
         f_dobj = F.make_function(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
-        dxdvs = [F.make_function(func, var_order; in_place = true, init_with_zeros = true) for func in _dxdvs]
+        dxdvs = [
+            F.make_function(func, var_order; in_place = true, init_with_zeros = true)
+            for func in _dxdvs
+        ]
     end
 
     return (
@@ -155,7 +164,7 @@ function differentiate_prepare_kkt(
         similar(_A, Float64),
         similar(_B, Float64),
         similar(_dobj, Float64),
-        [similar(func, Float64) for func in dxdvs],
+        [similar(func, Float64) for func in _dxdvs],
     ),
     variable_order(m)
 end
