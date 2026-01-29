@@ -66,12 +66,16 @@ function differentiate_prepare_kkt(
     objective::C.Value,
     parameters::Vector{Symbol}; # might not diff wrt all params
     make_expressions = false,
+    additional_derivatives = [], # array of functions to additionally differentiate
 )
     # create symbolic values of the primal and dual variables
     primals = F.make_variables(:x, C.var_count(m))
 
     # objective
     f = C.substitute(objective, primals)
+
+    # additional derivative to calculate
+    _dxdvs = [F.jacobian([C.substitute(func, primals)], primals)[1, :] for func in additional_derivatives]
 
     # equality constraints
     # E * x - b = H = 0
@@ -134,20 +138,24 @@ function differentiate_prepare_kkt(
         f_A = F.make_Expr(_A, var_order; in_place = true, init_with_zeros = false)
         f_B = F.make_Expr(_B, var_order; in_place = true, init_with_zeros = false)
         f_dobj = F.make_Expr(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
+        dxdvs = [F.make_Expr(func, var_order; in_place = true, init_with_zeros = true) for func in _dxdvs]
     else
         f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
         f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
         f_dobj = F.make_function(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
+        dxdvs = [F.make_function(func, var_order; in_place = true, init_with_zeros = true) for func in _dxdvs]
     end
 
     return (
         f_dobj,
         f_A,
         f_B,
+        dxdvs,
         parameters,
         similar(_A, Float64),
         similar(_B, Float64),
         similar(_dobj, Float64),
+        [similar(func, Float64) for func in dxdvs],
     ),
     variable_order(m)
 end
@@ -162,7 +170,7 @@ The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are ou
 `parameter_values`
 """
 function differentiate_solution(
-    (_, f_A, f_B, parameters, A, B, _),
+    (_, f_A, f_B, _, parameters, A, B, _, _),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
@@ -211,7 +219,7 @@ the deconstructed model. The following arguments (`primal_vals`, `eq_dual_vals`,
 `ineq_dual_vals`) are outputs of [`optimized_values`](@ref). `parameter_values`
 """
 function differentiate_objective(
-    (f_dObj_dprimal, _, _, parameters, _, _, df),
+    (_, f_A, f_B, _, parameters, A, B, _, _),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
@@ -227,3 +235,21 @@ function differentiate_objective(
 end
 
 export differentiate_objective
+
+function differentiate_function(
+    (f, parameters, x),
+    primal_vals::Vector{Float64},
+    eq_dual_vals::Vector{Float64},
+    ineq_dual_vals::Vector{Float64},
+    parameter_values::Dict{Symbol,Float64};
+)
+
+    # symbolic values at the optimal solution incl parameters
+    pvs = [parameter_values[p] for p in parameters]
+    sym_input = [primal_vals; eq_dual_vals; ineq_dual_vals; pvs]
+
+    f(x, sym_input)
+    x
+end
+
+export differentiate_function
