@@ -219,7 +219,7 @@ the deconstructed model. The following arguments (`primal_vals`, `eq_dual_vals`,
 `ineq_dual_vals`) are outputs of [`optimized_values`](@ref). `parameter_values`
 """
 function differentiate_objective(
-    (_, f_A, f_B, _, parameters, A, B, _, _),
+    (f_dObj_dprimal, _, _, _, parameters, _, _, df, _),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
