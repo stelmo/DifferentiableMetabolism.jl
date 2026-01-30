@@ -75,8 +75,8 @@ function differentiate_prepare_kkt(
     f = C.substitute(objective, primals)
 
     # additional derivative to calculate
-    _dxdvs = Dict(id =>
-        F.jacobian([C.substitute(func, primals)], primals)[1, :] for
+    _dxdvs = Dict(
+        id => F.jacobian([C.substitute(func, primals)], primals)[1, :] for
         (id, func) in additional_derivatives
     )
 
@@ -139,16 +139,15 @@ function differentiate_prepare_kkt(
     if make_expressions
         f_A = F.make_Expr(_A, var_order; in_place = true, init_with_zeros = false)
         f_B = F.make_Expr(_B, var_order; in_place = true, init_with_zeros = false)
-        dxdvs = Dict(id =>
-            F.make_Expr(func, var_order; in_place = true, init_with_zeros = true) for
-            (id, func) in _dxdvs
+        dxdvs = Dict(
+            id => F.make_Expr(func, var_order; in_place = true, init_with_zeros = true)
+            for (id, func) in _dxdvs
         )  # init with zeros should be true to make sure the zero elements are zeros
     else
         f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
         f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
-        dxdvs = Dict(id =>
-            F.make_function(func, var_order; in_place = true, init_with_zeros = true) for
-            (id, func) in _dxdvs
+        dxdvs = Dict(
+            id => F.make_function(func, var_order; in_place = true, init_with_zeros = true) for (id, func) in _dxdvs
         )  # init with zeros should be true to make sure the zero elements are zeros
     end
 
