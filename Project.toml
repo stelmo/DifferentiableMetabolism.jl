@@ -1,7 +1,7 @@
 name = "DifferentiableMetabolism"
 uuid = "9677e053-0fc1-49e6-98a8-2ad3a1525e54"
 authors = ["St. Elmo Wilken <stelmozors@gmail.com> and contributors"]
-version = "0.5.0"
+version = "0.6.0"
 
 [deps]
 AbstractFBCModels = "5a4f3dfa-1789-40f8-8221-69268c29937c"
