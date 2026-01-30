@@ -66,7 +66,7 @@ function differentiate_prepare_kkt(
     objective::C.Value,
     parameters::Vector{Symbol}; # might not diff wrt all params
     make_expressions = false,
-    additional_derivatives = [], # array of functions to additionally differentiate
+    additional_derivatives = Dict(:objective => objective), # array of functions to additionally differentiate
 )
     # create symbolic values of the primal and dual variables
     primals = F.make_variables(:x, C.var_count(m))
@@ -75,10 +75,10 @@ function differentiate_prepare_kkt(
     f = C.substitute(objective, primals)
 
     # additional derivative to calculate
-    _dxdvs = [
+    _dxdvs = Dict(id =>
         F.jacobian([C.substitute(func, primals)], primals)[1, :] for
-        func in additional_derivatives
-    ]
+        (id, func) in additional_derivatives
+    )
 
     # equality constraints
     # E * x - b = H = 0
@@ -135,36 +135,31 @@ function differentiate_prepare_kkt(
 
     _A = F.sparse_jacobian(kkt_eqns, [primals; eq_duals; ineq_duals])
     _B = F.sparse_jacobian(kkt_eqns, F.Node.(parameters))
-    _dobj = F.jacobian([f], primals)[1, :]
 
     if make_expressions
         f_A = F.make_Expr(_A, var_order; in_place = true, init_with_zeros = false)
         f_B = F.make_Expr(_B, var_order; in_place = true, init_with_zeros = false)
-        f_dobj = F.make_Expr(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
-        dxdvs = [
+        dxdvs = Dict(id =>
             F.make_Expr(func, var_order; in_place = true, init_with_zeros = true) for
-            func in _dxdvs
-        ]
+            (id, func) in _dxdvs
+        )  # init with zeros should be true to make sure the zero elements are zeros
     else
         f_A = F.make_function(_A, var_order; in_place = true, init_with_zeros = false)
         f_B = F.make_function(_B, var_order; in_place = true, init_with_zeros = false)
-        f_dobj = F.make_function(_dobj, var_order; in_place = true, init_with_zeros = true) # init with zeros should be true to make sure the zero elements are zeros
-        dxdvs = [
-            F.make_function(func, var_order; in_place = true, init_with_zeros = true)
-            for func in _dxdvs
-        ]
+        dxdvs = Dict(id =>
+            F.make_function(func, var_order; in_place = true, init_with_zeros = true) for
+            (id, func) in _dxdvs
+        )  # init with zeros should be true to make sure the zero elements are zeros
     end
 
     return (
-        f_dobj,
         f_A,
         f_B,
         dxdvs,
         parameters,
         similar(_A, Float64),
         similar(_B, Float64),
-        similar(_dobj, Float64),
-        [similar(func, Float64) for func in _dxdvs],
+        Dict(id => similar(func, Float64) for (id, func) in _dxdvs),
     ),
     variable_order(m)
 end
@@ -174,12 +169,13 @@ export differentiate_prepare_kkt
 """
 $(TYPEDSIGNATURES)
 
-Differentiate a solution of a model. The first argument is the output of [`differentiate_prepare_kkt`](@ref), and is a tuple of the deconstructed model.
-The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are outputs of [`optimized_values`](@ref).
-`parameter_values`
+Differentiate a solution of a model. The first argument is the output of
+[`differentiate_prepare_kkt`](@ref), and is a tuple of the deconstructed model.
+The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are
+outputs of [`optimized_values`](@ref). `parameter_values`
 """
 function differentiate_solution(
-    (_, f_A, f_B, _, parameters, A, B, _, _),
+    (f_A, f_B, _, parameters, A, B, _),
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
@@ -222,31 +218,15 @@ export differentiate_solution
 """
 $(TYPEDSIGNATURES)
 
-Differentiate the objective of a model with respect to the variables. The first
-argument is the output of [`differentiate_prepare_kkt`](@ref), and is a tuple of
-the deconstructed model. The following arguments (`primal_vals`, `eq_dual_vals`,
-`ineq_dual_vals`) are outputs of [`optimized_values`](@ref). `parameter_values`
+Differentiate a function with `f_id` of a model with respect to the variables.
+The first argument is the output of [`differentiate_prepare_kkt`](@ref), and is
+a tuple of the deconstructed model. The following arguments (`primal_vals`,
+`eq_dual_vals`, `ineq_dual_vals`) are outputs of [`optimized_values`](@ref).
+`parameter_values`
 """
-function differentiate_objective(
-    (f_dObj_dprimal, _, _, _, parameters, _, _, df, _),
-    primal_vals::Vector{Float64},
-    eq_dual_vals::Vector{Float64},
-    ineq_dual_vals::Vector{Float64},
-    parameter_values::Dict{Symbol,Float64};
-)
-
-    # symbolic values at the optimal solution incl parameters
-    pvs = [parameter_values[p] for p in parameters]
-    sym_input = [primal_vals; eq_dual_vals; ineq_dual_vals; pvs]
-
-    f_dObj_dprimal(df, sym_input)
-    df
-end
-
-export differentiate_objective
-
 function differentiate_function(
-    (f, parameters, x),
+    (_, _, dfs, parameters, _, _, dxs),
+    f_id,
     primal_vals::Vector{Float64},
     eq_dual_vals::Vector{Float64},
     ineq_dual_vals::Vector{Float64},
@@ -257,8 +237,11 @@ function differentiate_function(
     pvs = [parameter_values[p] for p in parameters]
     sym_input = [primal_vals; eq_dual_vals; ineq_dual_vals; pvs]
 
-    f(x, sym_input)
-    x
+    dx = dxs[f_id]
+    f = dfs[f_id]
+
+    f(dx, sym_input)
+    dx
 end
 
 export differentiate_function
