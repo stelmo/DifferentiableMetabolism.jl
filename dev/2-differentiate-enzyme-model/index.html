@@ -253,48 +253,7 @@ parameters = [:capacitylimitation; kcats]</code></pre><pre class="documenter-exa
  :ACt2r
  :NADH16
  :G6PDH2r
- :PPC</code></pre><p>Next prepare the model for differentiation</p><pre><code class="language-julia hljs">pkm_kkt, vids = D.differentiate_prepare_kkt(pkm, pkm.objective.value, parameters)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">((RuntimeGeneratedFunctions.RuntimeGeneratedFunction{(:result, :input_variables1), FastDifferentiation.var&quot;#_RGF_ModTag&quot;, FastDifferentiation.var&quot;#_RGF_ModTag&quot;, (0xbc8fad32, 0xab72adaf, 0x1632d8f3, 0xfdf70d4f, 0x27d00dd6), Expr}(quote
-    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:277 =#</span>
-    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:279 =#</span>
-    begin
-        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span>
-        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span> @boundscheck begin
-                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:197 =#</span>
-                expected_res_size = (131,)
-                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:198 =#</span>
-                if size(result) != expected_res_size
-                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:199 =#</span>
-                    throw(ArgumentError(&quot;The in place result array does not have the expected size. Expected size: $(expected_res_size). Actual size: $(size(result)).&quot;))
-                end
-            end
-        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:203 =#</span>
-        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:178 =#</span> @boundscheck begin
-                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:180 =#</span>
-                lengths = (530,)
-                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:181 =#</span>
-                for (input, expected_length) = zip((input_variables1,), lengths)
-                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:182 =#</span>
-                    if length(input) != expected_length
-                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:183 =#</span>
-                        actual_lengths = map(length, (input_variables1,))
-                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:184 =#</span>
-                        throw(ArgumentError(&quot;The input variables must have the same length as the input_variables argument to make_function. Expected lengths: $(lengths). Actual lengths: $(actual_lengths).&quot;))
-                    end
-                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:186 =#</span>
-                end
-            end
-    end
-    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:280 =#</span>
-    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:280 =#</span> @inbounds begin
-            <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:281 =#</span>
-            begin
-                result_element_type = promote_type(eltype.((input_variables1,))...)
-                result .= zero(result_element_type)
-                result[7] = 1.0
-                return nothing
-            end
-        end
-end), RuntimeGeneratedFunctions.RuntimeGeneratedFunction{(:result, :input_variables1), FastDifferentiation.var&quot;#_RGF_ModTag&quot;, FastDifferentiation.var&quot;#_RGF_ModTag&quot;, (0xff493c41, 0x8c127cca, 0x70e04b26, 0xe0b15792, 0x5c9953cd), Expr}(quote
+ :PPC</code></pre><p>Next prepare the model for differentiation</p><pre><code class="language-julia hljs">pkm_kkt, vids = D.differentiate_prepare_kkt(pkm, pkm.objective.value, parameters)</code></pre><pre class="documenter-example-output"><code class="nohighlight hljs ansi">((RuntimeGeneratedFunctions.RuntimeGeneratedFunction{(:result, :input_variables1), FastDifferentiation.var&quot;#_RGF_ModTag&quot;, FastDifferentiation.var&quot;#_RGF_ModTag&quot;, (0xff493c41, 0x8c127cca, 0x70e04b26, 0xe0b15792, 0x5c9953cd), Expr}(quote
     <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:355 =#</span>
     <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:357 =#</span>
     begin
@@ -2626,7 +2585,48 @@ end), RuntimeGeneratedFunctions.RuntimeGeneratedFunction{(:result, :input_variab
                 return result
             end
         end
-end), [:capacitylimitation, :NH4t, :PFK, :PTAr, :TKT2, :PGL, :H2Ot, :PGI, :PGK, :ICDHyr  …  :CYTBD, :TALA, :ENO, :RPI, :FBA, :GAPD, :ACt2r, :NADH16, :G6PDH2r, :PPC], sparse([137, 141, 142, 144, 182, 266, 398, 140, 145, 158  …  123, 124, 125, 126, 127, 128, 129, 130, 131, 492], [1, 1, 1, 1, 1, 1, 1, 2, 2, 2  …  492, 492, 492, 492, 492, 492, 492, 492, 492, 492], [5.965404497e-315, 5.74587872e-315, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  …  -4.1653784629598133e242, -2.4196744741287816e-270, 0.0, 1.126936378e-314, -2.4196843466035934e-270, 1.5421576855e-314, 0.0, 0.0, 1.802608481e-314, 0.0], 492, 492), sparse([492, 112, 248, 109, 251, 102, 258, 96, 264, 106  …  120, 240, 128, 232, 113, 247, 121, 239, 103, 257], [1, 2, 2, 3, 3, 4, 4, 5, 5, 6  …  34, 34, 35, 35, 36, 36, 37, 37, 38, 38], [6.93425339035446e-310, 6.93425339035446e-310, 6.93425339035446e-310, 6.9341272588958e-310, 6.93423042911482e-310, 6.93425339067026e-310, 6.93412725890057e-310, 6.9341272635187e-310, 6.93425339067026e-310, 6.93412725890373e-310  …  6.93423042971008e-310, 6.93425339086947e-310, 6.93423042891246e-310, 6.93412725899227e-310, 6.9341272635266e-310, 6.93412725048485e-310, 6.93425339202045e-310, 6.93412725048564e-310, 6.93412725048643e-310, 6.93425339035446e-310], 492, 38), [6.93424330841097e-310, 6.934245236682e-310, 6.93424591533135e-310, 6.9342459153345e-310, 6.9342459153345e-310, 6.93424318507005e-310, 6.9342459153345e-310, 6.9342459153187e-310, 6.9342431651264e-310, 6.93424591533135e-310  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 6.9342533933485e-310, 6.93425339332636e-310, 6.93425339221965e-310, 6.9341970169137e-310]), Tuple{Symbol, Symbol, Vararg{Symbol}}[(:fluxes, :ACKr), (:fluxes, :ACONTa), (:fluxes, :ACONTb), (:fluxes, :ACt2r), (:fluxes, :ATPM), (:fluxes, :ATPS4r), (:fluxes, :BIOMASS_Ecoli_core_w_GAM), (:fluxes, :CO2t), (:fluxes, :CS), (:fluxes, :CYTBD)  …  (:isozyme_forward_amounts, :FBA, :isozyme_1), (:isozyme_forward_amounts, :ENO, :isozyme_1), (:isozyme_forward_amounts, :CYTBD, :isozyme_2), (:isozyme_forward_amounts, :CS, :isozyme_1), (:isozyme_forward_amounts, :CO2t, :isozyme_1), (:isozyme_forward_amounts, :ATPS4r, :isozyme_1), (:isozyme_forward_amounts, :ACt2r, :isozyme_1), (:isozyme_forward_amounts, :ACONTb, :isozyme_1), (:isozyme_forward_amounts, :ACONTa, :isozyme_1), (:isozyme_forward_amounts, :ACKr, :isozyme_1)])</code></pre><p>Now differentiate the solution</p><pre><code class="language-julia hljs">sens = D.differentiate_solution(
+end), Dict{Symbol, RuntimeGeneratedFunctions.RuntimeGeneratedFunction{(:result, :input_variables1), FastDifferentiation.var&quot;#_RGF_ModTag&quot;, FastDifferentiation.var&quot;#_RGF_ModTag&quot;, (0xbc8fad32, 0xab72adaf, 0x1632d8f3, 0xfdf70d4f, 0x27d00dd6), Expr}}(:objective =&gt; RuntimeGeneratedFunctions.RuntimeGeneratedFunction{(:result, :input_variables1), FastDifferentiation.var&quot;#_RGF_ModTag&quot;, FastDifferentiation.var&quot;#_RGF_ModTag&quot;, (0xbc8fad32, 0xab72adaf, 0x1632d8f3, 0xfdf70d4f, 0x27d00dd6), Expr}(quote
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:277 =#</span>
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:279 =#</span>
+    begin
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span>
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:196 =#</span> @boundscheck begin
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:197 =#</span>
+                expected_res_size = (131,)
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:198 =#</span>
+                if size(result) != expected_res_size
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:199 =#</span>
+                    throw(ArgumentError(&quot;The in place result array does not have the expected size. Expected size: $(expected_res_size). Actual size: $(size(result)).&quot;))
+                end
+            end
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:203 =#</span>
+        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:178 =#</span> @boundscheck begin
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:180 =#</span>
+                lengths = (530,)
+                <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:181 =#</span>
+                for (input, expected_length) = zip((input_variables1,), lengths)
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:182 =#</span>
+                    if length(input) != expected_length
+                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:183 =#</span>
+                        actual_lengths = map(length, (input_variables1,))
+                        <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:184 =#</span>
+                        throw(ArgumentError(&quot;The input variables must have the same length as the input_variables argument to make_function. Expected lengths: $(lengths). Actual lengths: $(actual_lengths).&quot;))
+                    end
+                    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:186 =#</span>
+                end
+            end
+    end
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:280 =#</span>
+    <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:280 =#</span> @inbounds begin
+            <span class="sgr90">#= /home/runner/.julia/packages/FastDifferentiation/e95hO/src/CodeGeneration.jl:281 =#</span>
+            begin
+                result_element_type = promote_type(eltype.((input_variables1,))...)
+                result .= zero(result_element_type)
+                result[7] = 1.0
+                return nothing
+            end
+        end
+end)), [:capacitylimitation, :NH4t, :PFK, :PTAr, :TKT2, :PGL, :H2Ot, :PGI, :PGK, :ICDHyr  …  :CYTBD, :TALA, :ENO, :RPI, :FBA, :GAPD, :ACt2r, :NADH16, :G6PDH2r, :PPC], sparse([137, 141, 142, 144, 182, 266, 398, 140, 145, 158  …  123, 124, 125, 126, 127, 128, 129, 130, 131, 492], [1, 1, 1, 1, 1, 1, 1, 2, 2, 2  …  492, 492, 492, 492, 492, 492, 492, 492, 492, 492], [1.56990426e-316, 4.1736666e-316, 1.56990426e-316, 3.62953983e-316, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0  …  -4.1653784629598133e242, 0.0, 0.0, 0.0, -4.4496324323258125e-29, 0.0, 0.0, 1.81787315e-315, 1.802608481e-314, 0.0], 492, 492), sparse([492, 112, 248, 109, 251, 102, 258, 96, 264, 106  …  120, 240, 128, 232, 113, 247, 121, 239, 103, 257], [1, 2, 2, 3, 3, 4, 4, 5, 5, 6  …  34, 34, 35, 35, 36, 36, 37, 37, 38, 38], [2.0e-323, 5.0e-324, 1.0e-323, 1.5e-323, 5.0e-324, 5.0e-324, 5.0e-324, 0.0, 0.0, 0.0  …  0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.5e-323, 4.0e-323, 6.9252318146184e-310, 6.9252318146184e-310], 492, 38), Dict(:objective =&gt; [5.0e-324, 1.0e-323, 6.13e-322, 1.5e-323, 2.0e-323, 2.5e-323, 3.0e-323, 3.5e-323, 4.0e-323, 4.4e-323  …  4.9e-322, 4.94e-322, 5.0e-322, 6.92519078252027e-310, 6.92519078252264e-310, 6.925190782525e-310, 6.9251907825274e-310, 6.92519078252975e-310, 6.92519078253213e-310, 6.9251907825345e-310])), Tuple{Symbol, Symbol, Vararg{Symbol}}[(:fluxes, :ACKr), (:fluxes, :ACONTa), (:fluxes, :ACONTb), (:fluxes, :ACt2r), (:fluxes, :ATPM), (:fluxes, :ATPS4r), (:fluxes, :BIOMASS_Ecoli_core_w_GAM), (:fluxes, :CO2t), (:fluxes, :CS), (:fluxes, :CYTBD)  …  (:isozyme_forward_amounts, :FBA, :isozyme_1), (:isozyme_forward_amounts, :ENO, :isozyme_1), (:isozyme_forward_amounts, :CYTBD, :isozyme_2), (:isozyme_forward_amounts, :CS, :isozyme_1), (:isozyme_forward_amounts, :CO2t, :isozyme_1), (:isozyme_forward_amounts, :ATPS4r, :isozyme_1), (:isozyme_forward_amounts, :ACt2r, :isozyme_1), (:isozyme_forward_amounts, :ACONTb, :isozyme_1), (:isozyme_forward_amounts, :ACONTa, :isozyme_1), (:isozyme_forward_amounts, :ACKr, :isozyme_1)])</code></pre><p>Now differentiate the solution</p><pre><code class="language-julia hljs">sens = D.differentiate_solution(
     pkm_kkt,
     pruned_solution.primal_values,
     pruned_solution.equality_dual_values,
@@ -2689,4 +2689,4 @@ f, a, hm = CM.heatmap(
     ),
 )
 CM.Colorbar(f[1, 2], hm)
-f</code></pre><img src="aeec92bf.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.16.1 on <span class="colophon-date" title="Wednesday 28 January 2026 13:21">Wednesday 28 January 2026</span>. Using Julia version 1.11.8.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+f</code></pre><img src="aeec92bf.png" alt="Example block output"/><hr/><p><em>This page was generated using <a href="https://github.com/fredrikekre/Literate.jl">Literate.jl</a>.</em></p></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../1-parametric-models/">« Parametric constraint-based metabolic models</a><a class="docs-footer-nextpage" href="../3-parameter-estimation/">Parameter estimation using proteomics and flux data »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Saturday 4 April 2026 19:12">Saturday 4 April 2026</span>. Using Julia version 1.11.9.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
