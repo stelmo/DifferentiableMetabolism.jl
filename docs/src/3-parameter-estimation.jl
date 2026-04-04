@@ -143,8 +143,9 @@ for k = 1:150
         estimated_parameters,
     ) # derivative of variables wrt parameters
 
-    dL_dx = D.differentiate_objective(
+    dL_dx = D.differentiate_function(
         kmKKT,
+        :objective,
         _sol.primal_values,
         _sol.equality_dual_values,
         _sol.inequality_dual_values,
