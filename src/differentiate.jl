@@ -56,7 +56,10 @@ end
 $(TYPEDSIGNATURES)
 
 Prepare a model `m` with `objective` for differentiation with respect to
-`parameters`.
+`parameters`. Optionally return expressions of kkt equations if
+`make_expressions=true`. Finally, you can specify particular functions as a
+`symbol => function` dictionary to be differentiated. Here `function` is a
+constraint from the model, typically this is just the objective.
 
 This is the most time consuming aspect of differentiation. It pays off to do
 this separately  if the same model will be differentiated multiple times.
@@ -171,7 +174,8 @@ $(TYPEDSIGNATURES)
 Differentiate a solution of a model. The first argument is the output of
 [`differentiate_prepare_kkt`](@ref), and is a tuple of the deconstructed model.
 The following arguments (`primal_vals`, `eq_dual_vals`, `ineq_dual_vals`) are
-outputs of [`optimized_values`](@ref). `parameter_values`
+outputs of [`optimized_values`](@ref). `parameter_values` are the parameters
+themselves, and `scale` is a flag setting whether the output gets normalized.
 """
 function differentiate_solution(
     (f_A, f_B, _, parameters, A, B, _),
@@ -221,7 +225,8 @@ Differentiate a function with `f_id` of a model with respect to the variables.
 The first argument is the output of [`differentiate_prepare_kkt`](@ref), and is
 a tuple of the deconstructed model. The following arguments (`primal_vals`,
 `eq_dual_vals`, `ineq_dual_vals`) are outputs of [`optimized_values`](@ref).
-`parameter_values`
+`parameter_values` are the parameter values themselves. There is no scale
+option.
 """
 function differentiate_function(
     (_, _, dfs, parameters, _, _, dxs),
